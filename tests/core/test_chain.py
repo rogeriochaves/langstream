@@ -1,7 +1,7 @@
 import unittest
 from typing import Iterable
 
-from lightchain.core.chain import Chain
+from lightchain.core.chain import Chain, SingleOutputChain
 from lightchain.utils.async_iterable import as_async_iterable, join
 
 
@@ -43,4 +43,23 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
         chain = hello_chain.join().and_then(exclamation_chain)
 
         result = await join(chain("world"))
+        self.assertEqual(result, "hello world!")
+
+
+class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
+    async def test_it_is_callable_with_single_value_return(self):
+        exclamation_chain = SingleOutputChain[str, str](lambda input: f"{input}!")
+
+        result = await exclamation_chain("hello world")
+        self.assertEqual(result, "hello world!")
+
+    async def test_it_is_callable_with_async_return(self):
+        async def async_exclamation(input: str):
+            return f"{input}!"
+
+        exclamation_chain = SingleOutputChain[str, str](
+            lambda input: async_exclamation(input)
+        )
+
+        result = await exclamation_chain("hello world")
         self.assertEqual(result, "hello world!")

@@ -64,7 +64,7 @@ class Chain(BaseChain[T, U]):
             async for u in self(input):
                 yield fn(u)
 
-        return Chain[T, V](call=lambda input: map(input))
+        return Chain[T, V](lambda input: map(input))
 
     def and_then(
         self, next: Callable[[Iterable[U]], AsyncIterable[V]]
@@ -74,24 +74,30 @@ class Chain(BaseChain[T, U]):
             async for v in next(u):
                 yield v
 
-        return Chain[T, V](call=and_then)
+        return Chain[T, V](and_then)
 
     def join(self: "Chain[T, str]", join_with="") -> "SingleOutputChain[T, str]":
         async def _join(input: T) -> str:
             u = await join(self(input), join_with)
             return u
 
-        return SingleOutputChain[T, str](call=_join)
+        return SingleOutputChain[T, str](_join)
 
 
 class SingleOutputChain(BaseChain[T, U]):
-    call: Callable[[T], Awaitable[U]]
+    call: Callable[[T], Union[Awaitable[U], U]]
 
-    def __init__(self, call: Callable[[T], Awaitable[U]]) -> None:
+    def __init__(self, call: Callable[[T], Union[Awaitable[U], U]]) -> None:
         self.call = call
 
     def __call__(self, input: T) -> Awaitable[U]:
-        return self.call(input)
+        async def as_awaitable(value: V) -> V:
+            return value
+
+        result = self.call(input)
+        if isinstance(result, Awaitable):
+            return result
+        return as_awaitable(result)
 
     def map(self, fn: Callable[[U], V]) -> "SingleOutputChain[T, V]":
         async def map(input: T) -> V:
