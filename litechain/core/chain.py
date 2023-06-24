@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import asyncio
 from typing import (
     Any,
@@ -19,15 +20,23 @@ U = TypeVar("U")
 V = TypeVar("V")
 
 
-class BaseChain(Generic[T, U]):
+class BaseChain(ABC, Generic[T, U]):
     _call: Callable[[T], U]
 
+    @abstractmethod
     def __init__(self, call: Callable[[T], U]) -> None:
         self._call = call
 
+    @abstractmethod
     def __call__(self, input: T) -> U:
-        return self._call(input)
+        result = self._call(input)
+        return self._wrap(result)
 
+    @abstractmethod
+    def _wrap(self, value: U) -> U:
+        return value
+
+    @abstractmethod
     def map(self, fn: Callable[[U], V]) -> "BaseChain[T, V]":
         """
         Maps the results without extracing them of the wrapper (Awaitable, AwaitableIterator),
@@ -35,6 +44,7 @@ class BaseChain(Generic[T, U]):
         """
         return self.__class__(lambda input: fn(self(input)))
 
+    @abstractmethod
     def and_then(self, next: Callable[[U], V]) -> "BaseChain[T, V]":
         """
         Extracts the results outside it's wrapper box (Awaitable, AwaitableIterator) and then map it.
@@ -59,6 +69,11 @@ class Chain(BaseChain[T, U]):
     def __call__(self, input: T) -> AsyncIterable[U]:
         result = self._call(input)
         return self._wrap(result)
+
+    def _wrap(self, value: Union[AsyncIterable[V], V]) -> AsyncIterable[V]:
+        if isinstance(value, AsyncIterable):
+            return value
+        return as_async_iterable(value)
 
     def map(self, fn: Callable[[U], V]) -> "Chain[T, V]":
         async def map(input: T) -> AsyncIterable[V]:
@@ -98,11 +113,6 @@ class Chain(BaseChain[T, U]):
         # TODO
         raise NotImplementedError
 
-    def _wrap(self, value: Union[AsyncIterable[V], V]) -> AsyncIterable[V]:
-        if isinstance(value, AsyncIterable):
-            return value
-        return as_async_iterable(value)
-
 
 class SingleOutputChain(BaseChain[T, U]):
     call: Callable[[T], Union[Awaitable[U], U]]
@@ -111,13 +121,16 @@ class SingleOutputChain(BaseChain[T, U]):
         self.call = call
 
     def __call__(self, input: T) -> Awaitable[U]:
+        result = self.call(input)
+        return self._wrap(result)
+
+    def _wrap(self, value: Union[Awaitable[V], V]) -> Awaitable[V]:
         async def as_awaitable(value: V) -> V:
             return value
 
-        result = self.call(input)
-        if isinstance(result, Awaitable):
-            return result
-        return as_awaitable(result)
+        if isinstance(value, Awaitable):
+            return value
+        return as_awaitable(value)
 
     def map(self, fn: Callable[[U], V]) -> "SingleOutputChain[T, V]":
         async def map(input: T) -> V:
