@@ -1,9 +1,13 @@
+import asyncio
 from typing import (
+    Any,
     AsyncIterable,
     Awaitable,
     Callable,
+    Coroutine,
     Generic,
     Iterable,
+    List,
     TypeVar,
     Union,
 )
@@ -54,10 +58,7 @@ class Chain(BaseChain[T, U]):
 
     def __call__(self, input: T) -> AsyncIterable[U]:
         result = self._call(input)
-        if isinstance(result, AsyncIterable):
-            return result
-
-        return as_async_iterable(result)
+        return self._wrap(result)
 
     def map(self, fn: Callable[[U], V]) -> "Chain[T, V]":
         async def map(input: T) -> AsyncIterable[V]:
@@ -67,14 +68,22 @@ class Chain(BaseChain[T, U]):
         return Chain[T, V](lambda input: map(input))
 
     def and_then(
-        self, next: Callable[[Iterable[U]], AsyncIterable[V]]
+        self, next: Callable[[Iterable[U]], Union[AsyncIterable[V], V]]
     ) -> "Chain[T, V]":
         async def and_then(input: T) -> AsyncIterable[V]:
             u = await collect(self(input))
-            async for v in next(u):
+            iter_v = self._wrap(next(u))
+            async for v in iter_v:
                 yield v
 
         return Chain[T, V](and_then)
+
+    def collect(self: "Chain[T, U]") -> "SingleOutputChain[T, List[U]]":
+        async def _collect(input: T) -> List[U]:
+            u = await collect(self(input))
+            return u
+
+        return SingleOutputChain[T, List[U]](_collect)
 
     def join(self: "Chain[T, str]", join_with="") -> "SingleOutputChain[T, str]":
         async def _join(input: T) -> str:
@@ -82,6 +91,17 @@ class Chain(BaseChain[T, U]):
             return u
 
         return SingleOutputChain[T, str](_join)
+
+    def gather(
+        self: "Chain[T, List[AsyncIterable[V]]]",
+    ) -> "Chain[T, List[V]]":
+        # TODO
+        raise NotImplementedError
+
+    def _wrap(self, value: Union[AsyncIterable[V], V]) -> AsyncIterable[V]:
+        if isinstance(value, AsyncIterable):
+            return value
+        return as_async_iterable(value)
 
 
 class SingleOutputChain(BaseChain[T, U]):
@@ -103,7 +123,7 @@ class SingleOutputChain(BaseChain[T, U]):
         async def map(input: T) -> V:
             return fn(await self(input))
 
-        return SingleOutputChain[T, V](call=lambda input: map(input))
+        return SingleOutputChain[T, V](lambda input: map(input))
 
     def and_then(self, next: Callable[[U], AsyncIterable[V]]) -> "Chain[T, V]":
         async def and_then(input: T) -> AsyncIterable[V]:
@@ -111,4 +131,14 @@ class SingleOutputChain(BaseChain[T, U]):
             async for v in next(u):
                 yield v
 
-        return Chain[T, V](call=and_then)
+        return Chain[T, V](and_then)
+
+    def gather(
+        self: "Union[SingleOutputChain[T, List[Awaitable[V]]], SingleOutputChain[T, List[Coroutine[Any, Any, V]]]]",
+    ) -> "Chain[T, V]":
+        async def gather(input: T) -> AsyncIterable[V]:
+            vs: List[V] = await asyncio.gather(*await self(input))
+            for v in vs:
+                yield v
+
+        return Chain[T, V](gather)

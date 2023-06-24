@@ -1,3 +1,5 @@
+import asyncio
+import random
 import unittest
 from typing import Iterable, TypedDict
 
@@ -36,6 +38,16 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
         result = await join(chain("hello world"))
         self.assertEqual(result, "hello world, !")
 
+    async def test_it_is_thenable_with_single_value_return(self):
+        exclamation_stream_chain = Chain[str, str](
+            lambda input: as_async_iterable(f"{input}", "!")
+        )
+
+        chain = exclamation_stream_chain.and_then(lambda input: ", ".join(input))
+
+        result = await join(chain("hello world"))
+        self.assertEqual(result, "hello world, !")
+
     async def test_it_is_composable_by_waiting_the_first_chain_to_finish(self):
         hello_chain = Chain[str, str](lambda input: f"hello {input}")
         exclamation_chain = Chain[str, str](lambda input: f"{input}!")
@@ -69,6 +81,23 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
         result = await join(chain("hello"))
         self.assertEqual(result, "how are you?")
 
+    async def test_it_can_process_many_things_in_parallel(self):
+        async def increment_number(num: int) -> int:
+            await asyncio.sleep(random.random() * 0.5)  # heavy processing
+            return num + 1
+
+        chain: Chain[int, str] = (
+            Chain[int, int](lambda _: as_async_iterable(*range(0, 100)))
+            .map(increment_number)
+            .collect()
+            .gather()
+            .and_then(lambda result: sum(result))
+            .map(lambda x: str(x))
+        )
+
+        result = await join(chain(0))
+        self.assertEqual(result, "5050")
+
 
 class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
     async def test_it_is_callable_with_single_value_return(self):
@@ -87,3 +116,25 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
 
         result = await exclamation_chain("hello world")
         self.assertEqual(result, "hello world!")
+
+    # TODO: should be SingleOutputChain, accept both actually
+    # async def test_it_is_thenable(self):
+    #     exclamation_stream_chain = SingleOutputChain[str, List[str]](
+    #         lambda input: [f"{input}", "!"]
+    #     )
+    #     joiner_chain = SingleOutputChain[Iterable[str], str](lambda input: ", ".join(input))
+
+    #     chain = exclamation_stream_chain.and_then(joiner_chain)
+
+    #     result = await join(chain("hello world"))
+    #     self.assertEqual(result, "hello world, !")
+
+    # async def test_it_is_thenable_with_single_value_return(self):
+    #     exclamation_stream_chain = SingleOutputChain[str, List[str]](
+    #         lambda input: [f"{input}", "!"]
+    #     )
+
+    #     chain = exclamation_stream_chain.and_then(lambda input: ", ".join(input))
+
+    #     result = await join(chain("hello world"))
+    #     self.assertEqual(result, "hello world, !")
