@@ -5,9 +5,10 @@ from typing import (
     Generic,
     Iterable,
     TypeVar,
+    Union,
 )
 
-from lightchain.utils.async_iterable import collect, join
+from lightchain.utils.async_iterable import as_async_iterable, collect, join
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -46,13 +47,17 @@ class BaseChain(Generic[T, U]):
 
 
 class Chain(BaseChain[T, U]):
-    _call: Callable[[T], AsyncIterable[U]]
+    _call: Callable[[T], Union[AsyncIterable[U], U]]
 
-    def __init__(self, call: Callable[[T], AsyncIterable[U]]) -> None:
+    def __init__(self, call: Callable[[T], Union[AsyncIterable[U], U]]) -> None:
         self._call = call
 
     def __call__(self, input: T) -> AsyncIterable[U]:
-        return self._call(input)
+        result = self._call(input)
+        if isinstance(result, AsyncIterable):
+            return result
+
+        return as_async_iterable(result)
 
     def map(self, fn: Callable[[U], V]) -> "Chain[T, V]":
         async def map(input: T) -> AsyncIterable[V]:
@@ -101,10 +106,3 @@ class SingleOutputChain(BaseChain[T, U]):
                 yield v
 
         return Chain[T, V](call=and_then)
-
-
-class Response(Generic[T]):
-    @classmethod
-    async def of(cls, *values: T) -> AsyncIterable[T]:
-        for item in values:
-            yield item

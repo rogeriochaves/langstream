@@ -7,6 +7,11 @@ from typing import AsyncIterable, List, TypeVar
 T = TypeVar("T")
 
 
+async def as_async_iterable(*values: T) -> AsyncIterable[T]:
+    for item in values:
+        yield item
+
+
 async def collect(async_iterable: AsyncIterable[T]) -> List[T]:
     """
     Collect items from an async iterable into a list.
