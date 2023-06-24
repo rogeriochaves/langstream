@@ -11,6 +11,7 @@ from typing import (
     List,
     TypeVar,
     Union,
+    cast,
 )
 
 from litechain.utils.async_iterable import as_async_iterable, collect, join
@@ -32,8 +33,9 @@ class BaseChain(ABC, Generic[T, U]):
         result = self._call(input)
         return self._wrap(result)
 
+    @classmethod
     @abstractmethod
-    def _wrap(self, value: U) -> U:
+    def _wrap(cls, value: U) -> U:
         return value
 
     @abstractmethod
@@ -70,7 +72,8 @@ class Chain(BaseChain[T, U]):
         result = self._call(input)
         return self._wrap(result)
 
-    def _wrap(self, value: Union[AsyncIterable[V], V]) -> AsyncIterable[V]:
+    @classmethod
+    def _wrap(cls, value: Union[AsyncIterable[V], V]) -> AsyncIterable[V]:
         if isinstance(value, AsyncIterable):
             return value
         return as_async_iterable(value)
@@ -124,7 +127,8 @@ class SingleOutputChain(BaseChain[T, U]):
         result = self.call(input)
         return self._wrap(result)
 
-    def _wrap(self, value: Union[Awaitable[V], V]) -> Awaitable[V]:
+    @classmethod
+    def _wrap(cls, value: Union[Awaitable[V], V]) -> Awaitable[V]:
         async def as_awaitable(value: V) -> V:
             return value
 
@@ -138,10 +142,16 @@ class SingleOutputChain(BaseChain[T, U]):
 
         return SingleOutputChain[T, V](lambda input: map(input))
 
-    def and_then(self, next: Callable[[U], AsyncIterable[V]]) -> "Chain[T, V]":
+    def and_then(
+        self,
+        next: Callable[[U], Union[AsyncIterable[V], Awaitable[V], V]],
+    ) -> "Chain[T, V]":
         async def and_then(input: T) -> AsyncIterable[V]:
             u = await self(input)
-            async for v in next(u):
+            vs = next(u)
+            if isinstance(vs, Awaitable):
+                vs = cast(V, await vs)
+            async for v in Chain._wrap(vs):
                 yield v
 
         return Chain[T, V](and_then)

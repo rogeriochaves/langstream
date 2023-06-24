@@ -1,7 +1,7 @@
 import asyncio
 import random
 import unittest
-from typing import Iterable, TypedDict
+from typing import Iterable, List, TypedDict
 
 from litechain.core.chain import Chain, SingleOutputChain
 from litechain.utils.async_iterable import as_async_iterable, join
@@ -117,24 +117,25 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
         result = await exclamation_chain("hello world")
         self.assertEqual(result, "hello world!")
 
-    # TODO: should be SingleOutputChain, accept both actually
-    # async def test_it_is_thenable(self):
-    #     exclamation_stream_chain = SingleOutputChain[str, List[str]](
-    #         lambda input: [f"{input}", "!"]
-    #     )
-    #     joiner_chain = SingleOutputChain[Iterable[str], str](lambda input: ", ".join(input))
+    async def test_it_is_thenable(self):
+        exclamation_stream_chain = SingleOutputChain[str, List[str]](
+            lambda input: [f"{input}", "!"]
+        )
+        joiner_chain = SingleOutputChain[Iterable[str], str](
+            lambda input: ", ".join(input)
+        )
 
-    #     chain = exclamation_stream_chain.and_then(joiner_chain)
+        chain = exclamation_stream_chain.and_then(joiner_chain)
 
-    #     result = await join(chain("hello world"))
-    #     self.assertEqual(result, "hello world, !")
+        result = await join(chain("hello world"))
+        self.assertEqual(result, "hello world, !")
 
-    # async def test_it_is_thenable_with_single_value_return(self):
-    #     exclamation_stream_chain = SingleOutputChain[str, List[str]](
-    #         lambda input: [f"{input}", "!"]
-    #     )
+    async def test_it_is_thenable_with_single_value_return(self):
+        exclamation_stream_chain = SingleOutputChain[str, List[str]](
+            lambda input: [f"{input}", "!"]
+        )
 
-    #     chain = exclamation_stream_chain.and_then(lambda input: ", ".join(input))
+        chain = exclamation_stream_chain.and_then(lambda input: ", ".join(input))
 
-    #     result = await join(chain("hello world"))
-    #     self.assertEqual(result, "hello world, !")
+        result = await join(chain("hello world"))
+        self.assertEqual(result, "hello world, !")
