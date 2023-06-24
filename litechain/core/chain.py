@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import asyncio
 from typing import (
     Any,
@@ -8,6 +9,7 @@ from typing import (
     Generic,
     Iterable,
     List,
+    Type,
     TypeVar,
     Union,
 )
@@ -17,25 +19,31 @@ from litechain.utils.async_iterable import as_async_iterable, collect, join
 T = TypeVar("T")
 U = TypeVar("U")
 V = TypeVar("V")
+Wrapper = TypeVar("Wrapper", bound=Type)
 
 
-class BaseChain(Generic[T, U]):
-    _call: Callable[[T], U]
+class BaseChain(ABC, Generic[T, U, Wrapper]):
+    _call: Callable[[T], Union[Wrapper[U], U]]
 
     def __init__(self, call: Callable[[T], U]) -> None:
         self._call = call
 
-    def __call__(self, input: T) -> U:
-        return self._call(input)
+    def __call__(self, input: T) -> Wrapper[U]:
+        result = self._call(input)
+        return self._wrap(result)
 
-    def map(self, fn: Callable[[U], V]) -> "BaseChain[T, V]":
+    @abstractmethod
+    def _wrap(self, value: Union[Wrapper[U], U]) -> Wrapper[V]:
+        pass
+
+    def map(self, fn: Callable[[U], V]) -> "BaseChain[T, V, Wrapper]":
         """
         Maps the results without extracing them of the wrapper (Awaitable, AwaitableIterator),
         allowing you to map value on the fly
         """
         return self.__class__(lambda input: fn(self(input)))
 
-    def and_then(self, next: Callable[[U], V]) -> "BaseChain[T, V]":
+    def and_then(self, next: Callable[[U], V]) -> "BaseChain[T, V, Wrapper]":
         """
         Extracts the results outside it's wrapper box (Awaitable, AwaitableIterator) and then map it.
         On the base class, since there is no wrapper, it works exactly as map
@@ -43,22 +51,23 @@ class BaseChain(Generic[T, U]):
 
         return self.map(next)
 
-    def join(self: "BaseChain[T, str]", join_with="") -> "BaseChain[T, str]":
+    def join(self: "BaseChain[T, str, Wrapper]", join_with="") -> "BaseChain[T, str, Wrapper]":
         """
         If the chain produces string, waits for all of them to arrive and concatenate it all
         """
         return self
 
 
-class Chain(BaseChain[T, U]):
+class Chain(BaseChain[T, U, AsyncIterable]):
     _call: Callable[[T], Union[AsyncIterable[U], U]]
 
     def __init__(self, call: Callable[[T], Union[AsyncIterable[U], U]]) -> None:
         self._call = call
 
-    def __call__(self, input: T) -> AsyncIterable[U]:
-        result = self._call(input)
-        return self._wrap(result)
+    def _wrap(self, value: Union[AsyncIterable[V], V]) -> AsyncIterable[V]:
+        if isinstance(value, AsyncIterable):
+            return value
+        return as_async_iterable(value)
 
     def map(self, fn: Callable[[U], V]) -> "Chain[T, V]":
         async def map(input: T) -> AsyncIterable[V]:
@@ -98,26 +107,20 @@ class Chain(BaseChain[T, U]):
         # TODO
         raise NotImplementedError
 
-    def _wrap(self, value: Union[AsyncIterable[V], V]) -> AsyncIterable[V]:
-        if isinstance(value, AsyncIterable):
-            return value
-        return as_async_iterable(value)
 
-
-class SingleOutputChain(BaseChain[T, U]):
+class SingleOutputChain(BaseChain[T, U, Awaitable]):
     call: Callable[[T], Union[Awaitable[U], U]]
 
     def __init__(self, call: Callable[[T], Union[Awaitable[U], U]]) -> None:
         self.call = call
 
-    def __call__(self, input: T) -> Awaitable[U]:
+    def _wrap(self, value: Union[Awaitable[V], V]) -> Awaitable[V]:
         async def as_awaitable(value: V) -> V:
             return value
 
-        result = self.call(input)
-        if isinstance(result, Awaitable):
-            return result
-        return as_awaitable(result)
+        if isinstance(value, Awaitable):
+            return value
+        return as_awaitable(value)
 
     def map(self, fn: Callable[[U], V]) -> "SingleOutputChain[T, V]":
         async def map(input: T) -> V:
