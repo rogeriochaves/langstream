@@ -1,5 +1,5 @@
 import unittest
-from typing import Iterable
+from typing import Iterable, TypedDict
 
 from litechain.core.chain import Chain, SingleOutputChain
 from litechain.utils.async_iterable import as_async_iterable, join
@@ -44,6 +44,30 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
 
         result = await join(chain("world"))
         self.assertEqual(result, "hello world!")
+
+    async def test_it_uses_a_simple_dict_as_memory(
+        self,
+    ):
+        class Memory(TypedDict):
+            history: str
+
+        def save_to_memory(token: str):
+            memory["history"] += token
+            return token
+
+        memory = Memory(history="")
+
+        chain = Chain[str, str](
+            lambda input: "how are you?"
+            if "hello" in memory["history"]
+            else f"hello {input}"
+        ).map(save_to_memory)
+
+        result = await join(chain("José"))
+        self.assertEqual(result, "hello José")
+
+        result = await join(chain("hello"))
+        self.assertEqual(result, "how are you?")
 
 
 class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
