@@ -1,8 +1,8 @@
 import unittest
 from typing import Iterable
 
-from lightchain.core.chain import Chain, SingleOutputChain
-from lightchain.utils.async_iterable import as_async_iterable, join
+from litechain.core.chain import Chain, SingleOutputChain
+from litechain.utils.async_iterable import as_async_iterable, join
 
 
 class ChainTestCase(unittest.IsolatedAsyncioTestCase):

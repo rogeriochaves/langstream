@@ -10,5 +10,5 @@ Run all the tests:
 
 ```
 python -m unittest tests/**/*.py
-python -m doctest -v lightchain/**/*.py
+python -m doctest -v litechain/**/*.py
 ```

@@ -8,7 +8,7 @@ from typing import (
     Union,
 )
 
-from lightchain.utils.async_iterable import as_async_iterable, collect, join
+from litechain.utils.async_iterable import as_async_iterable, collect, join
 
 T = TypeVar("T")
 U = TypeVar("U")
