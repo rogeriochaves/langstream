@@ -1,18 +1,18 @@
 """
-Utils for working with Python's AsyncIterable with the same primitives as chains
+Utils for working with Python's AsyncGenerator with the same primitives as chains
 """
 import asyncio
-from typing import AsyncIterable, List, TypeVar
+from typing import Any, AsyncGenerator, List, TypeVar
 
 T = TypeVar("T")
 
 
-async def as_async_iterable(*values: T) -> AsyncIterable[T]:
+async def as_async_generator(*values: T) -> AsyncGenerator[T, Any]:
     for item in values:
         yield item
 
 
-async def collect(async_iterable: AsyncIterable[T]) -> List[T]:
+async def collect(async_iterable: AsyncGenerator[T, Any]) -> List[T]:
     """
     Collect items from an async iterable into a list.
 
@@ -31,7 +31,7 @@ async def collect(async_iterable: AsyncIterable[T]) -> List[T]:
     return [item async for item in async_iterable]
 
 
-async def join(async_iterable: AsyncIterable[str], join_with="") -> str:
+async def join(async_iterable: AsyncGenerator[str, Any], join_with="") -> str:
     """
     Collect items from an async iterable and join them in a string.
 
@@ -51,7 +51,7 @@ async def join(async_iterable: AsyncIterable[str], join_with="") -> str:
     return join_with.join(lst)
 
 
-async def gather(async_iterables: List[AsyncIterable[T]]) -> List[List[T]]:
+async def gather(async_iterables: List[AsyncGenerator[T, Any]]) -> List[List[T]]:
     """
     Gather items from a list of async iterables into a list of lists.
 
@@ -71,5 +71,5 @@ async def gather(async_iterables: List[AsyncIterable[T]]) -> List[List[T]]:
     return await asyncio.gather(*(collect(iterable) for iterable in async_iterables))
 
 
-async def next_item(async_iterable: AsyncIterable[T]) -> T:
+async def next_item(async_iterable: AsyncGenerator[T, Any]) -> T:
     return await async_iterable.__aiter__().__anext__()

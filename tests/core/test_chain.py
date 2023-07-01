@@ -3,7 +3,8 @@ import asyncio
 import random
 import unittest
 from typing import (
-    AsyncIterable,
+    Any,
+    AsyncGenerator,
     Iterable,
     List,
     TypeVar,
@@ -12,7 +13,7 @@ from typing import (
 )
 
 from litechain.core.chain import Chain, ChainOutput, SingleOutputChain
-from litechain.utils.async_iterable import as_async_iterable, collect, next_item
+from litechain.utils.async_generator import as_async_generator, collect, next_item
 from litechain.utils.chain import join_final_output
 
 T = TypeVar("T")
@@ -32,11 +33,10 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
             result,
             [ChainOutput(chain="ExclamationChain", output="hello world!", final=True)],
         )
-        # self.assertEqual(result, "hello world!")
 
     async def test_it_is_callable_with_async_iterable_return(self):
         exclamation_chain = Chain[str, str](
-            "ExclamationChain", lambda input: as_async_iterable(input, "!")
+            "ExclamationChain", lambda input: as_async_generator(input, "!")
         )
 
         result = await collect(exclamation_chain("hello world"))
@@ -50,7 +50,7 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
 
     async def test_it_is_mappable_as_values_arrive(self):
         exclamation_chain = Chain[str, str](
-            "ExclamationChain", lambda input: as_async_iterable(input, "!")
+            "ExclamationChain", lambda input: as_async_generator(input, "!")
         )
         chain = exclamation_chain.map(
             lambda input: input.replace("world", "planet")
@@ -98,7 +98,7 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
 
     async def test_it_is_thenable(self):
         exclamation_chain = Chain[str, str](
-            "ExclamationChain", lambda input: as_async_iterable(f"{input}", "!")
+            "ExclamationChain", lambda input: as_async_generator(f"{input}", "!")
         )
         chain = exclamation_chain.and_then(lambda input: ", ".join(input))
 
@@ -114,7 +114,7 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
 
     async def test_it_is_thenable_with_single_value_return(self):
         exclamation_chain = Chain[str, str](
-            "ExclamationChain", lambda input: as_async_iterable(f"{input}", "!")
+            "ExclamationChain", lambda input: as_async_generator(f"{input}", "!")
         )
 
         chain = exclamation_chain.and_then(lambda input: ", ".join(input))
@@ -125,14 +125,14 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
     async def test_it_gets_the_results_as_they_come(self):
         blocked = True
 
-        async def block_for_flag(xs: Iterable[T]) -> AsyncIterable[T]:
+        async def block_for_flag(xs: Iterable[T]) -> AsyncGenerator[T, Any]:
             while blocked:
                 pass
             for x in xs:
                 yield x
 
         exclamation_chain = Chain[str, str](
-            "ExclamationChain", lambda input: as_async_iterable(f"{input}", "!")
+            "ExclamationChain", lambda input: as_async_generator(f"{input}", "!")
         )
         blocking_chain = Chain[Iterable[str], str]("BlockingChain", block_for_flag)
         JoinerChain = Chain[Iterable[str], str](
@@ -165,14 +165,14 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
     async def test_it_is_composable_by_waiting_the_first_chain_to_finish(self):
         blocked = True
 
-        async def block_for_flag(xs: Iterable[T]) -> AsyncIterable[T]:
+        async def block_for_flag(xs: Iterable[T]) -> AsyncGenerator[T, Any]:
             while blocked:
                 pass
             for x in xs:
                 yield x
 
         hello_chain = Chain[str, str](
-            "HelloChain", lambda input: as_async_iterable("hello ", input)
+            "HelloChain", lambda input: as_async_generator("hello ", input)
         )
         blocking_chain = Chain[Iterable[str], str]("BlockingChain", block_for_flag)
         exclamation_chain = Chain[str, str](
@@ -210,7 +210,7 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
     async def test_it_collects_the_outputs_to_a_list(self):
         chain: Chain[int, List[int]] = (
             Chain[int, int](
-                "RangeChain", lambda start: as_async_iterable(*range(start, 5))
+                "RangeChain", lambda start: as_async_generator(*range(start, 5))
             )
             .map(lambda input: input + 1)
             .collect()
@@ -234,13 +234,13 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
         )
 
     async def test_it_can_process_many_things_in_parallel(self):
-        async def increment_number(num: int) -> AsyncIterable[int]:
+        async def increment_number(num: int) -> AsyncGenerator[int, Any]:
             await asyncio.sleep(random.random() * 0.5)  # heavy processing
             yield num + 1
 
         chain: Chain[int, str] = (
             Chain[int, int](
-                "ParallelChain", lambda start: as_async_iterable(*range(start, 100))
+                "ParallelChain", lambda start: as_async_generator(*range(start, 100))
             )
             .map(increment_number)
             .collect()
@@ -258,13 +258,13 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
             )
             self.assertIsInstance(
                 (await next_item(outputs)).output,
-                AsyncIterable,
+                AsyncGenerator,
             )
         collect_next = await next_item(outputs)
         self.assertEqual(len(cast(List, collect_next.output)), 100)
         self.assertIsInstance(
             cast(List, collect_next.output)[0],
-            AsyncIterable,
+            AsyncGenerator,
         )
         self.assertEqual(
             await next_item(outputs),
@@ -292,7 +292,7 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
         )
 
     async def test_it_can_gather_chain_mappings(self):
-        async def increment_number(num: int) -> AsyncIterable[int]:
+        async def increment_number(num: int) -> AsyncGenerator[int, Any]:
             await asyncio.sleep(random.random() * 0.5)  # heavy processing
             yield num + 1
 
@@ -300,7 +300,7 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
 
         chain: Chain[int, str] = (
             Chain[int, int](
-                "ParallelChain", lambda start: as_async_iterable(*range(start, 100))
+                "ParallelChain", lambda start: as_async_generator(*range(start, 100))
             )
             .map(inc_chain)
             .collect()
