@@ -380,7 +380,7 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
         result = await join_final_output(exclamation_chain("hello world"))
         self.assertEqual(result, "hello world!")
 
-    async def test_it_is_thenable(self):
+    async def test_it_is_thenable_keeping_the_proper_chain_names(self):
         exclamation_list_chain = SingleOutputChain[str, List[str]](
             "ExclamationListChain", lambda input: [f"{input}", "!"]
         )
@@ -388,7 +388,9 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
             "JoinerChain", lambda input: ", ".join(input)
         )
 
-        chain = exclamation_list_chain.and_then(joiner_chain)
+        chain = exclamation_list_chain.and_then(joiner_chain).map(
+            lambda input: input + "~"
+        )
 
         outputs = chain("hello world")
         self.assertEqual(
@@ -399,7 +401,11 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(
             await next_item(outputs),
-            ChainOutput(chain="JoinerChain", output="hello world, !", final=True),
+            ChainOutput(chain="JoinerChain", output="hello world, !", final=False),
+        )
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(chain="JoinerChain@map", output="hello world, !~", final=True),
         )
 
     async def test_it_is_thenable_with_single_value_return(self):

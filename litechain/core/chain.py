@@ -188,7 +188,8 @@ class SingleOutputChain(Chain[T, U]):
         self, next: Callable[[U], Union[AsyncGenerator[ChainOutput[V, W], Any], V]]
     ) -> "Chain[T, V]":
         next_name = f"{self.name}@and_then"
-        # TODO: hasattr(next, "name")
+        if hasattr(next, "name"):
+            next_name = next.name
 
         async def and_then(
             input: T,
@@ -210,7 +211,6 @@ class SingleOutputChain(Chain[T, U]):
             async for v in iter_v:
                 yield cast(ChainOutput[V, Union[U, V]], v)
 
-        # TODO: next_name
         return Chain[T, V](next_name, and_then)
 
     def gather(
