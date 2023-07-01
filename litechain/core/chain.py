@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
 from typing import (
@@ -31,63 +30,7 @@ class ChainOutput(Generic[T, V]):
     final: bool
 
 
-# TODO: not needed
-class BaseChain(ABC, Generic[T, U]):
-    name: str
-    _call: Callable[[T], U]
-
-    @abstractmethod
-    def __init__(self, name: str, call: Callable[[T], U]) -> None:
-        self.name = name
-        self._call = call
-
-    @abstractmethod
-    def __call__(self, input: T) -> ChainOutput[U, W]:
-        result = self._call(input)
-        return self._wrap(result)
-
-    @abstractmethod
-    def _wrap(self, value: U) -> ChainOutput[U, W]:
-        return self._output_wrap(value)
-
-    def _output_wrap(
-        self, value: Union[ChainOutput[V, W], V], final=None, name=None
-    ) -> ChainOutput[V, Union[V, W]]:
-        if isinstance(value, ChainOutput):
-            final = final if final is not None else value.final
-            return ChainOutput[V, Union[V, W]](
-                chain=value.chain, output=value.output, final=final
-            )
-
-        final = final if final is not None else True
-        return ChainOutput[V, Union[V, W]](
-            chain=self.name if name is None else name, output=value, final=final
-        )
-
-    @abstractmethod
-    def map(self, fn: Callable[[U], V]) -> "BaseChain[T, V]":
-        """
-        Maps the results without extracing them of the wrapper (Awaitable, AwaitableIterator),
-        allowing you to map value on the fly
-        """
-        return self.__class__(self.name, lambda input: fn(self(input).output))
-
-    @abstractmethod
-    def and_then(self, next: Callable[[U], V]) -> "BaseChain[T, V]":
-        """
-        Extracts the results outside it's wrapper box (Awaitable, AwaitableIterator) and then map it.
-        On the base class, since there is no wrapper, it works exactly as map
-        """
-        return self.map(next)
-
-    def join(self: "BaseChain[T, str]", join_with="") -> "BaseChain[T, str]":
-        """
-        If the chain produces string, waits for all of them to arrive and concatenate it all
-        """
-        return self
-
-
-class Chain(BaseChain[T, U]):
+class Chain(Generic[T, U]):
     _call: Callable[[T], Union[AsyncIterable[ChainOutput[U, Any]], AsyncIterable[U], U]]
 
     def __init__(
@@ -118,6 +61,20 @@ class Chain(BaseChain[T, U]):
         if isinstance(value, AsyncIterable):
             return _wrap(value)
         return _wrap(as_async_iterable(value))
+
+    def _output_wrap(
+        self, value: Union[ChainOutput[V, W], V], final=None, name=None
+    ) -> ChainOutput[V, Union[V, W]]:
+        if isinstance(value, ChainOutput):
+            final = final if final is not None else value.final
+            return ChainOutput[V, Union[V, W]](
+                chain=value.chain, output=value.output, final=final
+            )
+
+        final = final if final is not None else True
+        return ChainOutput[V, Union[V, W]](
+            chain=self.name if name is None else name, output=value, final=final
+        )
 
     async def _reyield(
         self, async_iterable: AsyncIterable[ChainOutput[U, U]]
@@ -275,7 +232,9 @@ class SingleOutputChain(Chain[T, U]):
                     f"Expected item at the end of the chain, found None for {self.name}@gather"
                 )
 
-            async def consume_async_generator(generator: AsyncIterable[X]) -> Iterable[X]:
+            async def consume_async_generator(
+                generator: AsyncIterable[X],
+            ) -> Iterable[X]:
                 return [item async for item in generator]
 
             # TODO: should we really wait for everything to arrive before calling asyncio gather? Can we call it during the previous reyield?
@@ -302,5 +261,3 @@ class SingleOutputChain(Chain[T, U]):
             yield cast(ChainOutput[List[List[V]], Union[U, List[List[V]]]], clean_vss)
 
         return SingleOutputChain[T, List[List[V]]](f"{self.name}@gather", gather)
-
-

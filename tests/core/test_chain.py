@@ -13,7 +13,7 @@ from typing import (
     cast,
 )
 
-from litechain.core.chain import BaseChain, Chain, ChainOutput, SingleOutputChain
+from litechain.core.chain import Chain, ChainOutput, SingleOutputChain
 from litechain.utils.async_iterable import as_async_iterable, collect, join
 
 T = TypeVar("T")
@@ -44,33 +44,6 @@ async def collect_final_output(
     async_iterable: AsyncIterable[ChainOutput[T, Any]]
 ) -> Iterable[T]:
     return await collect(filter_final_output(async_iterable))
-
-
-class ConcreteBaseChain(BaseChain[T, U]):
-    def __init__(self, name: str, call: Callable[[T], U]) -> None:
-        super().__init__(name, call)
-
-    def __call__(self, input: T) -> ChainOutput[U, W]:
-        return super().__call__(input)
-
-    def _wrap(self, value: U) -> ChainOutput[U, W]:
-        return super()._wrap(value)
-
-    def map(self, fn: Callable[[U], V]) -> "BaseChain[T, V]":
-        return super().map(fn)
-
-    def and_then(self, next: Callable[[U], V]) -> "BaseChain[T, V]":
-        return super().map(next)
-
-
-class BaseChainTestCase(unittest.IsolatedAsyncioTestCase):
-    async def test_it_executes_the_chain_when_called(self):
-        chain = ConcreteBaseChain[str, str]("IdentityChain", lambda input: input)
-
-        result = chain("foo")
-        self.assertEqual(
-            result, ChainOutput(chain="IdentityChain", output="foo", final=True)
-        )
 
 
 class ChainTestCase(unittest.IsolatedAsyncioTestCase):
