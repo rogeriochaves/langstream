@@ -380,6 +380,24 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
         result = await join_final_output(exclamation_chain("hello world"))
         self.assertEqual(result, "hello world!")
 
+    async def test_it_is_mappable(self):
+        exclamation_chain = SingleOutputChain[str, str](
+            "ExclamationChain", lambda input: f"{input}!"
+        )
+        chain = exclamation_chain.map(lambda input: input.replace("world", "planet"))
+
+        outputs = chain("hello world")
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(chain="ExclamationChain", output="hello world!", final=False),
+        )
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="ExclamationChain@map", output="hello planet!", final=True
+            ),
+        )
+
     async def test_it_is_thenable_keeping_the_proper_chain_names(self):
         exclamation_list_chain = SingleOutputChain[str, List[str]](
             "ExclamationListChain", lambda input: [f"{input}", "!"]

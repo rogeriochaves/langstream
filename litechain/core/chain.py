@@ -184,6 +184,23 @@ class SingleOutputChain(Chain[T, U]):
                 final_value = u.output
             yield (final_value, u_rewrapped)
 
+    def map(self, fn: Callable[[U], V]) -> "SingleOutputChain[T, V]":
+        async def map(input: T) -> AsyncGenerator[ChainOutput[V, Union[U, V]], Any]:
+            # Reyield previous chain so we never block the stream, and at the same time yield mapped values
+            final_u: Optional[U] = None
+            async for value, to_reyield in self._reyield(self(input), "map"):
+                yield cast(ChainOutput[V, Union[U, V]], to_reyield)
+                final_u = value
+
+            if final_u is None:
+                # TODO: try to make this happen with a bad use case, is it even breakable?
+                raise Exception(
+                    f"Expected item at the end of the chain, found None for {self.name}@map"
+                )
+            yield cast(ChainOutput[V, Union[U, V]], fn(final_u))
+
+        return SingleOutputChain[T, V](f"{self.name}@map", lambda input: map(input))
+
     def and_then(
         self, next: Callable[[U], Union[AsyncGenerator[ChainOutput[V, W], Any], V]]
     ) -> "Chain[T, V]":
