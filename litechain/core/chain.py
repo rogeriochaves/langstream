@@ -159,10 +159,9 @@ class Chain(Generic[T, U]):
         return SingleOutputChain[T, str](f"{self.name}@join", _join)
 
     def gather(
-        self: "Chain[T, List[AsyncGenerator[V, Any]]]",
-    ) -> "Chain[T, List[V]]":
-        # TODO
-        raise NotImplementedError
+        self: "Union[Chain[T, AsyncGenerator[ChainOutput[V, W], Any]], Chain[T, AsyncGenerator[V, Any]]]",
+    ) -> "SingleOutputChain[T, List[List[V]]]":
+        return self.collect().gather()
 
 
 class SingleOutputChain(Chain[T, U]):

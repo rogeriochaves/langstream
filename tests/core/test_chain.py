@@ -312,6 +312,24 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
         result = await join_final_output(chain(0))
         self.assertEqual(result, "5050")
 
+    async def test_it_can_gather_direclty_from_the_chain(self):
+        async def increment_number(num: int) -> AsyncGenerator[int, Any]:
+            await asyncio.sleep(random.random() * 0.5)  # heavy processing
+            yield num + 1
+
+        chain: Chain[int, str] = (
+            Chain[int, int](
+                "ParallelChain", lambda start: as_async_generator(*range(start, 100))
+            )
+            .map(increment_number)
+            .gather()
+            .and_then(lambda result: sum([x[0] for x in result]))
+            .map(lambda x: str(x))
+        )
+
+        result = await join_final_output(chain(0))
+        self.assertEqual(result, "5050")
+
     async def test_it_uses_a_simple_dict_as_memory(
         self,
     ):
