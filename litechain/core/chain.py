@@ -1,3 +1,85 @@
+"""
+Chain
+=====
+
+The `Chain` is the core concept of LiteChain for working with LLMs (Large Language Models), it
+provides a way to create composable calls to LLMs and any other processing elements.
+
+Since LLMs produce one token at a time, chains are essentially Python AsyncGenerators under the
+hood, with type-safe composable functions on top. By making use of the type hints and the
+composable functions, LiteChain makes it very easy to build and debug a complex chain of execution
+for working with LLMs.
+
+Since async generation streams is the fundamental block of LiteChain, it's processing should never be blocking.
+When executing a Chain with input, you get back an AsyncGenerator that produces the outputs of all
+pieces in the whole Chain, not only the final one. This means you have access to the each step of
+what is happening, making it easier to display and debug. The final output at the edge of the chain
+is marked as `final` when you process the Chain stream, with helpers available to filter them.
+
+On this module, we document the low-level concepts of Chains, so we use simple examples of hardcoded
+string generation. But one you learn the composition fundamentals here, you can expect to apply the
+same functions for composing everythere in LiteChain.
+
+Core Concepts
+-------------
+
+Chain:
+    A Chain takes in a name and a function, which takes an input and produces an asynchronous stream of outputs from it (AsyncGenerator).
+    Chains can be chained together with the composition methods below, and their input and output types can be
+    specifying in the type signature.
+
+SingleOutputChain:
+    A SingleOutputChain is a subtype of Chain that produces a single asynchronous final output after processing,
+    rather than an asynchronous stream of outputs.
+
+Composition Methods
+------------------
+
+map:
+    Transforms the output of the Chain by applying a function to each item as they arrive. This is
+    non-blocking and continues processing the chain in parallel.
+
+and_then:
+    Applies a function on the list of results of the Chain. Differently from `map`, this is blocking,
+    and collects the outputs before applying the function. It can also take another Chain as argument,
+    effectively composing two Chains together.
+
+collect:
+    Collects the output of a Chain into a list. This is a blocking operation and can be used
+    when the next processing step requires the full output at once.
+
+join:
+    Joins the output of a string producing Chain into a single string by concatenating each item.
+
+gather:
+    Gathers results from a chain that produces multiple async generators and processes them in parallel,
+    returning a list of lists of the results of all generators, allowing you to execute many Chains at
+    the same time, this is similar to `asyncio.gather`.
+
+Examples
+--------
+
+Using Chain to process text data:
+
+    >>> from litechain import Chain, as_async_generator, collect_final_output
+    >>> import asyncio
+    ...
+    >>> async def example():
+    ...     # Chain that splits a sentence into words
+    ...     words_chain = Chain[str, str]("WordsChain", lambda sentence: as_async_generator(*sentence.split(" ")))
+    ...     # Chain that capitalizes each word
+    ...     capitalized_chain = words_chain.map(lambda word: word.capitalize())
+    ...     # Join the capitalized words into a single string
+    ...     chain = capitalized_chain.join(" ")
+    ...
+    ...     async for output in chain("this is an example"):
+    ...         if output.final:
+    ...             return output.output
+    ...
+    >>> asyncio.run(example())
+    'This Is An Example'
+
+"""
 import asyncio
 from dataclasses import dataclass
 from typing import (
@@ -25,6 +107,41 @@ X = TypeVar("X")
 
 @dataclass
 class ChainOutput(Generic[T, V]):
+    """
+    ChainOutput is a data class that represents the output of a Chain at each step.
+
+    Attributes
+    ----------
+    chain : str
+        The name of the chain that produced this output. This helps in identifying
+        which part of the processing pipeline the output is coming from.
+
+    output : V
+        The actual output data produced by the Chain. This can be of any type produced by any step of the whole Chain.
+
+    final : bool
+        A boolean flag indicating whether this output is the final output of the Chain.
+        Only the outputs at the end of the chain are marked as "final".
+
+    Example
+    -------
+
+    >>> from litechain import Chain
+    >>> import asyncio
+    ...
+    >>> async def example():
+    ...     greet_chain = Chain[str, str]("GreetingChain", lambda name: f"Hello, {name}!")
+    ...     polite_chain = greet_chain.map(lambda greeting: f"{greeting} How are you?")
+    ...
+    ...     async for output in polite_chain("Alice"):
+    ...         # Output is of type ChainOutput
+    ...         print(output)
+    ...
+    >>> asyncio.run(example())
+    ChainOutput(chain='GreetingChain', output='Hello, Alice!', final=False)
+    ChainOutput(chain='GreetingChain@map', output='Hello, Alice! How are you?', final=True)
+    """
+
     chain: str
     output: V
     final: bool
@@ -92,6 +209,41 @@ class Chain(Generic[T, U]):
             yield (values, u_rewrapped)
 
     def map(self, fn: Callable[[U], V]) -> "Chain[T, V]":
+        """
+        Maps the output of the current chain through a function as they arrive.
+
+        The transform function will receive the current output of the chain and
+        should return a modified version of it. This method is non-blocking and
+        will continue processing the chain in parallel.
+
+        Example:
+
+        >>> from litechain import Chain, join_final_output
+        >>> import asyncio
+        ...
+        >>> async def example():
+        ...     greet_chain = Chain[str, str]("GreetingChain", lambda name: f"Hello, {name}!")
+        ...     polite_chain = greet_chain.map(lambda greeting: f"{greeting} How are you?")
+        ...     return await join_final_output(polite_chain("Alice"))
+        ...
+        >>> asyncio.run(example())
+        'Hello, Alice! How are you?'
+
+
+        Example of processing one token at a time:
+
+        >>> from litechain import Chain, as_async_generator, join_final_output
+        >>> import asyncio
+        ...
+        >>> async def example():
+        ...     words_chain = Chain[str, str]("WordsChain", lambda sentence: as_async_generator(*sentence.split(" "))) # produces one word at a time
+        ...     accronym_chain = words_chain.map(lambda word: word.upper()[0]) # uppercases each word and take the first letter
+        ...     return await join_final_output(accronym_chain("as soon as possible"))
+        ...
+        >>> asyncio.run(example())
+        'ASAP'
+        """
+
         async def map(input: T) -> AsyncGenerator[ChainOutput[V, Union[U, V]], Any]:
             # Reyield previous chain so we never block the stream, and at the same time yield mapped values
             prev_len_values = 0
@@ -107,6 +259,45 @@ class Chain(Generic[T, U]):
         self,
         next: Callable[[Iterable[U]], Union[AsyncGenerator[ChainOutput[V, W], Any], V]],
     ) -> "Chain[T, V]":
+        """
+        Processes the output of the current chain through a transformation function or another chain.
+
+        Unlike the map method, which applies transformations to outputs as they arrive,
+        the and_then method first collects all the outputs and then passes them to the transformation function or the next chain.
+        This method is blocking and will wait for the entire chain to be processed before applying the transformation.
+
+        If `transform` is a function, it should accept the list of collected outputs and return a modified version of it.
+        If `transform` is another chain, it is used to process the list of collected outputs.
+
+        Example using a function:
+
+        >>> from litechain import Chain, as_async_generator, collect_final_output
+        >>> import asyncio
+        ...
+        >>> async def example():
+        ...     word_chain = Chain[str, str]("WordChain", lambda word: as_async_generator(word, "!"))
+        ...     count_chain : Chain[str, int] = word_chain.and_then(lambda outputs: len(list(outputs)))
+        ...     return await collect_final_output(count_chain("Hi"))
+        ...
+        >>> asyncio.run(example())
+        [2]
+
+
+        Example using another chain:
+
+        >>> from litechain import Chain, as_async_generator, join_final_output
+        >>> import asyncio
+        ...
+        >>> async def example():
+        ...     words_chain = Chain[str, str]("WordsChain", lambda sentence: as_async_generator(*sentence.split(" "))) # produces one word at a time
+        ...     acronym_chain = Chain[list[str], str]("AcronymChain", lambda words: "".join(word.upper()[0] for word in words)) # produces acronym
+        ...     composed_chain = words_chain.and_then(acronym_chain)
+        ...     return await join_final_output(composed_chain("as soon as possible"))
+        ...
+        >>> asyncio.run(example())
+        'ASAP'
+        """
+
         next_name = f"{self.name}@and_then"
         if hasattr(next, "name"):
             next_name = next.name
@@ -128,6 +319,27 @@ class Chain(Generic[T, U]):
         return Chain[T, V](next_name, and_then)
 
     def collect(self: "Chain[T, U]") -> "SingleOutputChain[T, List[U]]":
+        """
+        Collects all the outputs produced by the chain and returns them as a list.
+
+        This method is blocking useful when the next chain or processing step needs to have access to the
+        entire output all at once, rather than processing elements as they arrive.
+
+        Example:
+
+        >>> from litechain import Chain, as_async_generator, collect_final_output
+        >>> import asyncio
+        ...
+        >>> async def example():
+        ...     word_chain: Chain[str, List[str]] = Chain[str, str](
+        ...         "WordChain", lambda word: as_async_generator(word, "!")
+        ...     ).collect()
+        ...     return await collect_final_output(word_chain("Hi"))
+        ...
+        >>> asyncio.run(example())
+        [['Hi', '!']]
+        """
+
         async def _collect(
             input: T,
         ) -> AsyncGenerator[ChainOutput[List[U], Union[U, List[U]]], Any]:
@@ -142,7 +354,35 @@ class Chain(Generic[T, U]):
 
         return SingleOutputChain[T, List[U]](f"{self.name}@collect", _collect)
 
-    def join(self: "Chain[T, str]", join_with="") -> "SingleOutputChain[T, str]":
+    def join(self: "Chain[T, str]", separator="") -> "SingleOutputChain[T, str]":
+        """
+        Joins the output of a string-producing chain into a single string.
+
+        The `join` method concatenates each item in the output of the chain, using the
+        provided separator between each element. This is particularly useful when working
+        with text, and you want to merge all the generated tokens.
+
+        Note that this method blocks until all outputs of the chain are available, as it
+        needs to wait for the complete output to perform the join operation.
+
+        :param separator: A string that will be used as a separator between the elements.
+                          Default is an empty string.
+
+        Example:
+
+        >>> from litechain import Chain, as_async_generator, join_final_output
+        >>> import asyncio
+        ...
+        >>> async def example():
+        ...     words_chain = Chain[str, str]("WordsChain", lambda sentence: as_async_generator(*sentence.split(" ")))
+        ...     capitalized_chain = words_chain.map(lambda word: word.capitalize())
+        ...     joined_chain = capitalized_chain.join(" ")
+        ...     return await join_final_output(joined_chain("this is an example"))
+        ...
+        >>> asyncio.run(example())
+        'This Is An Example'
+        """
+
         async def _join(
             input: T,
         ) -> AsyncGenerator[ChainOutput[str, Union[U, str]], Any]:
@@ -153,7 +393,7 @@ class Chain(Generic[T, U]):
                 iter_u = values
 
             # Then, return the joined result
-            output: str = join_with.join(iter_u)
+            output: str = separator.join(iter_u)
             yield cast(ChainOutput[str, Union[U, str]], output)
 
         return SingleOutputChain[T, str](f"{self.name}@join", _join)
@@ -161,6 +401,36 @@ class Chain(Generic[T, U]):
     def gather(
         self: "Union[Chain[T, AsyncGenerator[ChainOutput[V, W], Any]], Chain[T, AsyncGenerator[V, Any]]]",
     ) -> "SingleOutputChain[T, List[List[V]]]":
+        """
+        Gathers results from multiple chains and processes them in parallel.
+
+        The `gather` method is used to process several chains concurrently, and it waits until all of
+        them are complete before continuing. This is similar to `asyncio.gather`, and is useful when you
+        want to run multiple asynchronous tasks in parallel and wait for all of them to complete.
+
+        Note that the order of results corresponds to the order of chains passed to the `gather` method.
+
+        >>> from litechain import Chain, as_async_generator, collect_final_output
+        >>> import asyncio
+        ...
+        >>> async def delayed_output(x):
+        ...     await asyncio.sleep(0.1)
+        ...     yield f"Number: {x}"
+        ...
+        >>> async def example():
+        ...     number_chain = Chain[int, int](
+        ...         "NumberChain", lambda x: as_async_generator(*range(x))
+        ...     )
+        ...     gathered_chain : Chain[int, str] = (
+        ...         number_chain.map(delayed_output)
+        ...         .gather()
+        ...         .and_then(lambda results: as_async_generator(*(r[0] for r in results)))
+        ...     )
+        ...     return await collect_final_output(gathered_chain(3))
+        ...
+        >>> asyncio.run(example()) # will take 0.1s to finish, not 0.3s, because it runs in parallel
+        ['Number: 0', 'Number: 1', 'Number: 2']
+        """
         return self.collect().gather()
 
 
@@ -185,6 +455,14 @@ class SingleOutputChain(Chain[T, U]):
             yield (final_value, u_rewrapped)
 
     def map(self, fn: Callable[[U], V]) -> "SingleOutputChain[T, V]":
+        """
+        Similar to `Chain.map`, this method applies a function to the final output of the chain, but returns a SingleOutputChain.
+
+        The `fn` parameter is a function that takes a value of type U and returns a value of type V.
+
+        For detailed examples, refer to the documentation of `Chain.map`.
+        """
+
         async def map(input: T) -> AsyncGenerator[ChainOutput[V, Union[U, V]], Any]:
             # Reyield previous chain so we never block the stream, and at the same time yield mapped values
             final_u: Optional[U] = None
@@ -202,8 +480,17 @@ class SingleOutputChain(Chain[T, U]):
         return SingleOutputChain[T, V](f"{self.name}@map", lambda input: map(input))
 
     def and_then(
-        self, next: Callable[[U], Union[AsyncGenerator[ChainOutput[V, W], Any], V]]
+        self,
+        next: Callable[
+            [U],
+            Union[AsyncGenerator[ChainOutput[V, W], Any], AsyncGenerator[V, Any], V],
+        ],
     ) -> "Chain[T, V]":
+        """
+        Similar to `Chain.and_then`, this method takes a function that receives the final output of this chain as its input and returns a new Chain.
+
+        For detailed examples, refer to the documentation of `Chain.and_then`.
+        """
         next_name = f"{self.name}@and_then"
         if hasattr(next, "name"):
             next_name = next.name
@@ -233,6 +520,12 @@ class SingleOutputChain(Chain[T, U]):
     def gather(
         self: "Union[SingleOutputChain[T, List[AsyncGenerator[ChainOutput[V, W], Any]]], SingleOutputChain[T, List[AsyncGenerator[V, Any]]]]",
     ) -> "SingleOutputChain[T, List[List[V]]]":
+        """
+        Similar to `Chain.gather`, this method waits for all the async generators in the list returned by the chain to finish and gathers their results in a list.
+
+        For detailed examples, refer to the documentation of `Chain.gather`.
+        """
+
         async def gather(
             input: T,
         ) -> AsyncGenerator[ChainOutput[List[List[V]], Union[U, List[List[V]]]], Any]:

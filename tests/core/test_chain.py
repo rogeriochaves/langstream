@@ -448,3 +448,36 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
                 final=True,
             ),
         )
+
+    async def test_it_is_thenable_with_async_generator_return(self):
+        exclamation_list_chain = SingleOutputChain[str, List[str]](
+            "ExclamationListChain", lambda input: [f"{input}", "!"]
+        )
+
+        chain: Chain[str, str] = exclamation_list_chain.and_then(
+            lambda input: as_async_generator(*(s + ", " for s in input))
+        )
+
+        outputs = chain("hello world")
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="ExclamationListChain", output=["hello world", "!"], final=False
+            ),
+        )
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="ExclamationListChain@and_then",
+                output="hello world, ",
+                final=True,
+            ),
+        )
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="ExclamationListChain@and_then",
+                output="!, ",
+                final=True,
+            ),
+        )

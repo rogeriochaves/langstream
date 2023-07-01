@@ -8,13 +8,29 @@ T = TypeVar("T")
 
 
 async def as_async_generator(*values: T) -> AsyncGenerator[T, Any]:
+    """
+    Creates an asynchronous generator out of simple values, it's useful for
+    converting a single value or a list of values to a streamed output of a Chain
+
+    Example
+    -------
+    >>> import asyncio
+    >>> async def run_example():
+    ...     async for value in as_async_generator(1, 2, 3):
+    ...         print(value)
+    ...
+    >>> asyncio.run(run_example())
+    1
+    2
+    3
+    """
     for item in values:
         yield item
 
 
-async def collect(async_iterable: AsyncGenerator[T, Any]) -> List[T]:
+async def collect(async_generator: AsyncGenerator[T, Any]) -> List[T]:
     """
-    Collect items from an async iterable into a list.
+    Collect items from an async generator into a list.
 
     >>> import asyncio
     >>> async def async_gen():
@@ -28,12 +44,12 @@ async def collect(async_iterable: AsyncGenerator[T, Any]) -> List[T]:
     >>> asyncio.run(collect(async_gen()))
     ['hello', 'how', 'can', 'I', 'assist', 'you', 'today']
     """
-    return [item async for item in async_iterable]
+    return [item async for item in async_generator]
 
 
-async def join(async_iterable: AsyncGenerator[str, Any], join_with="") -> str:
+async def join(async_generator: AsyncGenerator[str, Any], separator="") -> str:
     """
-    Collect items from an async iterable and join them in a string.
+    Collect items from an async generator and join them in a string.
 
     >>> import asyncio
     >>> async def async_gen():
@@ -47,13 +63,13 @@ async def join(async_iterable: AsyncGenerator[str, Any], join_with="") -> str:
     >>> asyncio.run(join(async_gen()))
     'hello how can I assist you today'
     """
-    lst = await collect(async_iterable)
-    return join_with.join(lst)
+    lst = await collect(async_generator)
+    return separator.join(lst)
 
 
-async def gather(async_iterables: List[AsyncGenerator[T, Any]]) -> List[List[T]]:
+async def gather(async_generators: List[AsyncGenerator[T, Any]]) -> List[List[T]]:
     """
-    Gather items from a list of async iterables into a list of lists.
+    Gather items from a list of async generators into a list of lists.
 
     >>> import asyncio
     >>> async def async_gen1():
@@ -68,8 +84,8 @@ async def gather(async_iterables: List[AsyncGenerator[T, Any]]) -> List[List[T]]
     >>> asyncio.run(gather([async_gen1(), async_gen2()]))
     [['hello', 'how', 'can'], ['I', 'assist', 'you', 'today']]
     """
-    return await asyncio.gather(*(collect(iterable) for iterable in async_iterables))
+    return await asyncio.gather(*(collect(generator) for generator in async_generators))
 
 
-async def next_item(async_iterable: AsyncGenerator[T, Any]) -> T:
-    return await async_iterable.__aiter__().__anext__()
+async def next_item(async_generator: AsyncGenerator[T, Any]) -> T:
+    return await async_generator.__aiter__().__anext__()
