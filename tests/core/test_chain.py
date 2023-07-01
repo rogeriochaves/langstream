@@ -3,9 +3,7 @@ import asyncio
 import random
 import unittest
 from typing import (
-    Any,
     AsyncIterable,
-    Callable,
     Iterable,
     List,
     TypeVar,
@@ -14,36 +12,13 @@ from typing import (
 )
 
 from litechain.core.chain import Chain, ChainOutput, SingleOutputChain
-from litechain.utils.async_iterable import as_async_iterable, collect, join
+from litechain.utils.async_iterable import as_async_iterable, collect, next_item
+from litechain.utils.chain import join_final_output
 
 T = TypeVar("T")
 U = TypeVar("U")
 V = TypeVar("V")
 W = TypeVar("W")
-
-
-async def next_item(async_iterable: AsyncIterable[T]) -> T:
-    return await async_iterable.__aiter__().__anext__()
-
-
-async def filter_final_output(
-    async_iterable: AsyncIterable[ChainOutput[T, Any]]
-) -> AsyncIterable[T]:
-    async for output in async_iterable:
-        if output.final:
-            yield cast(T, output.output)
-
-
-async def join_final_output(
-    async_iterable: AsyncIterable[ChainOutput[str, Any]]
-) -> str:
-    return await join(filter_final_output(async_iterable))
-
-
-async def collect_final_output(
-    async_iterable: AsyncIterable[ChainOutput[T, Any]]
-) -> Iterable[T]:
-    return await collect(filter_final_output(async_iterable))
 
 
 class ChainTestCase(unittest.IsolatedAsyncioTestCase):

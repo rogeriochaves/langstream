@@ -69,3 +69,7 @@ async def gather(async_iterables: List[AsyncIterable[T]]) -> List[List[T]]:
     [['hello', 'how', 'can'], ['I', 'assist', 'you', 'today']]
     """
     return await asyncio.gather(*(collect(iterable) for iterable in async_iterables))
+
+
+async def next_item(async_iterable: AsyncIterable[T]) -> T:
+    return await async_iterable.__aiter__().__anext__()
