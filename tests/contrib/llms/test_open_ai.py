@@ -9,16 +9,22 @@ import pytest
 
 from litechain.core.chain import Chain, ChainOutput
 from litechain.utils.async_generator import as_async_generator
-from litechain.contrib.llms.open_ai import OpenAICompletionChain
+from litechain.contrib.llms.open_ai import (
+    OpenAIChatDelta,
+    OpenAIChatMessage,
+    OpenAICompletionChain,
+    OpenAIChatChain,
+)
 
 
-class OpenAITestCase(unittest.IsolatedAsyncioTestCase):
+class OpenAICompletionChainTestCase(unittest.IsolatedAsyncioTestCase):
     @pytest.mark.integration
     async def test_it_completes_a_simple_prompt(self):
         chain = OpenAICompletionChain[str, str](
             "GreetingChain",
             lambda name: f"Human: Hello, my name is {name}\nAssistant: ",
             model="text-ada-001",
+            temperature=0,
         )
 
         result = ""
@@ -37,6 +43,7 @@ class OpenAITestCase(unittest.IsolatedAsyncioTestCase):
             lambda _: f"Say async. Assistant: \n",
             model="text-ada-001",
             max_tokens=2,
+            temperature=0,
         )
 
         parallel_chain: Chain[str, List[List[str]]] = Chain[
@@ -64,3 +71,22 @@ class OpenAITestCase(unittest.IsolatedAsyncioTestCase):
                         ["\n", "Async"],
                     ],
                 )
+
+
+class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
+    @pytest.mark.integration
+    async def test_it_completes_a_simple_prompt(self):
+        chain = OpenAIChatChain[str, OpenAIChatDelta](
+            "GreetingChain",
+            lambda name: [
+                OpenAIChatMessage(role="user", content=f"Hello, my name is {name}")
+            ],
+            model="gpt-3.5-turbo-0613",
+            temperature=0,
+        )
+
+        result = ""
+        async for output in chain("Alice"):
+            print(output.output["content"], end="", flush=True)
+            result += output.output["content"]
+        self.assertIn("Hello Alice! How can I assist you today?", result)

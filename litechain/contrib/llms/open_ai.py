@@ -1,8 +1,16 @@
 import asyncio
-from typing import AsyncGenerator, Callable, Optional, TypeVar, cast
+from typing import (
+    AsyncGenerator,
+    Callable,
+    List,
+    Literal,
+    Optional,
+    TypeVar,
+    TypedDict,
+    cast,
+)
 
 from litechain.core.chain import Chain
-from litechain.utils.async_generator import as_async_generator
 import openai
 
 
@@ -19,7 +27,7 @@ class OpenAICompletionChain(Chain[T, U]):
             str,
         ],
         model: str,
-        temperature=0,
+        temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
     ) -> None:
         self.name = name
@@ -46,3 +54,58 @@ class OpenAICompletionChain(Chain[T, U]):
                             yield output["choices"][0]["text"]
 
         self._call = lambda input: completion(call(input))
+
+
+class OpenAIChatMessage(TypedDict):
+    role: Literal["system", "user", "assistant"]
+    content: str
+
+
+class OpenAIChatDelta(TypedDict):
+    role: Optional[Literal["assistant"]]
+    content: str
+
+
+class OpenAIChatChain(Chain[T, U]):
+    def __init__(
+        self: "OpenAIChatChain[T, OpenAIChatDelta]",
+        name: str,
+        call: Callable[
+            [T],
+            List[OpenAIChatMessage],
+        ],
+        model: str,
+        temperature: Optional[float] = 0,
+        max_tokens: Optional[int] = None,
+    ) -> None:
+        self.name = name
+
+        async def chat_completion(
+            messages: List[OpenAIChatMessage],
+        ) -> AsyncGenerator[OpenAIChatDelta, None]:
+            loop = asyncio.get_event_loop()
+
+            def get_completions():
+                return openai.ChatCompletion.create(
+                    model=model,
+                    messages=messages,
+                    temperature=temperature,
+                    stream=True,
+                    max_tokens=max_tokens,
+                )
+
+            completions = await loop.run_in_executor(None, get_completions)
+
+            for output in completions:
+                output = cast(dict, output)
+                if "choices" in output:
+                    if len(output["choices"]) > 0:
+                        if "delta" in output["choices"][0]:
+                            if "content" in output["choices"][0]["delta"]:
+                                delta = output["choices"][0]["delta"]
+                                role = delta["role"] if "role" in delta else None
+                                yield OpenAIChatDelta(
+                                    role=role, content=delta["content"]
+                                )
+
+        self._call = lambda input: chat_completion(call(input))
