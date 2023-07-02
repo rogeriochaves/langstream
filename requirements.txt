@@ -1,1 +1,4 @@
 pdoc3
+pytest
+pytest-timeout
+openai
