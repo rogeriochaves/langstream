@@ -93,6 +93,7 @@ For further tutorials and examples, consult the [documentation/README](https://g
 
 from litechain.core.chain import Chain, SingleOutputChain
 from litechain.utils.chain import (
+    debug,
     filter_final_output,
     collect_final_output,
     join_final_output,
@@ -108,6 +109,7 @@ from litechain.utils.async_generator import (
 __all__ = (
     "Chain",
     "SingleOutputChain",
+    "debug",
     "filter_final_output",
     "collect_final_output",
     "join_final_output",

@@ -1,10 +1,10 @@
-.PHONY: test doctest docs install
+.PHONY: test doctest test-integration docs install
 
 test:
 	PYTHONPATH=$PYTHONPATH:. pytest -s -m "not integration" $(filter-out $@,$(MAKECMDGOALS))
 
 doctest:
-	python -m doctest -v litechain/utils/chain.py && python -m doctest -v litechain/**/*.py
+	PYTHONPATH=$PYTHONPATH:. pytest --doctest-modules litechain/utils && PYTHONPATH=$PYTHONPATH:. pytest --doctest-modules litechain/core
 
 test-integration:
 	PYTHONPATH=$PYTHONPATH:. pytest -s -m integration $(filter-out $@,$(MAKECMDGOALS))

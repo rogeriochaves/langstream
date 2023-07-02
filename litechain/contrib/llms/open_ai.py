@@ -1,18 +1,11 @@
 import asyncio
-from typing import (
-    AsyncGenerator,
-    Callable,
-    List,
-    Literal,
-    Optional,
-    TypeVar,
-    TypedDict,
-    cast,
-)
+from dataclasses import dataclass
+from typing import AsyncGenerator, Callable, List, Literal, Optional, TypeVar, cast
+from colorama import Fore
 
-from litechain.core.chain import Chain
 import openai
 
+from litechain.core.chain import Chain
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -32,7 +25,7 @@ class OpenAICompletionChain(Chain[T, U]):
     ) -> None:
         self.name = name
 
-        async def completion(prompt) -> AsyncGenerator[str, None]:
+        async def completion(prompt: str) -> AsyncGenerator[str, None]:
             loop = asyncio.get_event_loop()
 
             def get_completions():
@@ -56,14 +49,25 @@ class OpenAICompletionChain(Chain[T, U]):
         self._call = lambda input: completion(call(input))
 
 
-class OpenAIChatMessage(TypedDict):
+@dataclass
+class OpenAIChatMessage:
     role: Literal["system", "user", "assistant"]
     content: str
 
 
-class OpenAIChatDelta(TypedDict):
+@dataclass
+class OpenAIChatDelta:
     role: Optional[Literal["assistant"]]
     content: str
+
+    def __chain_debug__(self):
+        if self.role is not None:
+            print(f"{Fore.YELLOW}{self.role.capitalize()}:{Fore.RESET} ", end="")
+        print(
+            self.content,
+            end="",
+            flush=True,
+        )
 
 
 class OpenAIChatChain(Chain[T, U]):
@@ -88,7 +92,7 @@ class OpenAIChatChain(Chain[T, U]):
             def get_completions():
                 return openai.ChatCompletion.create(
                     model=model,
-                    messages=messages,
+                    messages=[m.__dict__ for m in messages],
                     temperature=temperature,
                     stream=True,
                     max_tokens=max_tokens,

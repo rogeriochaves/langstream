@@ -1,4 +1,10 @@
+# Core
+colorama
+
+# Contrib
+openai
+
+# Test
 pdoc3
 pytest
 pytest-timeout
-openai

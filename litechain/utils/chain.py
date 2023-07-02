@@ -1,12 +1,89 @@
 """
 Utils for working with Chains outputs
 """
-from typing import Any, AsyncGenerator, Iterable, TypeVar, cast
+from typing import Any, AsyncGenerator, Callable, Iterable, TypeVar, cast
 
-from litechain.core.chain import ChainOutput
+from colorama import Fore
+
+from litechain.core.chain import Chain, ChainOutput
 from litechain.utils.async_generator import collect, join
 
 T = TypeVar("T")
+U = TypeVar("U")
+
+
+def debug(
+    chain: Callable[[T], AsyncGenerator[ChainOutput[U, Any], Any]]
+) -> Chain[T, U]:
+    """
+    A helper for helping you debugging chains. Simply wrap any piece of the chain or the whole chain together
+    with the `debug` function to print out everything that goes through it and its nested chains.
+
+    For example, you can wrap the whole chain to debug everything:
+    >>> from litechain import Chain, join_final_output
+    >>> import asyncio
+    ...
+    >>> async def debug_whole_chain():
+    ...     greet_chain = Chain[str, str]("GreetingChain", lambda name: f"Hello, {name}!")
+    ...     polite_chain = Chain[str, str]("PoliteChain", lambda greeting: f"{greeting} How are you?")
+    ...     chain = debug(
+    ...         greet_chain.join().and_then(polite_chain)
+    ...     )
+    ...     await join_final_output(chain("Alice"))
+    ...
+    >>> asyncio.run(debug_whole_chain())
+    <BLANKLINE>
+    \x1b[32m> GreetingChain\x1b[39m
+    <BLANKLINE>
+    Hello, Alice!
+    <BLANKLINE>
+    \x1b[32m> GreetingChain@join\x1b[39m
+    <BLANKLINE>
+    Hello, Alice!
+    <BLANKLINE>
+    \x1b[32m> PoliteChain\x1b[39m
+    <BLANKLINE>
+    Hello, Alice! How are you?
+
+    Or, alternatively, you can debug just a piece of it:
+    >>> from litechain import Chain, join_final_output
+    >>> import asyncio
+    ...
+    >>> async def debug_whole_chain():
+    ...     greet_chain = Chain[str, str]("GreetingChain", lambda name: f"Hello, {name}!")
+    ...     polite_chain = Chain[str, str]("PoliteChain", lambda greeting: f"{greeting} How are you?")
+    ...     chain = debug(greet_chain).join().and_then(polite_chain)
+    ...     await join_final_output(chain("Alice"))
+    ...
+    >>> asyncio.run(debug_whole_chain())
+    <BLANKLINE>
+    \x1b[32m> GreetingChain\x1b[39m
+    <BLANKLINE>
+    Hello, Alice!
+    """
+
+    async def debug(input: T) -> AsyncGenerator[ChainOutput[U, Any], Any]:
+        last_chain = ""
+        async for output in chain(input):
+            if output.chain != last_chain:
+                if last_chain != "":
+                    print("\n", end="", flush=True)
+                last_chain = output.chain
+                print(f"\n{Fore.GREEN}> {output.chain}{Fore.RESET}\n")
+            if hasattr(output.output, "__chain_debug__"):
+                output.output.__chain_debug__()
+            else:
+                print(
+                    output.output,
+                    end=("" if isinstance(output.output, str) else ", "),
+                    flush=True,
+                )
+            yield output
+
+    next_name = f"@debug"
+    if hasattr(next, "name"):
+        next_name = f"{next.name}@debug"
+    return Chain[T, U](next_name, debug)
 
 
 async def filter_final_output(

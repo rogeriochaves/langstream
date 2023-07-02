@@ -16,22 +16,22 @@ from litechain.contrib.llms.open_ai import (
     OpenAICompletionChain,
     OpenAIChatChain,
 )
+from litechain.utils.chain import collect_final_output, debug, join_final_output
 
 
 class OpenAICompletionChainTestCase(unittest.IsolatedAsyncioTestCase):
     @pytest.mark.integration
     async def test_it_completes_a_simple_prompt(self):
-        chain = OpenAICompletionChain[str, str](
-            "GreetingChain",
-            lambda name: f"Human: Hello, my name is {name}\nAssistant: ",
-            model="text-ada-001",
-            temperature=0,
+        chain = debug(
+            OpenAICompletionChain[str, str](
+                "GreetingChain",
+                lambda name: f"Human: Hello, my name is {name}\nAssistant: ",
+                model="text-ada-001",
+                temperature=0,
+            )
         )
 
-        result = ""
-        async for output in chain("Alice"):
-            print(output.output, end="", flush=True)
-            result += output.output
+        result = await join_final_output(chain("Alice"))
         self.assertIn("I am an assistant", result)
 
     @pytest.mark.integration
@@ -39,12 +39,14 @@ class OpenAICompletionChainTestCase(unittest.IsolatedAsyncioTestCase):
         0.7  # if due to some bug it ends up being blocking, then it will break this threshold
     )
     async def test_it_is_non_blocking(self):
-        async_chain = OpenAICompletionChain[str, str](
-            "AsyncChain",
-            lambda _: f"Say async. Assistant: \n",
-            model="text-ada-001",
-            max_tokens=2,
-            temperature=0,
+        async_chain = debug(
+            OpenAICompletionChain[str, str](
+                "AsyncChain",
+                lambda _: f"Say async. Assistant: \n",
+                model="text-ada-001",
+                max_tokens=2,
+                temperature=0,
+            )
         )
 
         parallel_chain: Chain[str, List[List[str]]] = Chain[
@@ -59,19 +61,18 @@ class OpenAICompletionChainTestCase(unittest.IsolatedAsyncioTestCase):
             ),
         ).gather()
 
-        async for output in parallel_chain("Alice"):
-            if isinstance(output.output, str):
-                print(output.output)
-            if output.final:
-                self.assertEqual(
-                    output.output,
-                    [
-                        ["\n", "Async"],
-                        ["\n", "Async"],
-                        ["\n", "Async"],
-                        ["\n", "Async"],
-                    ],
-                )
+        result = await collect_final_output(parallel_chain("Alice"))
+        self.assertEqual(
+            result,
+            [
+                [
+                    ["\n", "Async"],
+                    ["\n", "Async"],
+                    ["\n", "Async"],
+                    ["\n", "Async"],
+                ]
+            ],
+        )
 
 
 class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
@@ -88,8 +89,8 @@ class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
 
         result = ""
         async for output in chain("Alice"):
-            print(output.output["content"], end="", flush=True)
-            result += output.output["content"]
+            print(output.output.content, end="", flush=True)
+            result += output.output.content
         self.assertIn("Hello Alice! How can I assist you today?", result)
 
     @pytest.mark.integration
@@ -104,43 +105,38 @@ class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
             return message
 
         def update_delta_on_memory(delta: OpenAIChatDelta) -> OpenAIChatDelta:
-            if (
-                memory["history"][-1]["role"] != delta["role"]
-                and delta["role"] is not None
-            ):
+            if memory["history"][-1].role != delta.role and delta.role is not None:
                 memory["history"].append(
-                    OpenAIChatMessage(role=delta["role"], content=delta["content"])
+                    OpenAIChatMessage(role=delta.role, content=delta.content)
                 )
             else:
-                memory["history"][-1]["content"] += delta["content"]
+                memory["history"][-1].content += delta.content
             return delta
 
-        chain = OpenAIChatChain[str, OpenAIChatDelta](
-            "EmojiChatChain",
-            lambda user_message: [
-                *memory["history"],
-                save_message_to_memory(
-                    OpenAIChatMessage(
-                        role="user", content=f"{user_message}. Reply in emojis"
-                    )
-                ),
-            ],
-            model="gpt-3.5-turbo-0613",
-            temperature=0,
+        chain = debug(
+            OpenAIChatChain[str, OpenAIChatDelta](
+                "EmojiChatChain",
+                lambda user_message: [
+                    *memory["history"],
+                    save_message_to_memory(
+                        OpenAIChatMessage(
+                            role="user", content=f"{user_message}. Reply in emojis"
+                        )
+                    ),
+                ],
+                model="gpt-3.5-turbo-0613",
+                temperature=0,
+            )
         ).map(update_delta_on_memory)
 
-        result = ""
-        async for output in chain("Hey there, my name is 🧨 how is it going?"):
-            if output.final:
-                print(output.output["content"], end="", flush=True)
-                result += output.output["content"]
+        outputs = await collect_final_output(
+            chain("Hey there, my name is 🧨 how is it going?")
+        )
+        result = "".join([output.content for output in outputs])
         self.assertIn("👋🧨", result)
 
-        result = ""
-        async for output in chain("What is my name?"):
-            if output.final:
-                print(output.output["content"], end="", flush=True)
-                result += output.output["content"]
+        outputs = await collect_final_output(chain("What is my name?"))
+        result = "".join([output.content for output in outputs])
         self.assertIn("🧨", result)
 
         self.assertEqual(len(memory["history"]), 4)
