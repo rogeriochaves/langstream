@@ -3,3 +3,4 @@ repl.ipynb
 .ipynb_checkpoints
 .pytest_cache
 .env
+docs/static/pdoc
