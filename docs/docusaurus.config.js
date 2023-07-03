@@ -17,7 +17,7 @@ const config = {
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/litechain",
 
-  staticDirectories: ["pdoc", "static"],
+  staticDirectories: ["reference", "static"],
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
@@ -77,10 +77,7 @@ const config = {
           },
           {
             type: "html",
-            value: "<a class='navbar__link' style='margin-top: 2px' href='/litechain/pdoc/litechain/index.html'>Reference</a>"
-            // href: "/pdoc/litechain/index.html",
-            // label: "Reference",
-            // position: "left",
+            value: "<a class='navbar__link' style='margin-top: 2px' href='/litechain/reference/litechain/index.html'>Reference</a>"
           },
           {
             href: "https://github.com/rogeriochaves/litechain",

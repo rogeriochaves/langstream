@@ -491,7 +491,7 @@
       <a
         aria-current="page"
         class="navbar__item navbar__link navbar__link--active"
-        href="/litechain/pdoc/litechain/index.html"
+        href="/litechain/reference/litechain/index.html"
         >Reference</a
       >
     </div>

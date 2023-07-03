@@ -10,7 +10,7 @@ test-integration:
 	PYTHONPATH=$PYTHONPATH:. pytest -s -m integration $(filter-out $@,$(MAKECMDGOALS))
 
 docs:
-	pdoc --html -o ./docs/static/pdoc --template-dir ./docs/pdoc_template litechain --force && cd docs && npm run build
+	pdoc --html -o ./docs/static/reference --template-dir ./docs/pdoc_template litechain --force && cd docs && npm run build
 
 install:
 	pip install -r requirements.txt
