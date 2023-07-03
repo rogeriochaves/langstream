@@ -59,12 +59,12 @@ class ChainOutput(Generic[T, V]):
     ...         print(output)
     ...
     >>> asyncio.run(example())
-    ChainOutput(chain='GreetingChain', output='Hello, Alice!', final=False)
-    ChainOutput(chain='GreetingChain@map', output='Hello, Alice! How are you?', final=True)
+    ChainOutput(chain='GreetingChain', data='Hello, Alice!', final=False)
+    ChainOutput(chain='GreetingChain@map', data='Hello, Alice! How are you?', final=True)
     """
 
     chain: str
-    output: V
+    data: V
     final: bool
 
 
@@ -113,12 +113,12 @@ class Chain(Generic[T, U]):
         if isinstance(value, ChainOutput):
             final = final if final is not None else value.final
             return ChainOutput[V, Union[V, W]](
-                chain=value.chain, output=value.output, final=final
+                chain=value.chain, data=value.data, final=final
             )
 
         final = final if final is not None else True
         return ChainOutput[V, Union[V, W]](
-            chain=self.name if name is None else name, output=value, final=final
+            chain=self.name if name is None else name, data=value, final=final
         )
 
     async def _reyield(
@@ -128,7 +128,7 @@ class Chain(Generic[T, U]):
         async for u in async_iterable:
             u_rewrapped = self._output_wrap(u, final=False)
             if u.final:
-                values.append(u.output)
+                values.append(u.data)
             yield (values, u_rewrapped)
 
     def map(self, fn: Callable[[U], V]) -> "Chain[T, V]":
@@ -378,7 +378,7 @@ class SingleOutputChain(Chain[T, U]):
                     raise Exception(
                         f"Expected a single item at the end of SingleOutputChain, found multiple for {self.name}@{at}"
                     )
-                final_value = u.output
+                final_value = u.data
             yield (final_value, u_rewrapped)
 
     def map(self, fn: Callable[[U], V]) -> "SingleOutputChain[T, V]":
@@ -500,7 +500,7 @@ class SingleOutputChain(Chain[T, U]):
                     if isinstance(v, ChainOutput):
                         yield v_rewrapped
                         if v.final:
-                            clean_vs.append(v.output)
+                            clean_vs.append(v.data)
                     else:
                         clean_vs.append(v)
                 clean_vss.append(clean_vs)

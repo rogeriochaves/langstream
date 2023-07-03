@@ -31,7 +31,7 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
         result = await collect(exclamation_chain("hello world"))
         self.assertEqual(
             result,
-            [ChainOutput(chain="ExclamationChain", output="hello world!", final=True)],
+            [ChainOutput(chain="ExclamationChain", data="hello world!", final=True)],
         )
 
     async def test_it_is_callable_with_async_iterable_return(self):
@@ -43,8 +43,8 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             result,
             [
-                ChainOutput(chain="ExclamationChain", output="hello world", final=True),
-                ChainOutput(chain="ExclamationChain", output="!", final=True),
+                ChainOutput(chain="ExclamationChain", data="hello world", final=True),
+                ChainOutput(chain="ExclamationChain", data="!", final=True),
             ],
         )
 
@@ -62,32 +62,32 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
             [
                 ChainOutput(
                     chain="ExclamationChain",
-                    output="hello world",
+                    data="hello world",
                     final=False,
                 ),
                 ChainOutput(
                     chain="ExclamationChain@map",
-                    output="hello planet",
+                    data="hello planet",
                     final=False,
                 ),
                 ChainOutput(
                     chain="ExclamationChain@map@map",
-                    output="hello planet~",
+                    data="hello planet~",
                     final=True,
                 ),
                 ChainOutput(
                     chain="ExclamationChain",
-                    output="!",
+                    data="!",
                     final=False,
                 ),
                 ChainOutput(
                     chain="ExclamationChain@map",
-                    output="!",
+                    data="!",
                     final=False,
                 ),
                 ChainOutput(
                     chain="ExclamationChain@map@map",
-                    output="!~",
+                    data="!~",
                     final=True,
                 ),
             ],
@@ -107,7 +107,7 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
             result[-1],
             ChainOutput(
                 chain="ExclamationChain@and_then",
-                output="hello world, !",
+                data="hello world, !",
                 final=True,
             ),
         )
@@ -145,12 +145,12 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(
             await next_item(outputs),
-            ChainOutput(chain="ExclamationChain", output="hello world", final=False),
+            ChainOutput(chain="ExclamationChain", data="hello world", final=False),
         )
 
         self.assertEqual(
             await next_item(outputs),
-            ChainOutput(chain="ExclamationChain", output="!", final=False),
+            ChainOutput(chain="ExclamationChain", data="!", final=False),
         )
 
         blocked = False
@@ -159,7 +159,7 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(
             await next_item(outputs),
-            ChainOutput(chain="JoinerChain", output="hello world, !", final=True),
+            ChainOutput(chain="JoinerChain", data="hello world, !", final=True),
         )
 
     async def test_it_is_composable_by_waiting_the_first_chain_to_finish(self):
@@ -185,12 +185,12 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(
             await next_item(outputs),
-            ChainOutput(chain="HelloChain", output="hello ", final=False),
+            ChainOutput(chain="HelloChain", data="hello ", final=False),
         )
 
         self.assertEqual(
             await next_item(outputs),
-            ChainOutput(chain="HelloChain", output="world", final=False),
+            ChainOutput(chain="HelloChain", data="world", final=False),
         )
 
         blocked = False
@@ -199,12 +199,12 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(
             await next_item(outputs),
-            ChainOutput(chain="BlockingChain@join", output="hello world", final=False),
+            ChainOutput(chain="BlockingChain@join", data="hello world", final=False),
         )
 
         self.assertEqual(
             await next_item(outputs),
-            ChainOutput(chain="ExclamationChain", output="hello world!", final=True),
+            ChainOutput(chain="ExclamationChain", data="hello world!", final=True),
         )
 
     async def test_it_collects_the_outputs_to_a_list(self):
@@ -220,16 +220,16 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
         for i in range(0, 5):
             self.assertEqual(
                 await next_item(outputs),
-                ChainOutput(chain="RangeChain", output=i, final=False),
+                ChainOutput(chain="RangeChain", data=i, final=False),
             )
             self.assertEqual(
                 await next_item(outputs),
-                ChainOutput(chain="RangeChain@map", output=i + 1, final=False),
+                ChainOutput(chain="RangeChain@map", data=i + 1, final=False),
             )
         self.assertEqual(
             await next_item(outputs),
             ChainOutput(
-                chain="RangeChain@map@collect", output=[1, 2, 3, 4, 5], final=True
+                chain="RangeChain@map@collect", data=[1, 2, 3, 4, 5], final=True
             ),
         )
 
@@ -254,23 +254,23 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
         for i in range(0, 100):
             self.assertEqual(
                 await next_item(outputs),
-                ChainOutput(chain="ParallelChain", output=i, final=False),
+                ChainOutput(chain="ParallelChain", data=i, final=False),
             )
             self.assertIsInstance(
-                (await next_item(outputs)).output,
+                (await next_item(outputs)).data,
                 AsyncGenerator,
             )
         collect_next = await next_item(outputs)
-        self.assertEqual(len(cast(List, collect_next.output)), 100)
+        self.assertEqual(len(cast(List, collect_next.data)), 100)
         self.assertIsInstance(
-            cast(List, collect_next.output)[0],
+            cast(List, collect_next.data)[0],
             AsyncGenerator,
         )
         self.assertEqual(
             await next_item(outputs),
             ChainOutput(
                 chain="ParallelChain@map@collect@gather",
-                output=[[i + 1] for i in range(0, 100)],
+                data=[[i + 1] for i in range(0, 100)],
                 final=False,
             ),
         )
@@ -278,7 +278,7 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
             await next_item(outputs),
             ChainOutput(
                 chain="ParallelChain@map@collect@gather@and_then",
-                output=5050,
+                data=5050,
                 final=False,
             ),
         )
@@ -286,7 +286,7 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
             await next_item(outputs),
             ChainOutput(
                 chain="ParallelChain@map@collect@gather@and_then@map",
-                output="5050",
+                data="5050",
                 final=True,
             ),
         )
@@ -365,7 +365,7 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
         outputs = exclamation_chain("hello world")
         self.assertEqual(
             await next_item(outputs),
-            ChainOutput(chain="ExclamationChain", output="hello world!", final=True),
+            ChainOutput(chain="ExclamationChain", data="hello world!", final=True),
         )
 
     @unittest.skip("TODO")
@@ -389,12 +389,12 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
         outputs = chain("hello world")
         self.assertEqual(
             await next_item(outputs),
-            ChainOutput(chain="ExclamationChain", output="hello world!", final=False),
+            ChainOutput(chain="ExclamationChain", data="hello world!", final=False),
         )
         self.assertEqual(
             await next_item(outputs),
             ChainOutput(
-                chain="ExclamationChain@map", output="hello planet!", final=True
+                chain="ExclamationChain@map", data="hello planet!", final=True
             ),
         )
 
@@ -414,16 +414,16 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             await next_item(outputs),
             ChainOutput(
-                chain="ExclamationListChain", output=["hello world", "!"], final=False
+                chain="ExclamationListChain", data=["hello world", "!"], final=False
             ),
         )
         self.assertEqual(
             await next_item(outputs),
-            ChainOutput(chain="JoinerChain", output="hello world, !", final=False),
+            ChainOutput(chain="JoinerChain", data="hello world, !", final=False),
         )
         self.assertEqual(
             await next_item(outputs),
-            ChainOutput(chain="JoinerChain@map", output="hello world, !~", final=True),
+            ChainOutput(chain="JoinerChain@map", data="hello world, !~", final=True),
         )
 
     async def test_it_is_thenable_with_single_value_return(self):
@@ -437,14 +437,14 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             await next_item(outputs),
             ChainOutput(
-                chain="ExclamationListChain", output=["hello world", "!"], final=False
+                chain="ExclamationListChain", data=["hello world", "!"], final=False
             ),
         )
         self.assertEqual(
             await next_item(outputs),
             ChainOutput(
                 chain="ExclamationListChain@and_then",
-                output="hello world, !",
+                data="hello world, !",
                 final=True,
             ),
         )
@@ -462,14 +462,14 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             await next_item(outputs),
             ChainOutput(
-                chain="ExclamationListChain", output=["hello world", "!"], final=False
+                chain="ExclamationListChain", data=["hello world", "!"], final=False
             ),
         )
         self.assertEqual(
             await next_item(outputs),
             ChainOutput(
                 chain="ExclamationListChain@and_then",
-                output="hello world, ",
+                data="hello world, ",
                 final=True,
             ),
         )
@@ -477,7 +477,7 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
             await next_item(outputs),
             ChainOutput(
                 chain="ExclamationListChain@and_then",
-                output="!, ",
+                data="!, ",
                 final=True,
             ),
         )

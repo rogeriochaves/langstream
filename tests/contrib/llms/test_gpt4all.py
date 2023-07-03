@@ -48,11 +48,11 @@ class GPT4AllChainTestCase(unittest.IsolatedAsyncioTestCase):
         ).gather()
 
         async for output in parallel_chain("Alice"):
-            if isinstance(output.output, str):
-                print(output.output)
+            if isinstance(output.data, str):
+                print(output.data)
             if output.final:
                 self.assertEqual(
-                    output.output,
+                    output.data,
                     [
                         ["as", "ync"],
                         ["as", "ync"],

@@ -70,12 +70,12 @@ def debug(
                     print("\n", end="", flush=True)
                 last_chain = output.chain
                 print(f"\n{Fore.GREEN}> {output.chain}{Fore.RESET}\n")
-            if hasattr(output.output, "__chain_debug__"):
-                output.output.__chain_debug__()
+            if hasattr(output.data, "__chain_debug__"):
+                output.data.__chain_debug__()
             else:
                 print(
-                    output.output,
-                    end=("" if isinstance(output.output, str) else ", "),
+                    output.data,
+                    end=("" if isinstance(output.data, str) else ", "),
                     flush=True,
                 )
             yield output
@@ -110,14 +110,14 @@ async def filter_final_output(
     ...         print(final_output)
     ...
     >>> asyncio.run(all_outputs())
-    ChainOutput(chain='GreetingChain', output='Hello, Alice!', final=False)
-    ChainOutput(chain='GreetingChain@map', output='Hello, Alice! How are you?', final=True)
+    ChainOutput(chain='GreetingChain', data='Hello, Alice!', final=False)
+    ChainOutput(chain='GreetingChain@map', data='Hello, Alice! How are you?', final=True)
     >>> asyncio.run(only_final_outputs())
     Hello, Alice! How are you?
     """
     async for output in async_iterable:
         if output.final:
-            yield cast(T, output.output)
+            yield cast(T, output.data)
 
 
 async def collect_final_output(
@@ -142,9 +142,9 @@ async def collect_final_output(
     ...     print(output)
     ...
     >>> asyncio.run(all_outputs())
-    ChainOutput(chain='GreetingChain', output='Hello, ', final=True)
-    ChainOutput(chain='GreetingChain', output='Alice', final=True)
-    ChainOutput(chain='GreetingChain', output='!', final=True)
+    ChainOutput(chain='GreetingChain', data='Hello, ', final=True)
+    ChainOutput(chain='GreetingChain', data='Alice', final=True)
+    ChainOutput(chain='GreetingChain', data='!', final=True)
     >>> asyncio.run(collected_outputs())
     ['Hello, ', 'Alice', '!']
     """
@@ -173,9 +173,9 @@ async def join_final_output(
     ...     print(output)
     ...
     >>> asyncio.run(all_outputs())
-    ChainOutput(chain='GreetingChain', output='Hello, ', final=True)
-    ChainOutput(chain='GreetingChain', output='Alice', final=True)
-    ChainOutput(chain='GreetingChain', output='!', final=True)
+    ChainOutput(chain='GreetingChain', data='Hello, ', final=True)
+    ChainOutput(chain='GreetingChain', data='Alice', final=True)
+    ChainOutput(chain='GreetingChain', data='!', final=True)
     >>> asyncio.run(joined_outputs())
     Hello, Alice!
     """

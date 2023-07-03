@@ -89,8 +89,8 @@ class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
 
         result = ""
         async for output in chain("Alice"):
-            print(output.output.content, end="", flush=True)
-            result += output.output.content
+            print(output.data.content, end="", flush=True)
+            result += output.data.content
         self.assertIn("Hello Alice! How can I assist you today?", result)
 
     @pytest.mark.integration

@@ -87,7 +87,7 @@ Using Chain to process text data:
     ...
     ...     async for output in chain("this is an example"):
     ...         if output.final:
-    ...             return output.output
+    ...             return output.data
     ...
     >>> asyncio.run(example())
     'This Is An Example'
