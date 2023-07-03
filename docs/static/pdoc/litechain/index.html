@@ -148,22 +148,25 @@ specifying in the type signature.</p>
 A SingleOutputChain is a subtype of Chain that produces a single asynchronous final output after processing,
 rather than an asynchronous stream of outputs.</p>
 <h2 id="composition-methods">Composition Methods</h2>
-<p><code>map</code>:
-Transforms the output of the Chain by applying a function to each item as they arrive. This is
-non-blocking and continues processing the chain in parallel.</p>
-<p><code>and_then</code>:
+<p><code><a title="litechain.Chain.map" href="#litechain.Chain.map">Chain.map()</a></code>:
+Transforms the output of the Chain by applying a function to each token as they arrive. This is
+non-blocking and maps as chain generations flow in: <code>chain.map(lambda token: token.lower())</code></p>
+<p><code><a title="litechain.Chain.and_then" href="#litechain.Chain.and_then">Chain.and_then()</a></code>:
 Applies a function on the list of results of the Chain. Differently from <code>map</code>, this is blocking,
 and collects the outputs before applying the function. It can also take another Chain as argument,
-effectively composing two Chains together.</p>
-<p><code><a title="litechain.collect" href="#litechain.collect">collect()</a></code>:
+effectively composing two Chains together: <code>first_chain.and_then(second_chain)</code>.</p>
+<p><code><a title="litechain.Chain.collect" href="#litechain.Chain.collect">Chain.collect()</a></code>:
 Collects the output of a Chain into a list. This is a blocking operation and can be used
 when the next processing step requires the full output at once.</p>
-<p><code><a title="litechain.join" href="#litechain.join">join()</a></code>:
+<p><code><a title="litechain.Chain.join" href="#litechain.Chain.join">Chain.join()</a></code>:
 Joins the output of a string producing Chain into a single string by concatenating each item.</p>
-<p><code><a title="litechain.gather" href="#litechain.gather">gather()</a></code>:
+<p><code><a title="litechain.Chain.gather" href="#litechain.Chain.gather">Chain.gather()</a></code>:
 Gathers results from a chain that produces multiple async generators and processes them in parallel,
 returning a list of lists of the results of all generators, allowing you to execute many Chains at
 the same time, this is similar to <code>asyncio.gather</code>.</p>
+<h2 id="contrib-openai-gpt4all-and-more">Contrib: OpenAI, GPT4All and more</h2>
+<p>The core of LiteChain is kept small and stable, so all the integrations that build on top of it live under
+the <code><a title="litechain.contrib" href="contrib/index.html">litechain.contrib</a></code> module. Check it out for reference and code examples of the integrations.</p>
 <h2 id="examples">Examples</h2>
 <p>Using Chain to process text data:</p>
 <pre><code>&gt;&gt;&gt; from litechain import Chain, as_async_generator, collect_final_output
@@ -185,7 +188,7 @@ the same time, this is similar to <code>asyncio.gather</code>.</p>
 'This Is An Example'
 </code></pre>
 <hr>
-<p>For further tutorials and examples, consult the <a href="https://github.com/rogeriochaves/litechain">documentation/README</a>.</p>
+<p>Here you can find the reference and code examples, for further tutorials and use cases, consult the <a href="https://github.com/rogeriochaves/litechain">documentation</a>.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -234,26 +237,32 @@ Core Concepts
 Composition Methods
 ------------------
 
-`map`:
-    Transforms the output of the Chain by applying a function to each item as they arrive. This is
-    non-blocking and continues processing the chain in parallel.
+`Chain.map`:
+    Transforms the output of the Chain by applying a function to each token as they arrive. This is
+    non-blocking and maps as chain generations flow in: `chain.map(lambda token: token.lower())`
 
-`and_then`:
+`Chain.and_then`:
     Applies a function on the list of results of the Chain. Differently from `map`, this is blocking,
     and collects the outputs before applying the function. It can also take another Chain as argument,
-    effectively composing two Chains together.
+    effectively composing two Chains together: `first_chain.and_then(second_chain)`.
 
-`collect`:
+`Chain.collect`:
     Collects the output of a Chain into a list. This is a blocking operation and can be used
     when the next processing step requires the full output at once.
 
-`join`:
+`Chain.join`:
     Joins the output of a string producing Chain into a single string by concatenating each item.
 
-`gather`:
+`Chain.gather`:
     Gathers results from a chain that produces multiple async generators and processes them in parallel,
     returning a list of lists of the results of all generators, allowing you to execute many Chains at
     the same time, this is similar to `asyncio.gather`.
+
+Contrib: OpenAI, GPT4All and more
+---------------------------------
+
+The core of LiteChain is kept small and stable, so all the integrations that build on top of it live under
+the `litechain.contrib` module. Check it out for reference and code examples of the integrations.
 
 Examples
 --------
@@ -280,11 +289,12 @@ Using Chain to process text data:
 
 ---
 
-For further tutorials and examples, consult the [documentation/README](https://github.com/rogeriochaves/litechain).
+Here you can find the reference and code examples, for further tutorials and use cases, consult the [documentation](https://github.com/rogeriochaves/litechain).
 &#34;&#34;&#34;
 
-from litechain.core.chain import Chain, SingleOutputChain
+from litechain.core.chain import Chain, ChainOutput, SingleOutputChain
 from litechain.utils.chain import (
+    debug,
     filter_final_output,
     collect_final_output,
     join_final_output,
@@ -299,7 +309,9 @@ from litechain.utils.async_generator import (
 
 __all__ = (
     &#34;Chain&#34;,
+    &#34;ChainOutput&#34;,
     &#34;SingleOutputChain&#34;,
+    &#34;debug&#34;,
     &#34;filter_final_output&#34;,
     &#34;collect_final_output&#34;,
     &#34;join_final_output&#34;,
@@ -314,6 +326,11 @@ __all__ = (
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
+<dt><code class="name"><a title="litechain.contrib" href="contrib/index.html">litechain.contrib</a></code></dt>
+<dd>
+<div class="desc"><p>The Contrib module is where all the other chains and integrations that build on top of
+core Chain module live. Here you can import the LLMs you want …</p></div>
+</dd>
 <dt><code class="name"><a title="litechain.core" href="core/index.html">litechain.core</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -470,6 +487,132 @@ ChainOutput(chain='GreetingChain', output='!', final=True)
     [&#39;Hello, &#39;, &#39;Alice&#39;, &#39;!&#39;]
     &#34;&#34;&#34;
     return await collect(filter_final_output(async_iterable))</code></pre>
+</details>
+</dd>
+<dt id="litechain.debug"><code class="name flex">
+<span>def <span class="ident">debug</span></span>(<span>chain: Callable[[~T], AsyncGenerator[<a title="litechain.core.chain.ChainOutput" href="core/chain.html#litechain.core.chain.ChainOutput">ChainOutput</a>[~U, Any], Any]]) ‑> <a title="litechain.core.chain.Chain" href="core/chain.html#litechain.core.chain.Chain">Chain</a>[~T, ~U]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A helper for helping you debugging chains. Simply wrap any piece of the chain or the whole chain together
+with the <code><a title="litechain.debug" href="#litechain.debug">debug()</a></code> function to print out everything that goes through it and its nested chains.</p>
+<p>For example, you can wrap the whole chain to debug everything:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from litechain import Chain, join_final_output
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def debug_whole_chain():
+...     greet_chain = Chain[str, str](&quot;GreetingChain&quot;, lambda name: f&quot;Hello, {name}!&quot;)
+...     polite_chain = Chain[str, str](&quot;PoliteChain&quot;, lambda greeting: f&quot;{greeting} How are you?&quot;)
+...     chain = debug(
+...         greet_chain.join().and_then(polite_chain)
+...     )
+...     await join_final_output(chain(&quot;Alice&quot;))
+...
+&gt;&gt;&gt; asyncio.run(debug_whole_chain())
+&lt;BLANKLINE&gt;
+[32m&gt; GreetingChain[39m
+&lt;BLANKLINE&gt;
+Hello, Alice!
+&lt;BLANKLINE&gt;
+[32m&gt; GreetingChain@join[39m
+&lt;BLANKLINE&gt;
+Hello, Alice!
+&lt;BLANKLINE&gt;
+[32m&gt; PoliteChain[39m
+&lt;BLANKLINE&gt;
+Hello, Alice! How are you?
+</code></pre>
+<p>Or, alternatively, you can debug just a piece of it:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from litechain import Chain, join_final_output
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def debug_whole_chain():
+...     greet_chain = Chain[str, str](&quot;GreetingChain&quot;, lambda name: f&quot;Hello, {name}!&quot;)
+...     polite_chain = Chain[str, str](&quot;PoliteChain&quot;, lambda greeting: f&quot;{greeting} How are you?&quot;)
+...     chain = debug(greet_chain).join().and_then(polite_chain)
+...     await join_final_output(chain(&quot;Alice&quot;))
+...
+&gt;&gt;&gt; asyncio.run(debug_whole_chain())
+&lt;BLANKLINE&gt;
+[32m&gt; GreetingChain[39m
+&lt;BLANKLINE&gt;
+Hello, Alice!
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def debug(
+    chain: Callable[[T], AsyncGenerator[ChainOutput[U, Any], Any]]
+) -&gt; Chain[T, U]:
+    &#34;&#34;&#34;
+    A helper for helping you debugging chains. Simply wrap any piece of the chain or the whole chain together
+    with the `debug` function to print out everything that goes through it and its nested chains.
+
+    For example, you can wrap the whole chain to debug everything:
+    &gt;&gt;&gt; from litechain import Chain, join_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def debug_whole_chain():
+    ...     greet_chain = Chain[str, str](&#34;GreetingChain&#34;, lambda name: f&#34;Hello, {name}!&#34;)
+    ...     polite_chain = Chain[str, str](&#34;PoliteChain&#34;, lambda greeting: f&#34;{greeting} How are you?&#34;)
+    ...     chain = debug(
+    ...         greet_chain.join().and_then(polite_chain)
+    ...     )
+    ...     await join_final_output(chain(&#34;Alice&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(debug_whole_chain())
+    &lt;BLANKLINE&gt;
+    \x1b[32m&gt; GreetingChain\x1b[39m
+    &lt;BLANKLINE&gt;
+    Hello, Alice!
+    &lt;BLANKLINE&gt;
+    \x1b[32m&gt; GreetingChain@join\x1b[39m
+    &lt;BLANKLINE&gt;
+    Hello, Alice!
+    &lt;BLANKLINE&gt;
+    \x1b[32m&gt; PoliteChain\x1b[39m
+    &lt;BLANKLINE&gt;
+    Hello, Alice! How are you?
+
+    Or, alternatively, you can debug just a piece of it:
+    &gt;&gt;&gt; from litechain import Chain, join_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def debug_whole_chain():
+    ...     greet_chain = Chain[str, str](&#34;GreetingChain&#34;, lambda name: f&#34;Hello, {name}!&#34;)
+    ...     polite_chain = Chain[str, str](&#34;PoliteChain&#34;, lambda greeting: f&#34;{greeting} How are you?&#34;)
+    ...     chain = debug(greet_chain).join().and_then(polite_chain)
+    ...     await join_final_output(chain(&#34;Alice&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(debug_whole_chain())
+    &lt;BLANKLINE&gt;
+    \x1b[32m&gt; GreetingChain\x1b[39m
+    &lt;BLANKLINE&gt;
+    Hello, Alice!
+    &#34;&#34;&#34;
+
+    async def debug(input: T) -&gt; AsyncGenerator[ChainOutput[U, Any], Any]:
+        last_chain = &#34;&#34;
+        async for output in chain(input):
+            if output.chain != last_chain:
+                if last_chain != &#34;&#34;:
+                    print(&#34;\n&#34;, end=&#34;&#34;, flush=True)
+                last_chain = output.chain
+                print(f&#34;\n{Fore.GREEN}&gt; {output.chain}{Fore.RESET}\n&#34;)
+            if hasattr(output.output, &#34;__chain_debug__&#34;):
+                output.output.__chain_debug__()
+            else:
+                print(
+                    output.output,
+                    end=(&#34;&#34; if isinstance(output.output, str) else &#34;, &#34;),
+                    flush=True,
+                )
+            yield output
+
+    next_name = f&#34;@debug&#34;
+    if hasattr(next, &#34;name&#34;):
+        next_name = f&#34;{next.name}@debug&#34;
+    return Chain[T, U](next_name, debug)</code></pre>
 </details>
 </dd>
 <dt id="litechain.filter_final_output"><code class="name flex">
@@ -1005,6 +1148,9 @@ Hello, Alice!
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="litechain.contrib.llms.gpt4all_chain.GPT4AllChain" href="contrib/llms/gpt4all_chain.html#litechain.contrib.llms.gpt4all_chain.GPT4AllChain">GPT4AllChain</a></li>
+<li><a title="litechain.contrib.llms.open_ai.OpenAIChatChain" href="contrib/llms/open_ai.html#litechain.contrib.llms.open_ai.OpenAIChatChain">OpenAIChatChain</a></li>
+<li><a title="litechain.contrib.llms.open_ai.OpenAICompletionChain" href="contrib/llms/open_ai.html#litechain.contrib.llms.open_ai.OpenAICompletionChain">OpenAICompletionChain</a></li>
 <li><a title="litechain.core.chain.SingleOutputChain" href="core/chain.html#litechain.core.chain.SingleOutputChain">SingleOutputChain</a></li>
 </ul>
 <h3>Methods</h3>
@@ -1174,7 +1320,7 @@ entire output all at once, rather than processing elements as they arrive.</p>
 </details>
 </dd>
 <dt id="litechain.Chain.gather"><code class="name flex">
-<span>def <span class="ident">gather</span></span>(<span>self: Union[<a title="litechain.Chain" href="#litechain.Chain">Chain</a>[T, AsyncGenerator[ChainOutput[V, W], Any]], <a title="litechain.Chain" href="#litechain.Chain">Chain</a>[T, AsyncGenerator[V, Any]]]) ‑> <a title="litechain.core.chain.SingleOutputChain" href="core/chain.html#litechain.core.chain.SingleOutputChain">SingleOutputChain</a>[~T, typing.List[typing.List[~V]]]</span>
+<span>def <span class="ident">gather</span></span>(<span>self: Union[<a title="litechain.Chain" href="#litechain.Chain">Chain</a>[T, AsyncGenerator[<a title="litechain.ChainOutput" href="#litechain.ChainOutput">ChainOutput</a>[V, W], Any]], <a title="litechain.Chain" href="#litechain.Chain">Chain</a>[T, AsyncGenerator[V, Any]]]) ‑> <a title="litechain.core.chain.SingleOutputChain" href="core/chain.html#litechain.core.chain.SingleOutputChain">SingleOutputChain</a>[~T, typing.List[typing.List[~V]]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Gathers results from multiple chains and processes them in parallel.</p>
@@ -1406,6 +1552,104 @@ will continue processing the chain in parallel.</p>
 </dd>
 </dl>
 </dd>
+<dt id="litechain.ChainOutput"><code class="flex name class">
+<span>class <span class="ident">ChainOutput</span></span>
+<span>(</span><span>chain: str, output: ~V, final: bool)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>ChainOutput is a data class that represents the output of a Chain at each step.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>chain</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of the chain that produced this output. This helps in identifying
+which part of the processing pipeline the output is coming from.</dd>
+<dt><strong><code>output</code></strong> :&ensp;<code>V</code></dt>
+<dd>The actual output data produced by the Chain. This can be of any type produced by any step of the whole Chain.</dd>
+<dt><strong><code>final</code></strong> :&ensp;<code>bool</code></dt>
+<dd>A boolean flag indicating whether this output is the final output of the Chain.
+Only the outputs at the end of the chain are marked as "final".</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from litechain import Chain
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example():
+...     greet_chain = Chain[str, str](&quot;GreetingChain&quot;, lambda name: f&quot;Hello, {name}!&quot;)
+...     polite_chain = greet_chain.map(lambda greeting: f&quot;{greeting} How are you?&quot;)
+...
+...     async for output in polite_chain(&quot;Alice&quot;):
+...         # Output is of type ChainOutput
+...         print(output)
+...
+&gt;&gt;&gt; asyncio.run(example())
+ChainOutput(chain='GreetingChain', output='Hello, Alice!', final=False)
+ChainOutput(chain='GreetingChain@map', output='Hello, Alice! How are you?', final=True)
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@dataclass
+class ChainOutput(Generic[T, V]):
+    &#34;&#34;&#34;
+    ChainOutput is a data class that represents the output of a Chain at each step.
+
+    Attributes
+    ----------
+    chain : str
+        The name of the chain that produced this output. This helps in identifying
+        which part of the processing pipeline the output is coming from.
+
+    output : V
+        The actual output data produced by the Chain. This can be of any type produced by any step of the whole Chain.
+
+    final : bool
+        A boolean flag indicating whether this output is the final output of the Chain.
+        Only the outputs at the end of the chain are marked as &#34;final&#34;.
+
+    Example
+    -------
+
+    &gt;&gt;&gt; from litechain import Chain
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     greet_chain = Chain[str, str](&#34;GreetingChain&#34;, lambda name: f&#34;Hello, {name}!&#34;)
+    ...     polite_chain = greet_chain.map(lambda greeting: f&#34;{greeting} How are you?&#34;)
+    ...
+    ...     async for output in polite_chain(&#34;Alice&#34;):
+    ...         # Output is of type ChainOutput
+    ...         print(output)
+    ...
+    &gt;&gt;&gt; asyncio.run(example())
+    ChainOutput(chain=&#39;GreetingChain&#39;, output=&#39;Hello, Alice!&#39;, final=False)
+    ChainOutput(chain=&#39;GreetingChain@map&#39;, output=&#39;Hello, Alice! How are you?&#39;, final=True)
+    &#34;&#34;&#34;
+
+    chain: str
+    output: V
+    final: bool</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>typing.Generic</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="litechain.ChainOutput.chain"><code class="name">var <span class="ident">chain</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="litechain.ChainOutput.final"><code class="name">var <span class="ident">final</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="litechain.ChainOutput.output"><code class="name">var <span class="ident">output</span> : ~V</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
 <dt id="litechain.SingleOutputChain"><code class="flex name class">
 <span>class <span class="ident">SingleOutputChain</span></span>
 <span>(</span><span>name: str, call: Callable[[~T], Union[AsyncGenerator[<a title="litechain.core.chain.ChainOutput" href="core/chain.html#litechain.core.chain.ChainOutput">ChainOutput</a>[~U, ~W], Any], AsyncGenerator[~U, Any], ~U]])</span>
@@ -1623,7 +1867,7 @@ will continue processing the chain in parallel.</p>
 </details>
 </dd>
 <dt id="litechain.SingleOutputChain.gather"><code class="name flex">
-<span>def <span class="ident">gather</span></span>(<span>self: Union[<a title="litechain.SingleOutputChain" href="#litechain.SingleOutputChain">SingleOutputChain</a>[T, List[AsyncGenerator[ChainOutput[V, W], Any]]], <a title="litechain.SingleOutputChain" href="#litechain.SingleOutputChain">SingleOutputChain</a>[T, List[AsyncGenerator[V, Any]]]]) ‑> <a title="litechain.core.chain.SingleOutputChain" href="core/chain.html#litechain.core.chain.SingleOutputChain">SingleOutputChain</a>[~T, typing.List[typing.List[~V]]]</span>
+<span>def <span class="ident">gather</span></span>(<span>self: Union[<a title="litechain.SingleOutputChain" href="#litechain.SingleOutputChain">SingleOutputChain</a>[T, List[AsyncGenerator[<a title="litechain.ChainOutput" href="#litechain.ChainOutput">ChainOutput</a>[V, W], Any]]], <a title="litechain.SingleOutputChain" href="#litechain.SingleOutputChain">SingleOutputChain</a>[T, List[AsyncGenerator[V, Any]]]]) ‑> <a title="litechain.core.chain.SingleOutputChain" href="core/chain.html#litechain.core.chain.SingleOutputChain">SingleOutputChain</a>[~T, typing.List[typing.List[~V]]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Similar to <code><a title="litechain.Chain.gather" href="#litechain.Chain.gather">Chain.gather()</a></code>, this method waits for all the async generators in the list returned by the chain to finish and gathers their results in a list.</p>
@@ -1757,6 +2001,7 @@ will continue processing the chain in parallel.</p>
 <li><a href="#chain">Chain</a><ul>
 <li><a href="#core-concepts">Core Concepts</a></li>
 <li><a href="#composition-methods">Composition Methods</a></li>
+<li><a href="#contrib-openai-gpt4all-and-more">Contrib: OpenAI, GPT4All and more</a></li>
 <li><a href="#examples">Examples</a></li>
 </ul>
 </li>
@@ -1765,6 +2010,7 @@ will continue processing the chain in parallel.</p>
 <ul id="index">
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
+<li><code><a title="litechain.contrib" href="contrib/index.html">litechain.contrib</a></code></li>
 <li><code><a title="litechain.core" href="core/index.html">litechain.core</a></code></li>
 <li><code><a title="litechain.utils" href="utils/index.html">litechain.utils</a></code></li>
 </ul>
@@ -1774,6 +2020,7 @@ will continue processing the chain in parallel.</p>
 <li><code><a title="litechain.as_async_generator" href="#litechain.as_async_generator">as_async_generator</a></code></li>
 <li><code><a title="litechain.collect" href="#litechain.collect">collect</a></code></li>
 <li><code><a title="litechain.collect_final_output" href="#litechain.collect_final_output">collect_final_output</a></code></li>
+<li><code><a title="litechain.debug" href="#litechain.debug">debug</a></code></li>
 <li><code><a title="litechain.filter_final_output" href="#litechain.filter_final_output">filter_final_output</a></code></li>
 <li><code><a title="litechain.gather" href="#litechain.gather">gather</a></code></li>
 <li><code><a title="litechain.join" href="#litechain.join">join</a></code></li>
@@ -1791,6 +2038,14 @@ will continue processing the chain in parallel.</p>
 <li><code><a title="litechain.Chain.gather" href="#litechain.Chain.gather">gather</a></code></li>
 <li><code><a title="litechain.Chain.join" href="#litechain.Chain.join">join</a></code></li>
 <li><code><a title="litechain.Chain.map" href="#litechain.Chain.map">map</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="litechain.ChainOutput" href="#litechain.ChainOutput">ChainOutput</a></code></h4>
+<ul class="">
+<li><code><a title="litechain.ChainOutput.chain" href="#litechain.ChainOutput.chain">chain</a></code></li>
+<li><code><a title="litechain.ChainOutput.final" href="#litechain.ChainOutput.final">final</a></code></li>
+<li><code><a title="litechain.ChainOutput.output" href="#litechain.ChainOutput.output">output</a></code></li>
 </ul>
 </li>
 <li>

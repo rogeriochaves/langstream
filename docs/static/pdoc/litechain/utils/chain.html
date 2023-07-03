@@ -127,12 +127,89 @@ d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 
 <pre><code class="python">&#34;&#34;&#34;
 Utils for working with Chains outputs
 &#34;&#34;&#34;
-from typing import Any, AsyncGenerator, Iterable, TypeVar, cast
+from typing import Any, AsyncGenerator, Callable, Iterable, TypeVar, cast
 
-from litechain.core.chain import ChainOutput
+from colorama import Fore
+
+from litechain.core.chain import Chain, ChainOutput
 from litechain.utils.async_generator import collect, join
 
 T = TypeVar(&#34;T&#34;)
+U = TypeVar(&#34;U&#34;)
+
+
+def debug(
+    chain: Callable[[T], AsyncGenerator[ChainOutput[U, Any], Any]]
+) -&gt; Chain[T, U]:
+    &#34;&#34;&#34;
+    A helper for helping you debugging chains. Simply wrap any piece of the chain or the whole chain together
+    with the `debug` function to print out everything that goes through it and its nested chains.
+
+    For example, you can wrap the whole chain to debug everything:
+    &gt;&gt;&gt; from litechain import Chain, join_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def debug_whole_chain():
+    ...     greet_chain = Chain[str, str](&#34;GreetingChain&#34;, lambda name: f&#34;Hello, {name}!&#34;)
+    ...     polite_chain = Chain[str, str](&#34;PoliteChain&#34;, lambda greeting: f&#34;{greeting} How are you?&#34;)
+    ...     chain = debug(
+    ...         greet_chain.join().and_then(polite_chain)
+    ...     )
+    ...     await join_final_output(chain(&#34;Alice&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(debug_whole_chain())
+    &lt;BLANKLINE&gt;
+    \x1b[32m&gt; GreetingChain\x1b[39m
+    &lt;BLANKLINE&gt;
+    Hello, Alice!
+    &lt;BLANKLINE&gt;
+    \x1b[32m&gt; GreetingChain@join\x1b[39m
+    &lt;BLANKLINE&gt;
+    Hello, Alice!
+    &lt;BLANKLINE&gt;
+    \x1b[32m&gt; PoliteChain\x1b[39m
+    &lt;BLANKLINE&gt;
+    Hello, Alice! How are you?
+
+    Or, alternatively, you can debug just a piece of it:
+    &gt;&gt;&gt; from litechain import Chain, join_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def debug_whole_chain():
+    ...     greet_chain = Chain[str, str](&#34;GreetingChain&#34;, lambda name: f&#34;Hello, {name}!&#34;)
+    ...     polite_chain = Chain[str, str](&#34;PoliteChain&#34;, lambda greeting: f&#34;{greeting} How are you?&#34;)
+    ...     chain = debug(greet_chain).join().and_then(polite_chain)
+    ...     await join_final_output(chain(&#34;Alice&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(debug_whole_chain())
+    &lt;BLANKLINE&gt;
+    \x1b[32m&gt; GreetingChain\x1b[39m
+    &lt;BLANKLINE&gt;
+    Hello, Alice!
+    &#34;&#34;&#34;
+
+    async def debug(input: T) -&gt; AsyncGenerator[ChainOutput[U, Any], Any]:
+        last_chain = &#34;&#34;
+        async for output in chain(input):
+            if output.chain != last_chain:
+                if last_chain != &#34;&#34;:
+                    print(&#34;\n&#34;, end=&#34;&#34;, flush=True)
+                last_chain = output.chain
+                print(f&#34;\n{Fore.GREEN}&gt; {output.chain}{Fore.RESET}\n&#34;)
+            if hasattr(output.output, &#34;__chain_debug__&#34;):
+                output.output.__chain_debug__()
+            else:
+                print(
+                    output.output,
+                    end=(&#34;&#34; if isinstance(output.output, str) else &#34;, &#34;),
+                    flush=True,
+                )
+            yield output
+
+    next_name = f&#34;@debug&#34;
+    if hasattr(next, &#34;name&#34;):
+        next_name = f&#34;{next.name}@debug&#34;
+    return Chain[T, U](next_name, debug)
 
 
 async def filter_final_output(
@@ -299,6 +376,132 @@ ChainOutput(chain='GreetingChain', output='!', final=True)
     return await collect(filter_final_output(async_iterable))</code></pre>
 </details>
 </dd>
+<dt id="litechain.utils.chain.debug"><code class="name flex">
+<span>def <span class="ident">debug</span></span>(<span>chain: Callable[[~T], AsyncGenerator[<a title="litechain.core.chain.ChainOutput" href="../core/chain.html#litechain.core.chain.ChainOutput">ChainOutput</a>[~U, Any], Any]]) ‑> <a title="litechain.core.chain.Chain" href="../core/chain.html#litechain.core.chain.Chain">Chain</a>[~T, ~U]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A helper for helping you debugging chains. Simply wrap any piece of the chain or the whole chain together
+with the <code><a title="litechain.utils.chain.debug" href="#litechain.utils.chain.debug">debug()</a></code> function to print out everything that goes through it and its nested chains.</p>
+<p>For example, you can wrap the whole chain to debug everything:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from litechain import Chain, join_final_output
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def debug_whole_chain():
+...     greet_chain = Chain[str, str](&quot;GreetingChain&quot;, lambda name: f&quot;Hello, {name}!&quot;)
+...     polite_chain = Chain[str, str](&quot;PoliteChain&quot;, lambda greeting: f&quot;{greeting} How are you?&quot;)
+...     chain = debug(
+...         greet_chain.join().and_then(polite_chain)
+...     )
+...     await join_final_output(chain(&quot;Alice&quot;))
+...
+&gt;&gt;&gt; asyncio.run(debug_whole_chain())
+&lt;BLANKLINE&gt;
+[32m&gt; GreetingChain[39m
+&lt;BLANKLINE&gt;
+Hello, Alice!
+&lt;BLANKLINE&gt;
+[32m&gt; GreetingChain@join[39m
+&lt;BLANKLINE&gt;
+Hello, Alice!
+&lt;BLANKLINE&gt;
+[32m&gt; PoliteChain[39m
+&lt;BLANKLINE&gt;
+Hello, Alice! How are you?
+</code></pre>
+<p>Or, alternatively, you can debug just a piece of it:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from litechain import Chain, join_final_output
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def debug_whole_chain():
+...     greet_chain = Chain[str, str](&quot;GreetingChain&quot;, lambda name: f&quot;Hello, {name}!&quot;)
+...     polite_chain = Chain[str, str](&quot;PoliteChain&quot;, lambda greeting: f&quot;{greeting} How are you?&quot;)
+...     chain = debug(greet_chain).join().and_then(polite_chain)
+...     await join_final_output(chain(&quot;Alice&quot;))
+...
+&gt;&gt;&gt; asyncio.run(debug_whole_chain())
+&lt;BLANKLINE&gt;
+[32m&gt; GreetingChain[39m
+&lt;BLANKLINE&gt;
+Hello, Alice!
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def debug(
+    chain: Callable[[T], AsyncGenerator[ChainOutput[U, Any], Any]]
+) -&gt; Chain[T, U]:
+    &#34;&#34;&#34;
+    A helper for helping you debugging chains. Simply wrap any piece of the chain or the whole chain together
+    with the `debug` function to print out everything that goes through it and its nested chains.
+
+    For example, you can wrap the whole chain to debug everything:
+    &gt;&gt;&gt; from litechain import Chain, join_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def debug_whole_chain():
+    ...     greet_chain = Chain[str, str](&#34;GreetingChain&#34;, lambda name: f&#34;Hello, {name}!&#34;)
+    ...     polite_chain = Chain[str, str](&#34;PoliteChain&#34;, lambda greeting: f&#34;{greeting} How are you?&#34;)
+    ...     chain = debug(
+    ...         greet_chain.join().and_then(polite_chain)
+    ...     )
+    ...     await join_final_output(chain(&#34;Alice&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(debug_whole_chain())
+    &lt;BLANKLINE&gt;
+    \x1b[32m&gt; GreetingChain\x1b[39m
+    &lt;BLANKLINE&gt;
+    Hello, Alice!
+    &lt;BLANKLINE&gt;
+    \x1b[32m&gt; GreetingChain@join\x1b[39m
+    &lt;BLANKLINE&gt;
+    Hello, Alice!
+    &lt;BLANKLINE&gt;
+    \x1b[32m&gt; PoliteChain\x1b[39m
+    &lt;BLANKLINE&gt;
+    Hello, Alice! How are you?
+
+    Or, alternatively, you can debug just a piece of it:
+    &gt;&gt;&gt; from litechain import Chain, join_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def debug_whole_chain():
+    ...     greet_chain = Chain[str, str](&#34;GreetingChain&#34;, lambda name: f&#34;Hello, {name}!&#34;)
+    ...     polite_chain = Chain[str, str](&#34;PoliteChain&#34;, lambda greeting: f&#34;{greeting} How are you?&#34;)
+    ...     chain = debug(greet_chain).join().and_then(polite_chain)
+    ...     await join_final_output(chain(&#34;Alice&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(debug_whole_chain())
+    &lt;BLANKLINE&gt;
+    \x1b[32m&gt; GreetingChain\x1b[39m
+    &lt;BLANKLINE&gt;
+    Hello, Alice!
+    &#34;&#34;&#34;
+
+    async def debug(input: T) -&gt; AsyncGenerator[ChainOutput[U, Any], Any]:
+        last_chain = &#34;&#34;
+        async for output in chain(input):
+            if output.chain != last_chain:
+                if last_chain != &#34;&#34;:
+                    print(&#34;\n&#34;, end=&#34;&#34;, flush=True)
+                last_chain = output.chain
+                print(f&#34;\n{Fore.GREEN}&gt; {output.chain}{Fore.RESET}\n&#34;)
+            if hasattr(output.output, &#34;__chain_debug__&#34;):
+                output.output.__chain_debug__()
+            else:
+                print(
+                    output.output,
+                    end=(&#34;&#34; if isinstance(output.output, str) else &#34;, &#34;),
+                    flush=True,
+                )
+            yield output
+
+    next_name = f&#34;@debug&#34;
+    if hasattr(next, &#34;name&#34;):
+        next_name = f&#34;{next.name}@debug&#34;
+    return Chain[T, U](next_name, debug)</code></pre>
+</details>
+</dd>
 <dt id="litechain.utils.chain.filter_final_output"><code class="name flex">
 <span>async def <span class="ident">filter_final_output</span></span>(<span>async_iterable: AsyncGenerator[<a title="litechain.core.chain.ChainOutput" href="../core/chain.html#litechain.core.chain.ChainOutput">ChainOutput</a>[~T, Any], Any]) ‑> AsyncGenerator[~T, Any]</span>
 </code></dt>
@@ -445,6 +648,7 @@ Hello, Alice!
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="litechain.utils.chain.collect_final_output" href="#litechain.utils.chain.collect_final_output">collect_final_output</a></code></li>
+<li><code><a title="litechain.utils.chain.debug" href="#litechain.utils.chain.debug">debug</a></code></li>
 <li><code><a title="litechain.utils.chain.filter_final_output" href="#litechain.utils.chain.filter_final_output">filter_final_output</a></code></li>
 <li><code><a title="litechain.utils.chain.join_final_output" href="#litechain.utils.chain.join_final_output">join_final_output</a></code></li>
 </ul>

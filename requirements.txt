@@ -3,6 +3,7 @@ colorama
 
 # Contrib
 openai
+gpt4all
 
 # Test
 pdoc3

@@ -42,26 +42,32 @@ Core Concepts
 Composition Methods
 ------------------
 
-`map`:
-    Transforms the output of the Chain by applying a function to each item as they arrive. This is
-    non-blocking and continues processing the chain in parallel.
+`Chain.map`:
+    Transforms the output of the Chain by applying a function to each token as they arrive. This is
+    non-blocking and maps as chain generations flow in: `chain.map(lambda token: token.lower())`
 
-`and_then`:
+`Chain.and_then`:
     Applies a function on the list of results of the Chain. Differently from `map`, this is blocking,
     and collects the outputs before applying the function. It can also take another Chain as argument,
-    effectively composing two Chains together.
+    effectively composing two Chains together: `first_chain.and_then(second_chain)`.
 
-`collect`:
+`Chain.collect`:
     Collects the output of a Chain into a list. This is a blocking operation and can be used
     when the next processing step requires the full output at once.
 
-`join`:
+`Chain.join`:
     Joins the output of a string producing Chain into a single string by concatenating each item.
 
-`gather`:
+`Chain.gather`:
     Gathers results from a chain that produces multiple async generators and processes them in parallel,
     returning a list of lists of the results of all generators, allowing you to execute many Chains at
     the same time, this is similar to `asyncio.gather`.
+
+Contrib: OpenAI, GPT4All and more
+---------------------------------
+
+The core of LiteChain is kept small and stable, so all the integrations that build on top of it live separate,
+under the `litechain.contrib` module. Check it out for reference and code examples of the integrations.
 
 Examples
 --------
@@ -88,10 +94,10 @@ Using Chain to process text data:
 
 ---
 
-For further tutorials and examples, consult the [documentation/README](https://github.com/rogeriochaves/litechain).
+Here you can find the reference and code examples, for further tutorials and use cases, consult the [documentation](https://github.com/rogeriochaves/litechain).
 """
 
-from litechain.core.chain import Chain, SingleOutputChain
+from litechain.core.chain import Chain, ChainOutput, SingleOutputChain
 from litechain.utils.chain import (
     debug,
     filter_final_output,
@@ -108,6 +114,7 @@ from litechain.utils.async_generator import (
 
 __all__ = (
     "Chain",
+    "ChainOutput",
     "SingleOutputChain",
     "debug",
     "filter_final_output",
