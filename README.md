@@ -16,7 +16,7 @@ pip install git+https://github.com/rogeriochaves/litechain.git#egg=litechain
 
 The Chain is the building block for LiteChain, an LLM is a Chain, an output parser is a Chain, a group of chains can be composed as another Chain, it's [Chains all the way down](https://en.wikipedia.org/wiki/Turtles_all_the_way_down).
 
-Take a look at [the documentation guides](https://rogeriochaves.github.io/litechain) (TODO: link) for guides on building applications on top of chains, or go straight to [the reference](https://rogeriochaves.github.io/litechain/reference/litechain/index.html#chain) for the core concept.
+Take a look at [the documentation guides](https://rogeriochaves.github.io/litechain) for guides on building applications on top of chains, or go straight to [the reference](https://rogeriochaves.github.io/litechain/reference/litechain/index.html#chain) for the core concept.
 
 # Quick Example
 
