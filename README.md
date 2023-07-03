@@ -8,6 +8,12 @@ LiteChain is a lighter alternative to LangChain for building LLMs application, i
 pip install git+https://github.com/rogeriochaves/litechain.git#egg=litechain
 ```
 
+# 🔗 The Chain building block
+
+The Chain is the building block for LiteChain, an LLM is a Chain, an output parser is a Chain, a group of chains can be composed as another Chain, it's [Chains all the way down](https://en.wikipedia.org/wiki/Turtles_all_the_way_down).
+
+Take a look at [the documentation guides](https://rogeriochaves.github.io/litechain) (TODO: link) for guides on building applications on top of chains, or go straight to [the reference](https://rogeriochaves.github.io/litechain/reference/litechain/index.html#chain) for the core concept.
+
 # Quick Example
 
 Here is a ChatBot that answers anything you ask using only emojis:
@@ -74,19 +80,15 @@ The type signatures are an important part of LiteChain, having them can save a l
 
 Last but not least, you may also have noticed that both the emojis and the translation got printed in the final output, this is by design. In LiteChain, you always have access to everything that has gone through the whole chain in the final stream, this means that debugging it is very trivial, and a [`debug`](https://rogeriochaves.github.io/litechain/reference/litechain/index.html#litechain.debug) function is available to make it even easier. A property `output.final : bool` [is available](https://rogeriochaves.github.io/litechain/reference/litechain/index.html#litechain.ChainOutput.final) to be checked if you want to print just the results of the final Chain, but there are also more utility functions available to help you work with output stream as you wish, check them out on [the reference](https://rogeriochaves.github.io/litechain/reference/litechain/index.html).
 
-# The Chain building block
+# 📖 Learn more
 
-# Development
+To continue developing with LiteChain, take a look at our [documentation](https://rogeriochaves.github.io/litechain) so you can find:
 
-Install all dependencies:
+- Getting started
+- Detailed guides
+- How-to examples
+- Reference
 
-```
-pip install -r requirements.txt
-```
+# 🙋 Contributing
 
-Run all the tests:
-
-```
-python -m unittest tests/**/*.py
-python -m doctest -v litechain/**/*.py
-```
+As a very new project in a rapidly developing field LiteChain is extremely open to contributions, we need a lot of help with integrations, documentation and guides content, feel free to send MRs and open issues. The project is very easy to run (check out the Makefile, it's all you need), but more complete contibuting guidelines to be written (we need help with that too!)
