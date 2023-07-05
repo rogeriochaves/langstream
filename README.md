@@ -1,8 +1,8 @@
 # 🪽🔗 LiteChain
 
-[![tests](https://github.com/rogeriochaves/litechain/actions/workflows/run_tests.yml/badge.svg)](https://github.com/rogeriochaves/litechain/actions/workflows/run_tests.yml/badge.svg)
-[![docs](https://github.com/rogeriochaves/litechain/actions/workflows/publish_docs.yml/badge.svg)](https://github.com/rogeriochaves/litechain/actions/workflows/publish_docs.yml/badge.svg)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![tests](https://github.com/rogeriochaves/litechain/actions/workflows/run_tests.yml/badge.svg)](https://github.com/rogeriochaves/litechain/actions/workflows/run_tests.yml)
+[![docs](https://github.com/rogeriochaves/litechain/actions/workflows/publish_docs.yml/badge.svg)](https://github.com/rogeriochaves/litechain/actions/workflows/publish_docs.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/rogeriochaves/litechain/blob/main/LICENSE)
 
 LiteChain is a lighter alternative to LangChain for building LLMs application, instead of having a massive amount of features and classes, LiteChain focuses on having a single small core, that is easy to learn, easy to adapt, well documented, fully typed and truly composable.
 
