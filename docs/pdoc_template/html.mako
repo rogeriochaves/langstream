@@ -423,6 +423,13 @@
 <body>
 
 <style>
+.navbar.navbar--fixed-top{
+    background-color: #fff;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+    display: flex;
+    height: 3.75rem;
+    padding: 0.5rem 1rem;
+}
 .navbar__inner {
     display: flex;
     flex-wrap: wrap;
@@ -463,18 +470,10 @@
     min-width: 0;
 }
 .iconExternalLink_node_modules-\@docusaurus-theme-classic-lib-theme-Icon-ExternalLink-styles-module {
-  margin-left: 0.3rem;
+    margin-left: 0.3rem;
 }
 </style>
-<nav aria-label="Main" class="navbar navbar--fixed-top" style="background-color: #fff;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
-    display: flex;
-    height: 3.75rem;
-    padding: 0.5rem 1rem;
-    position: sticky;
-    top: 0;
-    z-index: 200;
-    ">
+<nav aria-label="Main" class="navbar navbar--fixed-top">
   <div class="navbar__inner" style="display: flex;
     flex-wrap: wrap;
     justify-content: space-between;

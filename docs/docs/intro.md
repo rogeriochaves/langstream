@@ -20,7 +20,7 @@ To run this example, first you will need to get an [API key from OpenAI](https:/
 export OPENAI_API_KEY=<your key here>
 ```
 
-(if you really cannot get access to the API, you can try [GPT4All](https://rogeriochaves.github.io/litechain/reference/litechain/contrib/index.html#litechain.contrib.GPT4AllChain) instead, it's completely free and runs locally)
+(if you really cannot get access to the API, you can try [GPT4All](pathname:///reference/litechain/contrib/index.html#litechain.contrib.GPT4AllChain) instead, it's completely free and runs locally)
 
 Now create a new file `main.py` and paste this example:
 

@@ -10,7 +10,7 @@ But you don't need to understand any Functional Programming or fancy terms, just
 
 ## `map()`
 
-This is the simplest one, the [`map()`](pathname://reference/litechain/index.html#litechain.Chain.map) function transforms the output of a Chain, one token at a time as they arrive. The [`map()`](pathname://reference/litechain/index.html#litechain.Chain.map) function is non-blocking, since it's processing the outputs as they come, so you shouldn't do heavy processing on it, although you can return asynchronous operations from it to await later.
+This is the simplest one, the [`map()`](pathname:///reference/litechain/index.html#litechain.Chain.map) function transforms the output of a Chain, one token at a time as they arrive. The [`map()`](pathname:///reference/litechain/index.html#litechain.Chain.map) function is non-blocking, since it's processing the outputs as they come, so you shouldn't do heavy processing on it, although you can return asynchronous operations from it to await later.
 
 Here is an example:
 
@@ -40,8 +40,8 @@ Here we are using a basic [`Chain`](pathname:///reference/litechain/index.html#c
 
 ## `and_then()`
 
-The [`and_then()`](pathname://reference/litechain/index.html#litechain.Chain.and_then) is the true composition function, it's what
-allows you to compose two chains together, taking the output of one chain, and using as input for another one. Since generally we want the first chain to be finished to send the input to the next one, for example for building a prompt, the [`and_then()`](pathname://reference/litechain/index.html#litechain.Chain.and_then) function is blocking, which means it will wait for all tokens
+The [`and_then()`](pathname:///reference/litechain/index.html#litechain.Chain.and_then) is the true composition function, it's what
+allows you to compose two chains together, taking the output of one chain, and using as input for another one. Since generally we want the first chain to be finished to send the input to the next one, for example for building a prompt, the [`and_then()`](pathname:///reference/litechain/index.html#litechain.Chain.and_then) function is blocking, which means it will wait for all tokens
 to arrive from Chain A, collect them to a list, and only then call the Chain B.
 
 For example:
@@ -79,7 +79,7 @@ Then again, it could also be an LLM producing tokens in place of those chains, t
 
 ## `collect()`
 
-The [`collect()`](pathname://reference/litechain/index.html#litechain.Chain.collect) function blocks a Chain until all the values have been generated, and collects it into a list, kinda like what `and_then()` does under the hood, but it doesn't take another chain as an argument, it takes no arguments, it just blocks the current chain transforming it into from a stream of items, to a single list item.
+The [`collect()`](pathname:///reference/litechain/index.html#litechain.Chain.collect) function blocks a Chain until all the values have been generated, and collects it into a list, kinda like what `and_then()` does under the hood, but it doesn't take another chain as an argument, it takes no arguments, it just blocks the current chain transforming it into from a stream of items, to a single list item.
 
 You can use `collect()` + `map()` to achieve the same as the `and_then()` example above:
 
