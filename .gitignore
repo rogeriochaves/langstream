@@ -4,3 +4,6 @@ repl.ipynb
 .pytest_cache
 .env
 docs/static/reference
+.chainlit
+chainlit.md
+test.py
