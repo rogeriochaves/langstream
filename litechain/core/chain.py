@@ -209,11 +209,12 @@ class Chain(Generic[T, U]):
         Example using another chain:
 
         >>> from litechain import Chain, as_async_generator, join_final_output
+        >>> from typing import Iterable
         >>> import asyncio
         ...
         >>> async def example():
         ...     words_chain = Chain[str, str]("WordsChain", lambda sentence: as_async_generator(*sentence.split(" "))) # produces one word at a time
-        ...     acronym_chain = Chain[list[str], str]("AcronymChain", lambda words: "".join(word.upper()[0] for word in words)) # produces acronym
+        ...     acronym_chain = Chain[Iterable[str], str]("AcronymChain", lambda words: "".join(word.upper()[0] for word in words)) # produces acronym
         ...     composed_chain = words_chain.and_then(acronym_chain)
         ...     return await join_final_output(composed_chain("as soon as possible"))
         ...

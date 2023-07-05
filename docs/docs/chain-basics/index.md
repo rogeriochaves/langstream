@@ -4,9 +4,9 @@ sidebar_position: 2
 
 # Chain Basics
 
-The [Chain](/reference/litechain/index.html#chain) is the main building block of LiteChain, you compose chains together to build your LLM application.
+The [Chain](pathname:///reference/litechain/index.html#chain) is the main building block of LiteChain, you compose chains together to build your LLM application.
 
-A Chain is basically a function that takes an input and produces an [AsyncGenerator](https://peps.python.org/pep-0525/) of an output, if you are not familiar with async generators, you can think about it as a stream, or in other word, a list over time.
+A Chain is basically a function that takes an input and produces an [`AsyncGenerator`](https://peps.python.org/pep-0525/) of an output, if you are not familiar with async generators, you can think about it as a stream, or in other word, a list over time.
 
 The simplest of all chains, takes one input and produces a stream of outputs of a single item, and this is how you create one:
 
@@ -21,7 +21,7 @@ It also takes a name, `"UppercaseChain"`, this can literally be anything you wan
 
 Then, the heart of the chain, is the lambda function that is executed when the chain is called. It takes exactly one input (which is `str` in this) and must return a value of the specified output type (also `str`), here it just returns the same input but in uppercase.
 
-Now that we have a chain, we can just run it, as a function, and we will get back an [AsyncGenerator](https://peps.python.org/pep-0525/) of outputs that we can iterate on. Here is the full example:
+Now that we have a chain, we can just run it, as a function, and we will get back an [`AsyncGenerator`](https://peps.python.org/pep-0525/) of outputs that we can iterate on. Here is the full example:
 
 ```python
 from litechain import Chain

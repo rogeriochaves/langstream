@@ -34,7 +34,7 @@ async for output in bacon_chain("I like bacon and"):
 
 You can notice that it will print more or less one word per line, those are the tokens it is generating, since Python by default adds a new line for each `print` statement, we end up with one token per line.
 
-When creating a simple Chain, if you return a single value, it will also output just that single value, so if you want to simulate an LLM, and create a chain that produces a stream of outputs, you can use the [as_async_generator()](pathname:///reference/litechain/index.html#litechain.as_async_generator) utility function:
+When creating a simple Chain, if you return a single value, it will also output just that single value, so if you want to simulate an LLM, and create a chain that produces a stream of outputs, you can use the [`as_async_generator()`](pathname:///reference/litechain/index.html#litechain.as_async_generator) utility function:
 
 
 ```python
@@ -79,7 +79,7 @@ async for output in tell_the_world(None):
 
 This is done by design so that you can always inspect what is going in the middle of a complex chain, either to debug it, or to display to the user for a better user experience.
 
-If you want just the final output, you can check for the property [output.final](pathname:///reference/litechain/index.html#litechain.ChainOutput.final):
+If you want just the final output, you can check for the property [`output.final`](pathname:///reference/litechain/index.html#litechain.ChainOutput.final):
 
 ```python
 import time
@@ -95,7 +95,7 @@ async for output in tell_the_world(None):
 
 ## Output Utils
 
-Now, as shown on the examples, you need to iterate over it with `async for` to get the final output. However, you might not care about streaming or inspecting the middle results at all, and just want the final result as a whole. For that, you can use some utility functions that LiteChain provides, for example, [collect_final_output()](pathname:///reference/litechain/index.html#litechain.collect_final_output), which gives you a single list with the final outputs all at once:
+Now, as shown on the examples, you need to iterate over it with `async for` to get the final output. However, you might not care about streaming or inspecting the middle results at all, and just want the final result as a whole. For that, you can use some utility functions that LiteChain provides, for example, [`collect_final_output()`](pathname:///reference/litechain/index.html#litechain.collect_final_output), which gives you a single list with the final outputs all at once:
 
 ```python
 from litechain import collect_final_output
@@ -104,7 +104,7 @@ await collect_final_output(tell_the_world(None))
 #=> ['I', 'LIKE', 'BACON']
 ```
 
-Or, if you chain's final output is `str`, then you can use [join_final_output()](pathname:///reference/litechain/index.html#litechain.join_final_output), which gives you already the full string, concatenated
+Or, if you chain's final output is `str`, then you can use [`join_final_output()`](pathname:///reference/litechain/index.html#litechain.join_final_output), which gives you already the full string, concatenated
 
 ```python
 from litechain import join_final_output
@@ -115,6 +115,6 @@ await join_final_output(tell_the_world(None))
 
 (LLMs produce spaces as token as well, so normally the lack of spaces in here is not a problem)
 
-Check out also [filter_final_output()](pathname:///reference/litechain/index.html#litechain.filter_final_output), which gives you still an `AsyncGenerator` to loop over, but including only the final results.
+Check out also [`filter_final_output()`](pathname:///reference/litechain/index.html#litechain.filter_final_output), which gives you still an `AsyncGenerator` to loop over, but including only the final results.
 
 Now that you know all about streams, you need to understand what does that mean when you are composing them together, keep on reading to learn about Composing Chains.

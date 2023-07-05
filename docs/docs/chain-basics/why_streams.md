@@ -17,7 +17,7 @@ Granted, it is not always that we will need or even want the results to be strea
 Newton, and one as it if were Kanye West, and then generate the answer basing on the arguments of those three for a better result, then of course you need to wait for them to finish first before answering the user. It is, however,
 very easy to block a stream and wait for it to finish before moving on, but the other way around, taking a blocking operation, and making a stream out of it, is simply not possible.
 
-That's why streaming is not just a feature for LiteChain, it is fundamentally ingrained into the [Chain](pathname:///reference/litechain/index.html#chain), under the hood everything is a Python [AsyncGenerator](https://peps.python.org/pep-0525/),
+That's why streaming is not just a feature for LiteChain, it is fundamentally ingrained into the [`Chain`](pathname:///reference/litechain/index.html#chain), under the hood everything is a Python [`AsyncGenerator`](https://peps.python.org/pep-0525/),
 the Chain just give us a nice composable and debuggable interface on top.
 
 Continue on reading for examples on how that looks like, and how do we work with those streams.
