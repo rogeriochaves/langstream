@@ -335,11 +335,12 @@ class Chain(Generic[T, U]):
         Example using another chain:
 
         &gt;&gt;&gt; from litechain import Chain, as_async_generator, join_final_output
+        &gt;&gt;&gt; from typing import Iterable
         &gt;&gt;&gt; import asyncio
         ...
         &gt;&gt;&gt; async def example():
         ...     words_chain = Chain[str, str](&#34;WordsChain&#34;, lambda sentence: as_async_generator(*sentence.split(&#34; &#34;))) # produces one word at a time
-        ...     acronym_chain = Chain[list[str], str](&#34;AcronymChain&#34;, lambda words: &#34;&#34;.join(word.upper()[0] for word in words)) # produces acronym
+        ...     acronym_chain = Chain[Iterable[str], str](&#34;AcronymChain&#34;, lambda words: &#34;&#34;.join(word.upper()[0] for word in words)) # produces acronym
         ...     composed_chain = words_chain.and_then(acronym_chain)
         ...     return await join_final_output(composed_chain(&#34;as soon as possible&#34;))
         ...
@@ -796,11 +797,12 @@ class SingleOutputChain(Chain[T, U]):
         Example using another chain:
 
         &gt;&gt;&gt; from litechain import Chain, as_async_generator, join_final_output
+        &gt;&gt;&gt; from typing import Iterable
         &gt;&gt;&gt; import asyncio
         ...
         &gt;&gt;&gt; async def example():
         ...     words_chain = Chain[str, str](&#34;WordsChain&#34;, lambda sentence: as_async_generator(*sentence.split(&#34; &#34;))) # produces one word at a time
-        ...     acronym_chain = Chain[list[str], str](&#34;AcronymChain&#34;, lambda words: &#34;&#34;.join(word.upper()[0] for word in words)) # produces acronym
+        ...     acronym_chain = Chain[Iterable[str], str](&#34;AcronymChain&#34;, lambda words: &#34;&#34;.join(word.upper()[0] for word in words)) # produces acronym
         ...     composed_chain = words_chain.and_then(acronym_chain)
         ...     return await join_final_output(composed_chain(&#34;as soon as possible&#34;))
         ...
@@ -982,11 +984,12 @@ If <code>transform</code> is another chain, it is used to process the list of co
 </code></pre>
 <p>Example using another chain:</p>
 <pre><code class="language-python-repl">&gt;&gt;&gt; from litechain import Chain, as_async_generator, join_final_output
+&gt;&gt;&gt; from typing import Iterable
 &gt;&gt;&gt; import asyncio
 ...
 &gt;&gt;&gt; async def example():
 ...     words_chain = Chain[str, str](&quot;WordsChain&quot;, lambda sentence: as_async_generator(*sentence.split(&quot; &quot;))) # produces one word at a time
-...     acronym_chain = Chain[list[str], str](&quot;AcronymChain&quot;, lambda words: &quot;&quot;.join(word.upper()[0] for word in words)) # produces acronym
+...     acronym_chain = Chain[Iterable[str], str](&quot;AcronymChain&quot;, lambda words: &quot;&quot;.join(word.upper()[0] for word in words)) # produces acronym
 ...     composed_chain = words_chain.and_then(acronym_chain)
 ...     return await join_final_output(composed_chain(&quot;as soon as possible&quot;))
 ...
@@ -1028,11 +1031,12 @@ If <code>transform</code> is another chain, it is used to process the list of co
     Example using another chain:
 
     &gt;&gt;&gt; from litechain import Chain, as_async_generator, join_final_output
+    &gt;&gt;&gt; from typing import Iterable
     &gt;&gt;&gt; import asyncio
     ...
     &gt;&gt;&gt; async def example():
     ...     words_chain = Chain[str, str](&#34;WordsChain&#34;, lambda sentence: as_async_generator(*sentence.split(&#34; &#34;))) # produces one word at a time
-    ...     acronym_chain = Chain[list[str], str](&#34;AcronymChain&#34;, lambda words: &#34;&#34;.join(word.upper()[0] for word in words)) # produces acronym
+    ...     acronym_chain = Chain[Iterable[str], str](&#34;AcronymChain&#34;, lambda words: &#34;&#34;.join(word.upper()[0] for word in words)) # produces acronym
     ...     composed_chain = words_chain.and_then(acronym_chain)
     ...     return await join_final_output(composed_chain(&#34;as soon as possible&#34;))
     ...
