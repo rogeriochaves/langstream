@@ -14,10 +14,9 @@ The simplest of all chains, takes one input and produces a stream of outputs of 
 uppercase_chain = Chain[str, str]("UppercaseChain", lambda input: input.upper())
 ```
 
-As you can see, there are some parameters you pass to it, first of all is the type signature `[str, str]`, this defines the input and output types of the chain, respectively. In this case they are the same, but they could be different, you can read more about why
-types are important for LiteChain [here](#) (TODO: link pending).
+As you can see, there are some parameters you pass to it, first of all is the type signature `[str, str]`, this defines the input and output types of the chain, respectively. In this case they are the same, but they could be different, you can read more about why types are important for LiteChain [here](/docs/chain-basics/type_signatures).
 
-It also takes a name, `"UppercaseChain"`, this can literally be anything you want, the reason for having a name, however, is making it easier to debug, if any issues arrive along the way, you can debug and visualize exactly why chains are misbehaving.
+It also takes a name, `"UppercaseChain"`, the reason for having a name is making it easier to debug, so it can be anything you want, as long as it's helpful for you to identify later. If any issues arrive along the way, you can debug and visualize exactly which chains are misbehaving.
 
 Then, the heart of the chain, is the lambda function that is executed when the chain is called. It takes exactly one input (which is `str` in this) and must return a value of the specified output type (also `str`), here it just returns the same input but in uppercase.
 

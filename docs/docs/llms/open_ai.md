@@ -36,7 +36,7 @@ When you use `OpenAICompletionChain` instead of a regular `Chain`, the lambda fu
 
 You also must specify which model to use, OpenAI has several variations of the GPT-3 text completion model, take a look at [their page](https://platform.openai.com/docs/models/gpt-3) to see which ones are available.
 
-You also have other parameters you can pass to the chain like `temperature`, which [helps with development if you keep it at zero](#) (TODO: add link), and `max_tokens`, take a look at [the reference](pathname:///reference/litechain/contrib/index.html#litechain.contrib.OpenAICompletionChain) to learn more.
+You also have other parameters you can pass to the chain like `temperature`, which [helps with development if you keep it at zero](/docs/llms/zero_temperature), and `max_tokens`, take a look at [the reference](pathname:///reference/litechain/contrib/index.html#litechain.contrib.OpenAICompletionChain) to learn more.
 
 ## Chat Completion
 
