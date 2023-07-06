@@ -318,7 +318,7 @@ Found model file at ...
 <dd>
 <div class="desc"><p><code><a title="litechain.contrib.OpenAIChatChain" href="#litechain.contrib.OpenAIChatChain">OpenAIChatChain</a></code> gives you access to the more powerful LLMs from OpenAI, like <code>gpt-3.5-turbo</code> and <code>gpt-4</code>, they are structured in a chat format with roles.</p>
 <p>The <code><a title="litechain.contrib.OpenAIChatChain" href="#litechain.contrib.OpenAIChatChain">OpenAIChatChain</a></code> takes a lambda function that should return a list of <code><a title="litechain.contrib.OpenAIChatMessage" href="#litechain.contrib.OpenAIChatMessage">OpenAIChatMessage</a></code> for the assistant to reply, it is stateless, so it doesn't keep
-memory of the past chat messages, you will have to handle the memory yourself, you can <a href="#">follow this guide to get started on memory</a> (TODO: add link).</p>
+memory of the past chat messages, you will have to handle the memory yourself, you can <a href="https://rogeriochaves.github.io/litechain/docs/llms/memory">follow this guide to get started on memory</a>.</p>
 <p>The <code><a title="litechain.contrib.OpenAIChatChain" href="#litechain.contrib.OpenAIChatChain">OpenAIChatChain</a></code> also produces <code><a title="litechain.contrib.OpenAIChatDelta" href="#litechain.contrib.OpenAIChatDelta">OpenAIChatDelta</a></code> as output, one per token, it contains the <code>role</code> that started the output, and then subsequent <code>content</code> updates.
 If you want the final content as a string, you will need to use the <code>.content</code> property from the delta and accumulate it for the final result.</p>
 <p>To use this chain you will need an <code>OPENAI_API_KEY</code> environment variable to be available, and then you can generate chat completions out of it.</p>
@@ -359,7 +359,7 @@ If you want the final content as a string, you will need to use the <code>.conte
     `OpenAIChatChain` gives you access to the more powerful LLMs from OpenAI, like `gpt-3.5-turbo` and `gpt-4`, they are structured in a chat format with roles.
 
     The `OpenAIChatChain` takes a lambda function that should return a list of `OpenAIChatMessage` for the assistant to reply, it is stateless, so it doesn&#39;t keep
-    memory of the past chat messages, you will have to handle the memory yourself, you can [follow this guide to get started on memory](#) (TODO: add link).
+    memory of the past chat messages, you will have to handle the memory yourself, you can [follow this guide to get started on memory](https://rogeriochaves.github.io/litechain/docs/llms/memory).
 
     The `OpenAIChatChain` also produces `OpenAIChatDelta` as output, one per token, it contains the `role` that started the output, and then subsequent `content` updates.
     If you want the final content as a string, you will need to use the `.content` property from the delta and accumulate it for the final result.
@@ -471,7 +471,7 @@ If you want the final content as a string, you will need to use the <code>.conte
 <dt><strong><code>role</code></strong> :&ensp;<code>Optional[Literal["assistant"]]</code></dt>
 <dd>The role of the output message, the first message will have the role, while
 the subsequent partial content output ones will have the role as <code>None</code>.
-For now the only possible values it will have is either None or <code>"assisant"</code> (TODO: functions to be supported)</dd>
+For now the only possible values it will have is either None or <code>"assistant"</code> (TODO: functions to be supported)</dd>
 <dt><strong><code>content</code></strong> :&ensp;<code>str</code></dt>
 <dd>A string with the partial content being outputted by the LLM, this generally
 translate to each token the LLM is producing</dd>
@@ -490,7 +490,7 @@ class OpenAIChatDelta:
     role : Optional[Literal[&#34;assistant&#34;]]
         The role of the output message, the first message will have the role, while
         the subsequent partial content output ones will have the role as `None`.
-        For now the only possible values it will have is either None or `&#34;assisant&#34;` (TODO: functions to be supported)
+        For now the only possible values it will have is either None or `&#34;assistant&#34;` (TODO: functions to be supported)
 
     content : str
         A string with the partial content being outputted by the LLM, this generally
