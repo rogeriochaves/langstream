@@ -1,10 +1,15 @@
 ---
 sidebar_position: 1
+title: Getting Started
 ---
 
-# Getting Started
+# Introduction
 
 LiteChain is a lighter alternative to LangChain for building LLMs application, instead of having a massive amount of features and classes, LiteChain focuses on having a single small core, that is easy to learn, easy to adapt, well documented, fully typed and truly composable.
+
+LiteChain also puts emphasis on "explicit is better than implicit", which means less magic and a bit more legwork, but on the other hand, you will be able to understand everything that is going on in between, making your application easy to maintain and customize.
+
+## Getting Started
 
 You can install it with pip:
 

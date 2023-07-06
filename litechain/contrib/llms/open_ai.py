@@ -107,7 +107,7 @@ class OpenAIChatDelta:
     role : Optional[Literal["assistant"]]
         The role of the output message, the first message will have the role, while
         the subsequent partial content output ones will have the role as `None`.
-        For now the only possible values it will have is either None or `"assisant"` (TODO: functions to be supported)
+        For now the only possible values it will have is either None or `"assistant"` (TODO: functions to be supported)
 
     content : str
         A string with the partial content being outputted by the LLM, this generally
@@ -132,7 +132,7 @@ class OpenAIChatChain(Chain[T, U]):
     `OpenAIChatChain` gives you access to the more powerful LLMs from OpenAI, like `gpt-3.5-turbo` and `gpt-4`, they are structured in a chat format with roles.
 
     The `OpenAIChatChain` takes a lambda function that should return a list of `OpenAIChatMessage` for the assistant to reply, it is stateless, so it doesn't keep
-    memory of the past chat messages, you will have to handle the memory yourself, you can [follow this guide to get started on memory](#) (TODO: add link).
+    memory of the past chat messages, you will have to handle the memory yourself, you can [follow this guide to get started on memory](https://rogeriochaves.github.io/litechain/docs/llms/memory).
 
     The `OpenAIChatChain` also produces `OpenAIChatDelta` as output, one per token, it contains the `role` that started the output, and then subsequent `content` updates.
     If you want the final content as a string, you will need to use the `.content` property from the delta and accumulate it for the final result.
