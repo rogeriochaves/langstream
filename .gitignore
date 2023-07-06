@@ -7,3 +7,5 @@ docs/static/reference
 .chainlit
 chainlit.md
 test.py
+build/
+litechain.egg-info/
