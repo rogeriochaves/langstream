@@ -11,7 +11,7 @@ LiteChain is a lighter alternative to LangChain for building LLMs application, i
 # Quick Install
 
 ```
-pip install git+https://github.com/rogeriochaves/litechain.git#egg=litechain
+pip install litechain
 ```
 
 # 🔗 The Chain building block
