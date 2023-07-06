@@ -136,6 +136,36 @@ U = TypeVar(&#34;U&#34;)
 
 
 class OpenAICompletionChain(Chain[T, U]):
+    &#34;&#34;&#34;
+    `OpenAICompletionChain` uses the most simple LLMs from OpenAI based on GPT-3 for text completion, if you are looking for ChatCompletion, take a look at `OpenAIChatChain`.
+
+    The `OpenAICompletionChain` takes a lambda function that should return a string with the prompt for completion.
+
+    To use this chain you will need an `OPENAI_API_KEY` environment variable to be available, and then you can generate completions out of it.
+
+    You can read more about the completion API on [OpenAI API reference](https://platform.openai.com/docs/api-reference/completions)
+
+    Example
+    -------
+
+    &gt;&gt;&gt; from litechain import join_final_output
+    &gt;&gt;&gt; from litechain.contrib import OpenAICompletionChain
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     recipe_chain = OpenAICompletionChain[str, str](
+    ...         &#34;RecipeChain&#34;,
+    ...         lambda recipe_name: f&#34;Here is my {recipe_name} recipe: &#34;,
+    ...         model=&#34;ada&#34;,
+    ...     )
+    ...
+    ...     return await join_final_output(recipe_chain(&#34;instant noodles&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(example()) # doctest:+SKIP
+    &#39;【Instant Noodles】\\n\\nIngredients:\\n\\n1 cup of water&#39;
+
+    &#34;&#34;&#34;
+
     def __init__(
         self: &#34;OpenAICompletionChain[T, str]&#34;,
         name: str,
@@ -175,12 +205,39 @@ class OpenAICompletionChain(Chain[T, U]):
 
 @dataclass
 class OpenAIChatMessage:
+    &#34;&#34;&#34;
+    OpenAIChatMessage is a data class that represents a chat message for building `OpenAIChatChain` prompt.
+
+    Attributes
+    ----------
+    role : Literal[&#34;system&#34;, &#34;user&#34;, &#34;assistant&#34;]
+        The role of who sent this message in the chat, can be one of `&#34;system&#34;`, `&#34;user&#34;` or `&#34;assisant&#34;` (TODO: functions to be supported)
+
+    content : str
+        A string with the full content of what the given role said
+
+    &#34;&#34;&#34;
     role: Literal[&#34;system&#34;, &#34;user&#34;, &#34;assistant&#34;]
     content: str
 
 
 @dataclass
 class OpenAIChatDelta:
+    &#34;&#34;&#34;
+    OpenAIChatDelta is a data class that represents the output of an `OpenAIChatChain`.
+
+    Attributes
+    ----------
+    role : Optional[Literal[&#34;assistant&#34;]]
+        The role of the output message, the first message will have the role, while
+        the subsequent partial content output ones will have the role as `None`.
+        For now the only possible values it will have is either None or `&#34;assisant&#34;` (TODO: functions to be supported)
+
+    content : str
+        A string with the partial content being outputted by the LLM, this generally
+        translate to each token the LLM is producing
+
+    &#34;&#34;&#34;
     role: Optional[Literal[&#34;assistant&#34;]]
     content: str
 
@@ -195,6 +252,50 @@ class OpenAIChatDelta:
 
 
 class OpenAIChatChain(Chain[T, U]):
+    &#34;&#34;&#34;
+    `OpenAIChatChain` gives you access to the more powerful LLMs from OpenAI, like `gpt-3.5-turbo` and `gpt-4`, they are structured in a chat format with roles.
+
+    The `OpenAIChatChain` takes a lambda function that should return a list of `OpenAIChatMessage` for the assistant to reply, it is stateless, so it doesn&#39;t keep
+    memory of the past chat messages, you will have to handle the memory yourself, you can [follow this guide to get started on memory](#) (TODO: add link).
+
+    The `OpenAIChatChain` also produces `OpenAIChatDelta` as output, one per token, it contains the `role` that started the output, and then subsequent `content` updates.
+    If you want the final content as a string, you will need to use the `.content` property from the delta and accumulate it for the final result.
+
+    To use this chain you will need an `OPENAI_API_KEY` environment variable to be available, and then you can generate chat completions out of it.
+
+    You can read more about the chat completion API on [OpenAI API reference](https://platform.openai.com/docs/api-reference/chat)
+
+    Example
+    -------
+
+    &gt;&gt;&gt; from litechain import Chain, join_final_output
+    &gt;&gt;&gt; from litechain.contrib import OpenAIChatChain, OpenAIChatMessage, OpenAIChatDelta
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     recipe_chain: Chain[str, str] = OpenAIChatChain[str, OpenAIChatDelta](
+    ...         &#34;RecipeChain&#34;,
+    ...         lambda recipe_name: [
+    ...             OpenAIChatMessage(
+    ...                 role=&#34;system&#34;,
+    ...                 content=&#34;You are ChefGPT, an assistant bot trained on all culinary knowledge of world&#39;s most proeminant Michelin Chefs&#34;,
+    ...             ),
+    ...             OpenAIChatMessage(
+    ...                 role=&#34;user&#34;,
+    ...                 content=f&#34;Hello, could you write me a recipe for {recipe_name}?&#34;,
+    ...             ),
+    ...         ],
+    ...         model=&#34;gpt-3.5-turbo&#34;,
+    ...         max_tokens=10,
+    ...     ).map(lambda delta: delta.content)
+    ...
+    ...     return await join_final_output(recipe_chain(&#34;instant noodles&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(example()) # doctest:+SKIP
+    &#34;Of course! Here&#39;s a simple and delicious recipe&#34;
+
+    &#34;&#34;&#34;
+
     def __init__(
         self: &#34;OpenAIChatChain[T, OpenAIChatDelta]&#34;,
         name: str,
@@ -253,12 +354,89 @@ class OpenAIChatChain(Chain[T, U]):
 <span>(</span><span>name: str, call: Callable[[~T], List[<a title="litechain.contrib.llms.open_ai.OpenAIChatMessage" href="#litechain.contrib.llms.open_ai.OpenAIChatMessage">OpenAIChatMessage</a>]], model: str, temperature: Optional[float] = 0, max_tokens: Optional[int] = None)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p><code><a title="litechain.contrib.llms.open_ai.OpenAIChatChain" href="#litechain.contrib.llms.open_ai.OpenAIChatChain">OpenAIChatChain</a></code> gives you access to the more powerful LLMs from OpenAI, like <code>gpt-3.5-turbo</code> and <code>gpt-4</code>, they are structured in a chat format with roles.</p>
+<p>The <code><a title="litechain.contrib.llms.open_ai.OpenAIChatChain" href="#litechain.contrib.llms.open_ai.OpenAIChatChain">OpenAIChatChain</a></code> takes a lambda function that should return a list of <code><a title="litechain.contrib.llms.open_ai.OpenAIChatMessage" href="#litechain.contrib.llms.open_ai.OpenAIChatMessage">OpenAIChatMessage</a></code> for the assistant to reply, it is stateless, so it doesn't keep
+memory of the past chat messages, you will have to handle the memory yourself, you can <a href="#">follow this guide to get started on memory</a> (TODO: add link).</p>
+<p>The <code><a title="litechain.contrib.llms.open_ai.OpenAIChatChain" href="#litechain.contrib.llms.open_ai.OpenAIChatChain">OpenAIChatChain</a></code> also produces <code><a title="litechain.contrib.llms.open_ai.OpenAIChatDelta" href="#litechain.contrib.llms.open_ai.OpenAIChatDelta">OpenAIChatDelta</a></code> as output, one per token, it contains the <code>role</code> that started the output, and then subsequent <code>content</code> updates.
+If you want the final content as a string, you will need to use the <code>.content</code> property from the delta and accumulate it for the final result.</p>
+<p>To use this chain you will need an <code>OPENAI_API_KEY</code> environment variable to be available, and then you can generate chat completions out of it.</p>
+<p>You can read more about the chat completion API on <a href="https://platform.openai.com/docs/api-reference/chat">OpenAI API reference</a></p>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from litechain import Chain, join_final_output
+&gt;&gt;&gt; from litechain.contrib import OpenAIChatChain, OpenAIChatMessage, OpenAIChatDelta
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example():
+...     recipe_chain: Chain[str, str] = OpenAIChatChain[str, OpenAIChatDelta](
+...         &quot;RecipeChain&quot;,
+...         lambda recipe_name: [
+...             OpenAIChatMessage(
+...                 role=&quot;system&quot;,
+...                 content=&quot;You are ChefGPT, an assistant bot trained on all culinary knowledge of world's most proeminant Michelin Chefs&quot;,
+...             ),
+...             OpenAIChatMessage(
+...                 role=&quot;user&quot;,
+...                 content=f&quot;Hello, could you write me a recipe for {recipe_name}?&quot;,
+...             ),
+...         ],
+...         model=&quot;gpt-3.5-turbo&quot;,
+...         max_tokens=10,
+...     ).map(lambda delta: delta.content)
+...
+...     return await join_final_output(recipe_chain(&quot;instant noodles&quot;))
+...
+&gt;&gt;&gt; asyncio.run(example()) # doctest:+SKIP
+&quot;Of course! Here's a simple and delicious recipe&quot;
+</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class OpenAIChatChain(Chain[T, U]):
+    &#34;&#34;&#34;
+    `OpenAIChatChain` gives you access to the more powerful LLMs from OpenAI, like `gpt-3.5-turbo` and `gpt-4`, they are structured in a chat format with roles.
+
+    The `OpenAIChatChain` takes a lambda function that should return a list of `OpenAIChatMessage` for the assistant to reply, it is stateless, so it doesn&#39;t keep
+    memory of the past chat messages, you will have to handle the memory yourself, you can [follow this guide to get started on memory](#) (TODO: add link).
+
+    The `OpenAIChatChain` also produces `OpenAIChatDelta` as output, one per token, it contains the `role` that started the output, and then subsequent `content` updates.
+    If you want the final content as a string, you will need to use the `.content` property from the delta and accumulate it for the final result.
+
+    To use this chain you will need an `OPENAI_API_KEY` environment variable to be available, and then you can generate chat completions out of it.
+
+    You can read more about the chat completion API on [OpenAI API reference](https://platform.openai.com/docs/api-reference/chat)
+
+    Example
+    -------
+
+    &gt;&gt;&gt; from litechain import Chain, join_final_output
+    &gt;&gt;&gt; from litechain.contrib import OpenAIChatChain, OpenAIChatMessage, OpenAIChatDelta
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     recipe_chain: Chain[str, str] = OpenAIChatChain[str, OpenAIChatDelta](
+    ...         &#34;RecipeChain&#34;,
+    ...         lambda recipe_name: [
+    ...             OpenAIChatMessage(
+    ...                 role=&#34;system&#34;,
+    ...                 content=&#34;You are ChefGPT, an assistant bot trained on all culinary knowledge of world&#39;s most proeminant Michelin Chefs&#34;,
+    ...             ),
+    ...             OpenAIChatMessage(
+    ...                 role=&#34;user&#34;,
+    ...                 content=f&#34;Hello, could you write me a recipe for {recipe_name}?&#34;,
+    ...             ),
+    ...         ],
+    ...         model=&#34;gpt-3.5-turbo&#34;,
+    ...         max_tokens=10,
+    ...     ).map(lambda delta: delta.content)
+    ...
+    ...     return await join_final_output(recipe_chain(&#34;instant noodles&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(example()) # doctest:+SKIP
+    &#34;Of course! Here&#39;s a simple and delicious recipe&#34;
+
+    &#34;&#34;&#34;
+
     def __init__(
         self: &#34;OpenAIChatChain[T, OpenAIChatDelta]&#34;,
         name: str,
@@ -325,13 +503,38 @@ class OpenAIChatChain(Chain[T, U]):
 <span>(</span><span>role: Optional[Literal['assistant']], content: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>OpenAIChatDelta(role: Optional[Literal['assistant']], content: str)</p></div>
+<div class="desc"><p>OpenAIChatDelta is a data class that represents the output of an <code><a title="litechain.contrib.llms.open_ai.OpenAIChatChain" href="#litechain.contrib.llms.open_ai.OpenAIChatChain">OpenAIChatChain</a></code>.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>role</code></strong> :&ensp;<code>Optional[Literal["assistant"]]</code></dt>
+<dd>The role of the output message, the first message will have the role, while
+the subsequent partial content output ones will have the role as <code>None</code>.
+For now the only possible values it will have is either None or <code>"assisant"</code> (TODO: functions to be supported)</dd>
+<dt><strong><code>content</code></strong> :&ensp;<code>str</code></dt>
+<dd>A string with the partial content being outputted by the LLM, this generally
+translate to each token the LLM is producing</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@dataclass
 class OpenAIChatDelta:
+    &#34;&#34;&#34;
+    OpenAIChatDelta is a data class that represents the output of an `OpenAIChatChain`.
+
+    Attributes
+    ----------
+    role : Optional[Literal[&#34;assistant&#34;]]
+        The role of the output message, the first message will have the role, while
+        the subsequent partial content output ones will have the role as `None`.
+        For now the only possible values it will have is either None or `&#34;assisant&#34;` (TODO: functions to be supported)
+
+    content : str
+        A string with the partial content being outputted by the LLM, this generally
+        translate to each token the LLM is producing
+
+    &#34;&#34;&#34;
     role: Optional[Literal[&#34;assistant&#34;]]
     content: str
 
@@ -361,13 +564,32 @@ class OpenAIChatDelta:
 <span>(</span><span>role: Literal['system', 'user', 'assistant'], content: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>OpenAIChatMessage(role: Literal['system', 'user', 'assistant'], content: str)</p></div>
+<div class="desc"><p>OpenAIChatMessage is a data class that represents a chat message for building <code><a title="litechain.contrib.llms.open_ai.OpenAIChatChain" href="#litechain.contrib.llms.open_ai.OpenAIChatChain">OpenAIChatChain</a></code> prompt.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>role</code></strong> :&ensp;<code>Literal["system", "user", "assistant"]</code></dt>
+<dd>The role of who sent this message in the chat, can be one of <code>"system"</code>, <code>"user"</code> or <code>"assisant"</code> (TODO: functions to be supported)</dd>
+<dt><strong><code>content</code></strong> :&ensp;<code>str</code></dt>
+<dd>A string with the full content of what the given role said</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@dataclass
 class OpenAIChatMessage:
+    &#34;&#34;&#34;
+    OpenAIChatMessage is a data class that represents a chat message for building `OpenAIChatChain` prompt.
+
+    Attributes
+    ----------
+    role : Literal[&#34;system&#34;, &#34;user&#34;, &#34;assistant&#34;]
+        The role of who sent this message in the chat, can be one of `&#34;system&#34;`, `&#34;user&#34;` or `&#34;assisant&#34;` (TODO: functions to be supported)
+
+    content : str
+        A string with the full content of what the given role said
+
+    &#34;&#34;&#34;
     role: Literal[&#34;system&#34;, &#34;user&#34;, &#34;assistant&#34;]
     content: str</code></pre>
 </details>
@@ -388,12 +610,62 @@ class OpenAIChatMessage:
 <span>(</span><span>name: str, call: Callable[[~T], str], model: str, temperature: Optional[float] = 0, max_tokens: Optional[int] = None)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p><code><a title="litechain.contrib.llms.open_ai.OpenAICompletionChain" href="#litechain.contrib.llms.open_ai.OpenAICompletionChain">OpenAICompletionChain</a></code> uses the most simple LLMs from OpenAI based on GPT-3 for text completion, if you are looking for ChatCompletion, take a look at <code><a title="litechain.contrib.llms.open_ai.OpenAIChatChain" href="#litechain.contrib.llms.open_ai.OpenAIChatChain">OpenAIChatChain</a></code>.</p>
+<p>The <code><a title="litechain.contrib.llms.open_ai.OpenAICompletionChain" href="#litechain.contrib.llms.open_ai.OpenAICompletionChain">OpenAICompletionChain</a></code> takes a lambda function that should return a string with the prompt for completion.</p>
+<p>To use this chain you will need an <code>OPENAI_API_KEY</code> environment variable to be available, and then you can generate completions out of it.</p>
+<p>You can read more about the completion API on <a href="https://platform.openai.com/docs/api-reference/completions">OpenAI API reference</a></p>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from litechain import join_final_output
+&gt;&gt;&gt; from litechain.contrib import OpenAICompletionChain
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example():
+...     recipe_chain = OpenAICompletionChain[str, str](
+...         &quot;RecipeChain&quot;,
+...         lambda recipe_name: f&quot;Here is my {recipe_name} recipe: &quot;,
+...         model=&quot;ada&quot;,
+...     )
+...
+...     return await join_final_output(recipe_chain(&quot;instant noodles&quot;))
+...
+&gt;&gt;&gt; asyncio.run(example()) # doctest:+SKIP
+'【Instant Noodles】\n\nIngredients:\n\n1 cup of water'
+</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class OpenAICompletionChain(Chain[T, U]):
+    &#34;&#34;&#34;
+    `OpenAICompletionChain` uses the most simple LLMs from OpenAI based on GPT-3 for text completion, if you are looking for ChatCompletion, take a look at `OpenAIChatChain`.
+
+    The `OpenAICompletionChain` takes a lambda function that should return a string with the prompt for completion.
+
+    To use this chain you will need an `OPENAI_API_KEY` environment variable to be available, and then you can generate completions out of it.
+
+    You can read more about the completion API on [OpenAI API reference](https://platform.openai.com/docs/api-reference/completions)
+
+    Example
+    -------
+
+    &gt;&gt;&gt; from litechain import join_final_output
+    &gt;&gt;&gt; from litechain.contrib import OpenAICompletionChain
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     recipe_chain = OpenAICompletionChain[str, str](
+    ...         &#34;RecipeChain&#34;,
+    ...         lambda recipe_name: f&#34;Here is my {recipe_name} recipe: &#34;,
+    ...         model=&#34;ada&#34;,
+    ...     )
+    ...
+    ...     return await join_final_output(recipe_chain(&#34;instant noodles&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(example()) # doctest:+SKIP
+    &#39;【Instant Noodles】\\n\\nIngredients:\\n\\n1 cup of water&#39;
+
+    &#34;&#34;&#34;
+
     def __init__(
         self: &#34;OpenAICompletionChain[T, str]&#34;,
         name: str,
