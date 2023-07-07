@@ -103,7 +103,7 @@ asyncio.run(example())
 
 ## `join()`
 
-As you may have noticed, both `and_then()` and `collect()` produces a list of items from the previous chain output, this is because chains may produce any type of values, and a list is universal. However, for LLMs, the most common common case is for them to produce `str`, which we want to join together as a final `str`, for that, you can use the [`join()`](pathname:///reference/litechain/index.html#litechain.Chain.join) function.
+As you may have noticed, both `and_then()` and `collect()` produces a list of items from the previous chain output, this is because chains may produce any type of values, and a list is universal. However, for LLMs, the most common case is for them to produce `str`, which we want to join together as a final `str`, for that, you can use the [`join()`](pathname:///reference/litechain/index.html#litechain.Chain.join) function.
 
 The `join()` function is also blocking, and it will only work if you chain is producing `str` as output, otherwise it will show you a typing error.
 

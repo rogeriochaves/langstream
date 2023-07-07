@@ -33,6 +33,7 @@ def debug(
     ...
     >>> asyncio.run(debug_whole_chain())
     <BLANKLINE>
+    <BLANKLINE>
     \x1b[32m> GreetingChain\x1b[39m
     <BLANKLINE>
     Hello, Alice!
@@ -57,6 +58,7 @@ def debug(
     ...
     >>> asyncio.run(debug_whole_chain())
     <BLANKLINE>
+    <BLANKLINE>
     \x1b[32m> GreetingChain\x1b[39m
     <BLANKLINE>
     Hello, Alice!
@@ -66,8 +68,7 @@ def debug(
         last_chain = ""
         async for output in chain(input):
             if output.chain != last_chain:
-                if last_chain != "":
-                    print("\n", end="", flush=True)
+                print("\n", end="", flush=True)
                 last_chain = output.chain
                 print(f"\n{Fore.GREEN}> {output.chain}{Fore.RESET}\n")
             if hasattr(output.data, "__chain_debug__"):
