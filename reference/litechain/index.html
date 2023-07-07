@@ -508,6 +508,7 @@ with the <code><a title="litechain.debug" href="#litechain.debug">debug()</a></c
 ...
 &gt;&gt;&gt; asyncio.run(debug_whole_chain())
 &lt;BLANKLINE&gt;
+&lt;BLANKLINE&gt;
 [32m&gt; GreetingChain[39m
 &lt;BLANKLINE&gt;
 Hello, Alice!
@@ -531,6 +532,7 @@ Hello, Alice! How are you?
 ...     await join_final_output(chain(&quot;Alice&quot;))
 ...
 &gt;&gt;&gt; asyncio.run(debug_whole_chain())
+&lt;BLANKLINE&gt;
 &lt;BLANKLINE&gt;
 [32m&gt; GreetingChain[39m
 &lt;BLANKLINE&gt;
@@ -561,6 +563,7 @@ Hello, Alice!
     ...
     &gt;&gt;&gt; asyncio.run(debug_whole_chain())
     &lt;BLANKLINE&gt;
+    &lt;BLANKLINE&gt;
     \x1b[32m&gt; GreetingChain\x1b[39m
     &lt;BLANKLINE&gt;
     Hello, Alice!
@@ -585,6 +588,7 @@ Hello, Alice!
     ...
     &gt;&gt;&gt; asyncio.run(debug_whole_chain())
     &lt;BLANKLINE&gt;
+    &lt;BLANKLINE&gt;
     \x1b[32m&gt; GreetingChain\x1b[39m
     &lt;BLANKLINE&gt;
     Hello, Alice!
@@ -594,8 +598,7 @@ Hello, Alice!
         last_chain = &#34;&#34;
         async for output in chain(input):
             if output.chain != last_chain:
-                if last_chain != &#34;&#34;:
-                    print(&#34;\n&#34;, end=&#34;&#34;, flush=True)
+                print(&#34;\n&#34;, end=&#34;&#34;, flush=True)
                 last_chain = output.chain
                 print(f&#34;\n{Fore.GREEN}&gt; {output.chain}{Fore.RESET}\n&#34;)
             if hasattr(output.data, &#34;__chain_debug__&#34;):
