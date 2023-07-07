@@ -108,3 +108,7 @@ To continue developing with LiteChain, take a look at our [documentation](https:
 # 🙋 Contributing
 
 As a very new project in a rapidly developing field LiteChain is extremely open to contributions, we need a lot of help with integrations, documentation and guides content, feel free to send MRs and open issues. The project is very easy to run (check out the Makefile, it's all you need), but more complete contibuting guidelines to be written (we need help with that too!)
+
+If you want to help me pay the bills and keep developing this project, you can:
+
+<a href="https://www.buymeacoffee.com/rchaves" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
