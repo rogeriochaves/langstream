@@ -1,5 +1,7 @@
 # 🪽🔗 LiteChain
 
+> Note: I am launching LiteChain today! 🎉 If you like what you see, please give it a star and consider sharing it to help spread the project, also, join our discord community!
+
 [![](https://dcbadge.vercel.app/api/server/AmEMWmFG?style=flat)](https://discord.gg/AmEMWmFG)
 [![Release Notes](https://img.shields.io/github/release/rogeriochaves/litechain)](https://pypi.org/project/litechain/)
 [![tests](https://github.com/rogeriochaves/litechain/actions/workflows/run_tests.yml/badge.svg)](https://github.com/rogeriochaves/litechain/actions/workflows/run_tests.yml)
