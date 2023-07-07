@@ -1,5 +1,6 @@
 # 🪽🔗 LiteChain
 
+[![](https://dcbadge.vercel.app/api/server/AmEMWmFG?style=flat)](https://discord.gg/AmEMWmFG)
 [![Release Notes](https://img.shields.io/github/release/rogeriochaves/litechain)](https://pypi.org/project/litechain/)
 [![tests](https://github.com/rogeriochaves/litechain/actions/workflows/run_tests.yml/badge.svg)](https://github.com/rogeriochaves/litechain/actions/workflows/run_tests.yml)
 [![docs](https://github.com/rogeriochaves/litechain/actions/workflows/publish_docs.yml/badge.svg)](https://github.com/rogeriochaves/litechain/actions/workflows/publish_docs.yml)
@@ -95,6 +96,12 @@ To continue developing with LiteChain, take a look at our [documentation](https:
 - Detailed guides
 - How-to examples
 - Reference
+
+# 👥 Community
+
+[Join our discord](https://discord.gg/AmEMWmFG) community to connect with other LiteChain developers, ask questions, get support, and stay updated with the latest news and announcements.
+
+[![Join our Discord community](https://img.shields.io/badge/Join-Discord-7289DA.svg)](https://discord.gg/AmEMWmFG)
 
 # 🙋 Contributing
 
