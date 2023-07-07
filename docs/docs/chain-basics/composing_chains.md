@@ -132,6 +132,42 @@ asyncio.run(example())
 
 It is common practice to `join()` an LLM output before injecting it as another LLM input.
 
+## `gather()`
+
+Now, for the more advanced use case. Sometimes you want to call not one, but many LLMs at the same time in parallel, for example if you have a series of documents and you want to summarize and score them all, at the same time, to later decide which one is the best document. To create multiple processings, you can use `map()`, but then to wait on them all to finish, you have to use [`gather()`](pathname:///reference/litechain/index.html#litechain.Chain.gather).
+
+The [`gather()`](pathname:///reference/litechain/index.html#litechain.Chain.gather) function works similarly to [`asyncio.gather`](https://docs.python.org/3/library/asyncio-task.html#asyncio.gather), but instead of async functions, it can be executed on a chain that is generating other `AsyncGenerator`s (a chain of chains), it will process all those async generators at the same time in parallel and block until they all finish, then it will produce a `List` of `List`s with all the results.
+
+For example:
+
+```python
+from litechain import Chain, as_async_generator, collect_final_output
+from typing import AsyncGenerator
+import asyncio
+
+async def delayed_output(x) -> AsyncGenerator[str, None]:
+    await asyncio.sleep(1)
+    yield f"Number: {x}"
+
+async def example():
+    number_chain = Chain[int, int](
+        "NumberChain", lambda x: as_async_generator(*range(x))
+    )
+    gathered_chain : Chain[int, str] = (
+        number_chain.map(delayed_output)
+        .gather()
+        .and_then(lambda results: as_async_generator(*(r[0] for r in results)))
+    )
+    return await collect_final_output(gathered_chain(1))
+
+asyncio.run(example()) # will take 1s to finish, not 3s, because it runs in parallel
+#=> ['Number: 0', 'Number: 1', 'Number: 2']
+```
+
+In this simple example, we generate a range of numbers `[0, 1, 2]`, then for each of those, we simulate a heavy process that would take 1s to finish the `delayed_output`, we `map()` each number to this `delayed_output` function, which is a function that produces an `AsyncGenerator`, then we `gather()`, and then we take the first item of each.
+
+Because we used `gather()`, the chain will take `1s` to finish, because even though each one of the three numbers alone take `1s`, they are ran in parallel, so they finish all together.
+
 ## Standard nomenclature
 
 Now that you know the basic composing functions, it's also interesting to note everything in LiteChain also follow the same patterns, for example, for the final output we have the utilities [`filter_final_output()`](pathname:///reference/litechain/index.html#litechain.filter_final_output), [`collect_final_output()`](pathname:///reference/litechain/index.html#litechain.collect_final_output) and [`join_final_output()`](pathname:///reference/litechain/index.html#litechain.join_final_output), you can see they are using the same `filter`, `collect` and `join` names, and they work as you would expect them to.
