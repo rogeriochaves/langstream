@@ -5,6 +5,9 @@ colorama
 openai
 gpt4all
 
+# Function parsing
+docstring_parser
+
 # Test
 pdoc3
 pytest

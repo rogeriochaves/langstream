@@ -1,14 +1,29 @@
 import asyncio
 from dataclasses import dataclass
-from typing import AsyncGenerator, Callable, List, Literal, Optional, TypeVar, cast
-from colorama import Fore
+import json
+from typing import (
+    Any,
+    AsyncGenerator,
+    Callable,
+    Dict,
+    Generator,
+    List,
+    Literal,
+    Optional,
+    TypeVar,
+    Union,
+    cast,
+)
 
 import openai
+from colorama import Fore
+from litechain.contrib.utils.open_ai_functions import OpenAIFunction, py2gpt
 
-from litechain.core.chain import Chain
+from litechain.core.chain import Chain, ChainOutput
 
 T = TypeVar("T")
 U = TypeVar("U")
+V = TypeVar("V")
 
 
 class OpenAICompletionChain(Chain[T, U]):
@@ -93,8 +108,15 @@ class OpenAIChatMessage:
         A string with the full content of what the given role said
 
     """
+
     role: Literal["system", "user", "assistant"]
     content: str
+
+
+@dataclass
+class _OpenAIFunctionCall:
+    name: str
+    arguments: str
 
 
 @dataclass
@@ -114,6 +136,7 @@ class OpenAIChatDelta:
         translate to each token the LLM is producing
 
     """
+
     role: Optional[Literal["assistant"]]
     content: str
 
@@ -173,44 +196,120 @@ class OpenAIChatChain(Chain[T, U]):
     """
 
     def __init__(
-        self: "OpenAIChatChain[T, OpenAIChatDelta]",
+        self: "OpenAIChatChain[T, Union[OpenAIChatDelta, V]]",
         name: str,
         call: Callable[
             [T],
             List[OpenAIChatMessage],
         ],
         model: str,
+        functions: Optional[List[Callable[..., V]]] = cast(
+            List[Callable[..., OpenAIChatDelta]], None
+        ),
+        function_call: Optional[Union[Literal["none", "auto"], str]] = None,
         temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
     ) -> None:
         self.name = name
 
+        name_to_function: Dict[str, Callable] = dict()
+        if functions is not None:
+            openai_functions: List[OpenAIFunction] = []
+            for fn in functions:
+                try:
+                    openai_functions = [py2gpt(fn) for fn in functions]
+                except ValueError as e:
+                    raise ValueError(
+                        f"The function {fn} that you passed in the 'functions' argument when creating a OpenAIChatChain could not be converted to a valid OpenAI function: {str(e)}"
+                    )
+            name_to_function = dict(
+                [
+                    (openai_fn["name"], fn)
+                    for fn, openai_fn in zip(functions, openai_functions)
+                ]
+            )
+
         async def chat_completion(
             messages: List[OpenAIChatMessage],
-        ) -> AsyncGenerator[OpenAIChatDelta, None]:
+        ) -> AsyncGenerator[ChainOutput[Union[OpenAIChatDelta, V], Any], Any]:
             loop = asyncio.get_event_loop()
 
             def get_completions():
+                function_kwargs = {}
+                if functions is not None:
+                    function_kwargs["functions"] = openai_functions
+                if function_call is not None:
+                    function_kwargs["function_call"] = function_call
+
                 return openai.ChatCompletion.create(
                     model=model,
                     messages=[m.__dict__ for m in messages],
                     temperature=temperature,
                     stream=True,
                     max_tokens=max_tokens,
+                    **function_kwargs,
                 )
 
             completions = await loop.run_in_executor(None, get_completions)
 
+            pending_function_calls: List[_OpenAIFunctionCall] = []
+
+            def run_pending_function_call() -> Generator[ChainOutput, None, None]:
+                for function_call in pending_function_calls:
+                    function_to_call = name_to_function[function_call.name]
+                    arguments = json.loads(function_call.arguments)
+                    result = function_to_call(**arguments)
+                    yield self._output_wrap(
+                        result, name=f"{self.name}@function_call->{function_call.name}"
+                    )
+                pending_function_calls.clear()
+
             for output in completions:
                 output = cast(dict, output)
-                if "choices" in output:
-                    if len(output["choices"]) > 0:
-                        if "delta" in output["choices"][0]:
-                            if "content" in output["choices"][0]["delta"]:
-                                delta = output["choices"][0]["delta"]
-                                role = delta["role"] if "role" in delta else None
-                                yield OpenAIChatDelta(
-                                    role=role, content=delta["content"]
-                                )
+                if "choices" not in output:
+                    continue
+
+                if len(output["choices"]) == 0:
+                    continue
+
+                if "delta" not in output["choices"][0]:
+                    continue
+
+                if "function_call" in output["choices"][0]["delta"]:
+                    delta = output["choices"][0]["delta"]
+                    role = delta["role"] if "role" in delta else None
+                    function_name: Optional[str] = delta["function_call"].get("name")
+                    function_arguments: Optional[str] = delta["function_call"].get(
+                        "arguments"
+                    )
+
+                    if function_name is not None:
+                        for value in run_pending_function_call():
+                            yield value
+                        pending_function_calls = [
+                            _OpenAIFunctionCall(
+                                name=function_name,
+                                arguments=function_arguments or "",
+                            )
+                        ]
+                    elif (
+                        len(pending_function_calls) > 0
+                        and function_arguments is not None
+                    ):
+                        pending_function_calls[-1].arguments += function_arguments
+                elif "content" in output["choices"][0]["delta"]:
+                    delta = output["choices"][0]["delta"]
+                    role = delta["role"] if "role" in delta else None
+                    yield self._output_wrap(
+                        OpenAIChatDelta(
+                            role=role,
+                            content=delta["content"],
+                        )
+                    )
+                else:
+                    for value in run_pending_function_call():
+                        yield value
+            for value in run_pending_function_call():
+                yield value
 
         self._call = lambda input: chat_completion(call(input))

@@ -1,9 +1,12 @@
+import json
 import unittest
 from typing import (
     Any,
     AsyncGenerator,
     List,
+    Literal,
     TypedDict,
+    Union,
 )
 
 import pytest
@@ -15,6 +18,7 @@ from litechain.contrib.llms.open_ai import (
     OpenAIChatMessage,
     OpenAICompletionChain,
     OpenAIChatChain,
+    OpenAIFunction,
 )
 from litechain.utils.chain import collect_final_output, debug, join_final_output
 
@@ -140,3 +144,53 @@ class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
         self.assertIn("🧨", result)
 
         self.assertEqual(len(memory["history"]), 4)
+
+    @pytest.mark.integration
+    async def test_it_calls_functions(self):
+        class WeatherReturn(TypedDict):
+            location: str
+            forecast: str
+            temperature: str
+
+        def get_current_weather(
+            location: str, format: Literal["celsius", "fahrenheit"] = "celsius"
+        ) -> WeatherReturn:
+            """
+            Gets the current weather in a given location, use this function for any questions related to the weather"
+
+            Attributes
+            ----------
+            location
+                The city to get the weather, e.g. San Francisco. Guess the location from user messages
+
+            format
+                A string with the full content of what the given role said
+            """
+
+            return {
+                "location": location,
+                "forecast": "sunny",
+                "temperature": "25 C" if format == "celsius" else "77 F",
+            }
+
+        chain = debug(
+            OpenAIChatChain[str, Union[OpenAIChatDelta, WeatherReturn]](
+                "WeatherChain",
+                lambda user_input: [
+                    OpenAIChatMessage(role="user", content=user_input),
+                ],
+                model="gpt-3.5-turbo-0613",
+                functions=[get_current_weather],
+                temperature=0,
+            )
+        )
+
+        result = await collect_final_output(
+            chain(
+                "I'm in my appartment in Amsterdam, thinking... should I take an umbrella for my pet chicken?"
+            )
+        )
+        self.assertEqual(
+            list(result)[0],
+            {"location": "Amsterdam", "forecast": "sunny", "temperature": "25 C"},
+        )
