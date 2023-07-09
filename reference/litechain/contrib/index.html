@@ -164,6 +164,10 @@ __all__ = (
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="litechain.contrib.utils" href="utils/index.html">litechain.contrib.utils</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 </dl>
 </section>
 <section>
@@ -313,7 +317,7 @@ Found model file at ...
 </dd>
 <dt id="litechain.contrib.OpenAIChatChain"><code class="flex name class">
 <span>class <span class="ident">OpenAIChatChain</span></span>
-<span>(</span><span>name: str, call: Callable[[~T], List[<a title="litechain.contrib.llms.open_ai.OpenAIChatMessage" href="llms/open_ai.html#litechain.contrib.llms.open_ai.OpenAIChatMessage">OpenAIChatMessage</a>]], model: str, temperature: Optional[float] = 0, max_tokens: Optional[int] = None)</span>
+<span>(</span><span>name: str, call: Callable[[~T], List[<a title="litechain.contrib.llms.open_ai.OpenAIChatMessage" href="llms/open_ai.html#litechain.contrib.llms.open_ai.OpenAIChatMessage">OpenAIChatMessage</a>]], model: str, functions: Optional[List[Callable[..., ~V]]] = None, function_call: Union[Literal['none', 'auto'], str, ForwardRef(None)] = None, temperature: Optional[float] = 0, max_tokens: Optional[int] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><code><a title="litechain.contrib.OpenAIChatChain" href="#litechain.contrib.OpenAIChatChain">OpenAIChatChain</a></code> gives you access to the more powerful LLMs from OpenAI, like <code>gpt-3.5-turbo</code> and <code>gpt-4</code>, they are structured in a chat format with roles.</p>
@@ -400,45 +404,121 @@ If you want the final content as a string, you will need to use the <code>.conte
     &#34;&#34;&#34;
 
     def __init__(
-        self: &#34;OpenAIChatChain[T, OpenAIChatDelta]&#34;,
+        self: &#34;OpenAIChatChain[T, Union[OpenAIChatDelta, V]]&#34;,
         name: str,
         call: Callable[
             [T],
             List[OpenAIChatMessage],
         ],
         model: str,
+        functions: Optional[List[Callable[..., V]]] = cast(
+            List[Callable[..., OpenAIChatDelta]], None
+        ),
+        function_call: Optional[Union[Literal[&#34;none&#34;, &#34;auto&#34;], str]] = None,
         temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
     ) -&gt; None:
         self.name = name
 
+        name_to_function: Dict[str, Callable] = dict()
+        if functions is not None:
+            openai_functions: List[OpenAIFunction] = []
+            for fn in functions:
+                try:
+                    openai_functions = [py2gpt(fn) for fn in functions]
+                except ValueError as e:
+                    raise ValueError(
+                        f&#34;The function {fn} that you passed in the &#39;functions&#39; argument when creating a OpenAIChatChain could not be converted to a valid OpenAI function: {str(e)}&#34;
+                    )
+            name_to_function = dict(
+                [
+                    (openai_fn[&#34;name&#34;], fn)
+                    for fn, openai_fn in zip(functions, openai_functions)
+                ]
+            )
+
         async def chat_completion(
             messages: List[OpenAIChatMessage],
-        ) -&gt; AsyncGenerator[OpenAIChatDelta, None]:
+        ) -&gt; AsyncGenerator[ChainOutput[Union[OpenAIChatDelta, V], Any], Any]:
             loop = asyncio.get_event_loop()
 
             def get_completions():
+                function_kwargs = {}
+                if functions is not None:
+                    function_kwargs[&#34;functions&#34;] = openai_functions
+                if function_call is not None:
+                    function_kwargs[&#34;function_call&#34;] = function_call
+
                 return openai.ChatCompletion.create(
                     model=model,
                     messages=[m.__dict__ for m in messages],
                     temperature=temperature,
                     stream=True,
                     max_tokens=max_tokens,
+                    **function_kwargs,
                 )
 
             completions = await loop.run_in_executor(None, get_completions)
 
+            pending_function_calls: List[_OpenAIFunctionCall] = []
+
+            def run_pending_function_call() -&gt; Generator[ChainOutput, None, None]:
+                for function_call in pending_function_calls:
+                    function_to_call = name_to_function[function_call.name]
+                    arguments = json.loads(function_call.arguments)
+                    result = function_to_call(**arguments)
+                    yield self._output_wrap(
+                        result, name=f&#34;{self.name}@function_call-&gt;{function_call.name}&#34;
+                    )
+                pending_function_calls.clear()
+
             for output in completions:
                 output = cast(dict, output)
-                if &#34;choices&#34; in output:
-                    if len(output[&#34;choices&#34;]) &gt; 0:
-                        if &#34;delta&#34; in output[&#34;choices&#34;][0]:
-                            if &#34;content&#34; in output[&#34;choices&#34;][0][&#34;delta&#34;]:
-                                delta = output[&#34;choices&#34;][0][&#34;delta&#34;]
-                                role = delta[&#34;role&#34;] if &#34;role&#34; in delta else None
-                                yield OpenAIChatDelta(
-                                    role=role, content=delta[&#34;content&#34;]
-                                )
+                if &#34;choices&#34; not in output:
+                    continue
+
+                if len(output[&#34;choices&#34;]) == 0:
+                    continue
+
+                if &#34;delta&#34; not in output[&#34;choices&#34;][0]:
+                    continue
+
+                if &#34;function_call&#34; in output[&#34;choices&#34;][0][&#34;delta&#34;]:
+                    delta = output[&#34;choices&#34;][0][&#34;delta&#34;]
+                    role = delta[&#34;role&#34;] if &#34;role&#34; in delta else None
+                    function_name: Optional[str] = delta[&#34;function_call&#34;].get(&#34;name&#34;)
+                    function_arguments: Optional[str] = delta[&#34;function_call&#34;].get(
+                        &#34;arguments&#34;
+                    )
+
+                    if function_name is not None:
+                        for value in run_pending_function_call():
+                            yield value
+                        pending_function_calls = [
+                            _OpenAIFunctionCall(
+                                name=function_name,
+                                arguments=function_arguments or &#34;&#34;,
+                            )
+                        ]
+                    elif (
+                        len(pending_function_calls) &gt; 0
+                        and function_arguments is not None
+                    ):
+                        pending_function_calls[-1].arguments += function_arguments
+                elif &#34;content&#34; in output[&#34;choices&#34;][0][&#34;delta&#34;]:
+                    delta = output[&#34;choices&#34;][0][&#34;delta&#34;]
+                    role = delta[&#34;role&#34;] if &#34;role&#34; in delta else None
+                    yield self._output_wrap(
+                        OpenAIChatDelta(
+                            role=role,
+                            content=delta[&#34;content&#34;],
+                        )
+                    )
+                else:
+                    for value in run_pending_function_call():
+                        yield value
+            for value in run_pending_function_call():
+                yield value
 
         self._call = lambda input: chat_completion(call(input))</code></pre>
 </details>
@@ -497,6 +577,7 @@ class OpenAIChatDelta:
         translate to each token the LLM is producing
 
     &#34;&#34;&#34;
+
     role: Optional[Literal[&#34;assistant&#34;]]
     content: str
 
@@ -552,6 +633,7 @@ class OpenAIChatMessage:
         A string with the full content of what the given role said
 
     &#34;&#34;&#34;
+
     role: Literal[&#34;system&#34;, &#34;user&#34;, &#34;assistant&#34;]
     content: str</code></pre>
 </details>
@@ -700,6 +782,7 @@ class OpenAIChatMessage:
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="litechain.contrib.llms" href="llms/index.html">litechain.contrib.llms</a></code></li>
+<li><code><a title="litechain.contrib.utils" href="utils/index.html">litechain.contrib.utils</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
