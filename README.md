@@ -90,6 +90,20 @@ The type signatures are an important part of LiteChain, having them can save a l
 
 Last but not least, you may also have noticed that both the emojis and the translation got printed in the final output, this is by design. In LiteChain, you always have access to everything that has gone through the whole chain in the final stream, this means that debugging it is very trivial, and a [`debug`](https://rogeriochaves.github.io/litechain/reference/litechain/index.html#litechain.debug) function is available to make it even easier. A property `output.final : bool` [is available](https://rogeriochaves.github.io/litechain/reference/litechain/index.html#litechain.ChainOutput.final) to be checked if you want to print just the results of the final Chain, but there are also more utility functions available to help you work with output stream as you wish, check out more about it on our [Why Streams? guide](https://rogeriochaves.github.io/litechain/docs/chain-basics/why_streams) and [the reference](https://rogeriochaves.github.io/litechain/reference/litechain/index.html).
 
+# Prompts on the outside
+
+In our experience, when working with LLM applications, the main part you must spend tunning are your prompts, which are not always portable if you switch LLMs. The content one chain produces might change a lot how another chain should be written, the prompt carry the personality and the goal of your app, doing good prompt engineering can really make it or break it.
+
+That's why LiteChain does not hide prompts away in agents, we will give examples in the documentation, but believe you should build your own agents, to be able to customize them and their prompts later. LiteChain simply wants to facilitate and standardize the piping and connection between different parts, so you can focus on what is really important, we don't want you to spend time with LiteChain itself.
+
+# Bring your own integration
+
+In addition, as the name implies, LiteChain wants to stay light, not embrace the world, the goal is that you really understand the Chain, making it very easy for your to add your own integration, without any additional layers in between.
+
+In our experience, wrappers can hurt more than they help, because instead of using the library or API you want to connect directly, now you need to learn another layer of indirection, which might not accept the same parameters to work the way you expect, it gets in the way.
+
+We do provide some integrations for OpenAI and GPT4All for example, but then we try to have a very thin layer, and to stay as close as possible to the original API, to the point that you can use the oficial documentation for it.
+
 # 📖 Learn more
 
 To continue developing with LiteChain, take a look at our [documentation](https://rogeriochaves.github.io/litechain) so you can find:
