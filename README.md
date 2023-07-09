@@ -119,6 +119,15 @@ To continue developing with LiteChain, take a look at our [documentation](https:
 
 [![Join our Discord community](https://img.shields.io/badge/Join-Discord-7289DA.svg)](https://discord.gg/AmEMWmFG)
 
+# 🚙 Roadmap
+
+- [ ] Add support for OpenAI functions
+- [ ] Add an example for document retrieval using vector search
+- [ ] Add a `filter` function
+- [ ] Add docs for debugging
+- [ ] Add default error handling
+- [ ] Add a simple default memory mechanism
+
 # 🙋 Contributing
 
 As a very new project in a rapidly developing field LiteChain is extremely open to contributions, we need a lot of help with integrations, documentation and guides content, feel free to send MRs and open issues. The project is very easy to run (check out the Makefile, it's all you need), but more complete contibuting guidelines to be written (we need help with that too!)
