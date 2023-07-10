@@ -6,7 +6,6 @@ from typing import (
     AsyncGenerator,
     Callable,
     Dict,
-    Generator,
     List,
     Literal,
     Optional,
@@ -101,15 +100,15 @@ class OpenAIChatMessage:
 
     Attributes
     ----------
-    role : Literal["system", "user", "assistant"]
-        The role of who sent this message in the chat, can be one of `"system"`, `"user"` or `"assisant"` (TODO: functions to be supported)
+    role : Literal["system", "user", "assistant", "function"]
+        The role of who sent this message in the chat, can be one of `"system"`, `"user"`, `"assistant"` or "function"
 
     content : str
         A string with the full content of what the given role said
 
     """
 
-    role: Literal["system", "user", "assistant"]
+    role: Literal["system", "user", "assistant", "function"]
     content: str
 
 
@@ -126,10 +125,10 @@ class OpenAIChatDelta:
 
     Attributes
     ----------
-    role : Optional[Literal["assistant"]]
+    role : Optional[Literal["assistant", "function"]]
         The role of the output message, the first message will have the role, while
         the subsequent partial content output ones will have the role as `None`.
-        For now the only possible values it will have is either None or `"assistant"` (TODO: functions to be supported)
+        For now the only possible values it will have is either None or `"assistant"`
 
     content : str
         A string with the partial content being outputted by the LLM, this generally
@@ -192,6 +191,58 @@ class OpenAIChatChain(Chain[T, U]):
     ...
     >>> asyncio.run(example()) # doctest:+SKIP
     "Of course! Here's a simple and delicious recipe"
+
+    You can also pass python functions to be called by the model, LiteChain will convert those functions to OpenAI function schema and call it back automatically.
+    The functions you pass must have type signatures and doctypes including for the parameters, otherwise you will get a runtime error. The docs are important because
+    this is how you tell the model why should it use that function, and what each parameter means, for better results.
+
+    The function you pass may return either a static value or an `AsyncGenerator`, which means you can call other chains from it. Take a look [at our guide](https://rogeriochaves.github.io/litechain/docs/llms/open_ai_functions)
+    to learn more about OpenAI function calls in LiteChain.
+
+    Function Call Example
+    ---------------------
+
+    >>> from litechain import Chain, collect_final_output
+    >>> from litechain.contrib import OpenAIChatChain, OpenAIChatMessage, OpenAIChatDelta
+    >>> from typing import Literal, Union, Dict
+    >>> import asyncio
+    ...
+    >>> async def example():
+    ...     def get_current_weather(
+    ...         location: str, format: Literal["celsius", "fahrenheit"] = "celsius"
+    ...     ) -> Dict[str, str]:
+    ...         \"""
+    ...         Gets the current weather in a given location, use this function for any questions related to the weather
+    ...
+    ...         Parameters
+    ...         ----------
+    ...         location
+    ...             The city to get the weather, e.g. San Francisco. Guess the location from user messages
+    ...
+    ...         format
+    ...             A string with the full content of what the given role said
+    ...         \"""
+    ...
+    ...         return {
+    ...             "location": location,
+    ...             "forecast": "sunny",
+    ...             "temperature": "25 C" if format == "celsius" else "77 F",
+    ...         }
+    ...
+    ...     chain = OpenAIChatChain[str, Union[OpenAIChatDelta, Dict[str, str]]](
+    ...         "WeatherChain",
+    ...         lambda user_input: [
+    ...             OpenAIChatMessage(role="user", content=user_input),
+    ...         ],
+    ...         model="gpt-3.5-turbo",
+    ...         functions=[get_current_weather],
+    ...         temperature=0,
+    ...     )
+    ...
+    ...     return await collect_final_output(chain("how is the weather today in Rio de Janeiro?"))
+    ...
+    >>> asyncio.run(example()) # doctest:+SKIP
+    [{'location': 'Rio de Janeiro', 'forecast': 'sunny', 'temperature': '25 C'}]
 
     """
 

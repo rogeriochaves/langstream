@@ -156,9 +156,9 @@ class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
             location: str, format: Literal["celsius", "fahrenheit"] = "celsius"
         ) -> WeatherReturn:
             """
-            Gets the current weather in a given location, use this function for any questions related to the weather"
+            Gets the current weather in a given location, use this function for any questions related to the weather
 
-            Attributes
+            Parameters
             ----------
             location
                 The city to get the weather, e.g. San Francisco. Guess the location from user messages
@@ -167,11 +167,11 @@ class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
                 A string with the full content of what the given role said
             """
 
-            return {
-                "location": location,
-                "forecast": "sunny",
-                "temperature": "25 C" if format == "celsius" else "77 F",
-            }
+            return WeatherReturn(
+                location=location,
+                forecast="sunny",
+                temperature="25 C" if format == "celsius" else "77 F",
+            )
 
         chain = debug(
             OpenAIChatChain[str, Union[OpenAIChatDelta, WeatherReturn]](
@@ -209,7 +209,7 @@ class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
                 """
                 Gets the current weather in a given location and replies user, use this function for any questions related to the weather"
 
-                Attributes
+                Parameters
                 ----------
                 location
                     The city to get the weather, e.g. San Francisco. Guess the location from user messages

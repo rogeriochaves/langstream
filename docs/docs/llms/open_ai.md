@@ -40,7 +40,7 @@ You also have other parameters you can pass to the chain like `temperature`, whi
 
 ## Chat Completion
 
-The most popular and powerful OpenAI completion API, however, is the Chat Completion, which gives you access to `gpt-3.5-turbo` and `gpt-4` models. It is a bit more work to work with, because it has defined roles, for `system`, `user`, `assistant` or `function` (TODO: function yet to be supported). You define an [`OpenAIChatChain`](pathname:///reference/litechain/contrib/index.html#litechain.contrib.OpenAIChatChain) like this:
+The most popular and powerful OpenAI completion API, however, is the Chat Completion, which gives you access to `gpt-3.5-turbo` and `gpt-4` models. It is a bit more work to work with, because it has defined roles, for `system`, `user`, `assistant` or `function`. You define an [`OpenAIChatChain`](pathname:///reference/litechain/contrib/index.html#litechain.contrib.OpenAIChatChain) like this:
 
 ```python
 from litechain import Chain, join_final_output
@@ -69,4 +69,6 @@ This model is really optimized for answering questions and following guidance. I
 
 Then, if you look at the type signature of `OpenAIChatChain`, you will notice that it takes a `str` but it returns an [`OpenAIChatDelta`](pathname:///reference/litechain/contrib/index.html#litechain.contrib.OpenAIChatMessage), this is what OpenAI's chat completion API streams back to us, it holds also the `role` and the `content`, so before joining the chain, we need to do a `map` on the `delta.content` to get strings back.
 
-That's it for OpenAI LLMs, but if instead of an API you want to run an LLM locally, check it out the next guide on GPT4All
+Now, you just learned how to use OpenAI for text and chat completion, which is powerful enough, but there is one even more powerful feature, which we put on a separate guide, OpenAI Function Calling, check it out on the next guide.
+
+Also, if instead of an API you want to run an LLM locally, check it out our guide on [GPT4All](/docs/llms/gpt4all).
