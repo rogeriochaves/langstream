@@ -137,7 +137,7 @@ class OpenAIChatDelta:
 
     """
 
-    role: Optional[Literal["assistant"]]
+    role: Optional[Literal["assistant", "function"]]
     content: str
 
     def __chain_debug__(self):
@@ -203,31 +203,17 @@ class OpenAIChatChain(Chain[T, U]):
             List[OpenAIChatMessage],
         ],
         model: str,
-        functions: Optional[List[Callable[..., V]]] = cast(
-            List[Callable[..., OpenAIChatDelta]], None
-        ),
+        functions: Union[
+            Optional[List[Callable[..., AsyncGenerator[ChainOutput[V, Any], Any]]]],
+            Optional[List[Callable[..., AsyncGenerator[V, Any]]]],
+            Optional[List[Callable[..., V]]],
+        ] = cast(List[Callable[..., OpenAIChatDelta]], None),
         function_call: Optional[Union[Literal["none", "auto"], str]] = None,
         temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
     ) -> None:
         self.name = name
-
-        name_to_function: Dict[str, Callable] = dict()
-        if functions is not None:
-            openai_functions: List[OpenAIFunction] = []
-            for fn in functions:
-                try:
-                    openai_functions = [py2gpt(fn) for fn in functions]
-                except ValueError as e:
-                    raise ValueError(
-                        f"The function {fn} that you passed in the 'functions' argument when creating a OpenAIChatChain could not be converted to a valid OpenAI function: {str(e)}"
-                    )
-            name_to_function = dict(
-                [
-                    (openai_fn["name"], fn)
-                    for fn, openai_fn in zip(functions, openai_functions)
-                ]
-            )
+        name_to_function, openai_functions = self._parse_functions(functions)
 
         async def chat_completion(
             messages: List[OpenAIChatMessage],
@@ -254,16 +240,6 @@ class OpenAIChatChain(Chain[T, U]):
 
             pending_function_calls: List[_OpenAIFunctionCall] = []
 
-            def run_pending_function_call() -> Generator[ChainOutput, None, None]:
-                for function_call in pending_function_calls:
-                    function_to_call = name_to_function[function_call.name]
-                    arguments = json.loads(function_call.arguments)
-                    result = function_to_call(**arguments)
-                    yield self._output_wrap(
-                        result, name=f"{self.name}@function_call->{function_call.name}"
-                    )
-                pending_function_calls.clear()
-
             for output in completions:
                 output = cast(dict, output)
                 if "choices" not in output:
@@ -284,8 +260,6 @@ class OpenAIChatChain(Chain[T, U]):
                     )
 
                     if function_name is not None:
-                        for value in run_pending_function_call():
-                            yield value
                         pending_function_calls = [
                             _OpenAIFunctionCall(
                                 name=function_name,
@@ -307,9 +281,60 @@ class OpenAIChatChain(Chain[T, U]):
                         )
                     )
                 else:
-                    for value in run_pending_function_call():
+                    async for value in self._run_pending_function_call(
+                        name_to_function, pending_function_calls
+                    ):
                         yield value
-            for value in run_pending_function_call():
+            async for value in self._run_pending_function_call(
+                name_to_function, pending_function_calls
+            ):
                 yield value
 
         self._call = lambda input: chat_completion(call(input))
+
+    def _parse_functions(self, functions: Optional[List[Callable]]):
+        name_to_function: Dict[str, Callable] = dict()
+        openai_functions: List[OpenAIFunction] = []
+        if functions is not None:
+            for fn in functions:
+                try:
+                    openai_functions = [py2gpt(fn) for fn in functions]
+                except ValueError as e:
+                    raise ValueError(
+                        f"The function {fn} that you passed in the 'functions' argument when creating a OpenAIChatChain could not be converted to a valid OpenAI function: {str(e)}"
+                    )
+            name_to_function = dict(
+                [
+                    (openai_fn["name"], fn)
+                    for fn, openai_fn in zip(functions, openai_functions)
+                ]
+            )
+
+        return name_to_function, openai_functions
+
+    async def _run_pending_function_call(
+        self,
+        name_to_function: Dict[str, Callable],
+        pending_function_calls: List[_OpenAIFunctionCall],
+    ) -> AsyncGenerator[ChainOutput, None]:
+        for function_call in pending_function_calls:
+            function_to_call = name_to_function[function_call.name]
+            arguments = json.loads(function_call.arguments)
+            output_chain_name = f"{self.name}@function_call->{function_call.name}"
+
+            stringified_keywords_list = ", ".join(
+                [f"{k}={repr(v)}" for k, v in arguments.items()]
+            )
+            yield self._output_wrap(
+                OpenAIChatDelta(
+                    role="function",
+                    content=f"{function_call.name}({stringified_keywords_list})",
+                ),
+                final=False,
+            )
+
+            result = function_to_call(**arguments)
+            wrapped = self._wrap(result, name=output_chain_name)
+            async for output in wrapped:
+                yield output
+        pending_function_calls.clear()
