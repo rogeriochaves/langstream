@@ -353,6 +353,54 @@ If you want the final content as a string, you will need to use the <code>.conte
 ...
 &gt;&gt;&gt; asyncio.run(example()) # doctest:+SKIP
 &quot;Of course! Here's a simple and delicious recipe&quot;
+</code></pre>
+<p>You can also pass python functions to be called by the model, LiteChain will convert those functions to OpenAI function schema and call it back automatically.
+The functions you pass must have type signatures and doctypes including for the parameters, otherwise you will get a runtime error. The docs are important because
+this is how you tell the model why should it use that function, and what each parameter means, for better results.</p>
+<p>The function you pass may return either a static value or an <code>AsyncGenerator</code>, which means you can call other chains from it. Take a look <a href="https://rogeriochaves.github.io/litechain/docs/llms/open_ai_functions">at our guide</a>
+to learn more about OpenAI function calls in LiteChain.</p>
+<h2 id="function-call-example">Function Call Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from litechain import Chain, collect_final_output
+&gt;&gt;&gt; from litechain.contrib import OpenAIChatChain, OpenAIChatMessage, OpenAIChatDelta
+&gt;&gt;&gt; from typing import Literal, Union, Dict
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example():
+...     def get_current_weather(
+...         location: str, format: Literal[&quot;celsius&quot;, &quot;fahrenheit&quot;] = &quot;celsius&quot;
+...     ) -&gt; Dict[str, str]:
+...         &quot;&quot;&quot;
+...         Gets the current weather in a given location, use this function for any questions related to the weather
+...
+...         Parameters
+...         ----------
+...         location
+...             The city to get the weather, e.g. San Francisco. Guess the location from user messages
+...
+...         format
+...             A string with the full content of what the given role said
+...         &quot;&quot;&quot;
+...
+...         return {
+...             &quot;location&quot;: location,
+...             &quot;forecast&quot;: &quot;sunny&quot;,
+...             &quot;temperature&quot;: &quot;25 C&quot; if format == &quot;celsius&quot; else &quot;77 F&quot;,
+...         }
+...
+...     chain = OpenAIChatChain[str, Union[OpenAIChatDelta, Dict[str, str]]](
+...         &quot;WeatherChain&quot;,
+...         lambda user_input: [
+...             OpenAIChatMessage(role=&quot;user&quot;, content=user_input),
+...         ],
+...         model=&quot;gpt-3.5-turbo&quot;,
+...         functions=[get_current_weather],
+...         temperature=0,
+...     )
+...
+...     return await collect_final_output(chain(&quot;how is the weather today in Rio de Janeiro?&quot;))
+...
+&gt;&gt;&gt; asyncio.run(example()) # doctest:+SKIP
+[{'location': 'Rio de Janeiro', 'forecast': 'sunny', 'temperature': '25 C'}]
 </code></pre></div>
 <details class="source">
 <summary>
@@ -400,6 +448,58 @@ If you want the final content as a string, you will need to use the <code>.conte
     ...
     &gt;&gt;&gt; asyncio.run(example()) # doctest:+SKIP
     &#34;Of course! Here&#39;s a simple and delicious recipe&#34;
+
+    You can also pass python functions to be called by the model, LiteChain will convert those functions to OpenAI function schema and call it back automatically.
+    The functions you pass must have type signatures and doctypes including for the parameters, otherwise you will get a runtime error. The docs are important because
+    this is how you tell the model why should it use that function, and what each parameter means, for better results.
+
+    The function you pass may return either a static value or an `AsyncGenerator`, which means you can call other chains from it. Take a look [at our guide](https://rogeriochaves.github.io/litechain/docs/llms/open_ai_functions)
+    to learn more about OpenAI function calls in LiteChain.
+
+    Function Call Example
+    ---------------------
+
+    &gt;&gt;&gt; from litechain import Chain, collect_final_output
+    &gt;&gt;&gt; from litechain.contrib import OpenAIChatChain, OpenAIChatMessage, OpenAIChatDelta
+    &gt;&gt;&gt; from typing import Literal, Union, Dict
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     def get_current_weather(
+    ...         location: str, format: Literal[&#34;celsius&#34;, &#34;fahrenheit&#34;] = &#34;celsius&#34;
+    ...     ) -&gt; Dict[str, str]:
+    ...         \&#34;&#34;&#34;
+    ...         Gets the current weather in a given location, use this function for any questions related to the weather
+    ...
+    ...         Parameters
+    ...         ----------
+    ...         location
+    ...             The city to get the weather, e.g. San Francisco. Guess the location from user messages
+    ...
+    ...         format
+    ...             A string with the full content of what the given role said
+    ...         \&#34;&#34;&#34;
+    ...
+    ...         return {
+    ...             &#34;location&#34;: location,
+    ...             &#34;forecast&#34;: &#34;sunny&#34;,
+    ...             &#34;temperature&#34;: &#34;25 C&#34; if format == &#34;celsius&#34; else &#34;77 F&#34;,
+    ...         }
+    ...
+    ...     chain = OpenAIChatChain[str, Union[OpenAIChatDelta, Dict[str, str]]](
+    ...         &#34;WeatherChain&#34;,
+    ...         lambda user_input: [
+    ...             OpenAIChatMessage(role=&#34;user&#34;, content=user_input),
+    ...         ],
+    ...         model=&#34;gpt-3.5-turbo&#34;,
+    ...         functions=[get_current_weather],
+    ...         temperature=0,
+    ...     )
+    ...
+    ...     return await collect_final_output(chain(&#34;how is the weather today in Rio de Janeiro?&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(example()) # doctest:+SKIP
+    [{&#39;location&#39;: &#39;Rio de Janeiro&#39;, &#39;forecast&#39;: &#39;sunny&#39;, &#39;temperature&#39;: &#39;25 C&#39;}]
 
     &#34;&#34;&#34;
 
@@ -573,10 +673,10 @@ If you want the final content as a string, you will need to use the <code>.conte
 <div class="desc"><p>OpenAIChatDelta is a data class that represents the output of an <code><a title="litechain.contrib.OpenAIChatChain" href="#litechain.contrib.OpenAIChatChain">OpenAIChatChain</a></code>.</p>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>role</code></strong> :&ensp;<code>Optional[Literal["assistant"]]</code></dt>
+<dt><strong><code>role</code></strong> :&ensp;<code>Optional[Literal["assistant", "function"]]</code></dt>
 <dd>The role of the output message, the first message will have the role, while
 the subsequent partial content output ones will have the role as <code>None</code>.
-For now the only possible values it will have is either None or <code>"assistant"</code> (TODO: functions to be supported)</dd>
+For now the only possible values it will have is either None or <code>"assistant"</code></dd>
 <dt><strong><code>content</code></strong> :&ensp;<code>str</code></dt>
 <dd>A string with the partial content being outputted by the LLM, this generally
 translate to each token the LLM is producing</dd>
@@ -592,10 +692,10 @@ class OpenAIChatDelta:
 
     Attributes
     ----------
-    role : Optional[Literal[&#34;assistant&#34;]]
+    role : Optional[Literal[&#34;assistant&#34;, &#34;function&#34;]]
         The role of the output message, the first message will have the role, while
         the subsequent partial content output ones will have the role as `None`.
-        For now the only possible values it will have is either None or `&#34;assistant&#34;` (TODO: functions to be supported)
+        For now the only possible values it will have is either None or `&#34;assistant&#34;`
 
     content : str
         A string with the partial content being outputted by the LLM, this generally
@@ -629,14 +729,14 @@ class OpenAIChatDelta:
 </dd>
 <dt id="litechain.contrib.OpenAIChatMessage"><code class="flex name class">
 <span>class <span class="ident">OpenAIChatMessage</span></span>
-<span>(</span><span>role: Literal['system', 'user', 'assistant'], content: str)</span>
+<span>(</span><span>role: Literal['system', 'user', 'assistant', 'function'], content: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>OpenAIChatMessage is a data class that represents a chat message for building <code><a title="litechain.contrib.OpenAIChatChain" href="#litechain.contrib.OpenAIChatChain">OpenAIChatChain</a></code> prompt.</p>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>role</code></strong> :&ensp;<code>Literal["system", "user", "assistant"]</code></dt>
-<dd>The role of who sent this message in the chat, can be one of <code>"system"</code>, <code>"user"</code> or <code>"assisant"</code> (TODO: functions to be supported)</dd>
+<dt><strong><code>role</code></strong> :&ensp;<code>Literal["system", "user", "assistant", "function"]</code></dt>
+<dd>The role of who sent this message in the chat, can be one of <code>"system"</code>, <code>"user"</code>, <code>"assistant"</code> or "function"</dd>
 <dt><strong><code>content</code></strong> :&ensp;<code>str</code></dt>
 <dd>A string with the full content of what the given role said</dd>
 </dl></div>
@@ -651,15 +751,15 @@ class OpenAIChatMessage:
 
     Attributes
     ----------
-    role : Literal[&#34;system&#34;, &#34;user&#34;, &#34;assistant&#34;]
-        The role of who sent this message in the chat, can be one of `&#34;system&#34;`, `&#34;user&#34;` or `&#34;assisant&#34;` (TODO: functions to be supported)
+    role : Literal[&#34;system&#34;, &#34;user&#34;, &#34;assistant&#34;, &#34;function&#34;]
+        The role of who sent this message in the chat, can be one of `&#34;system&#34;`, `&#34;user&#34;`, `&#34;assistant&#34;` or &#34;function&#34;
 
     content : str
         A string with the full content of what the given role said
 
     &#34;&#34;&#34;
 
-    role: Literal[&#34;system&#34;, &#34;user&#34;, &#34;assistant&#34;]
+    role: Literal[&#34;system&#34;, &#34;user&#34;, &#34;assistant&#34;, &#34;function&#34;]
     content: str</code></pre>
 </details>
 <h3>Class variables</h3>
@@ -668,7 +768,7 @@ class OpenAIChatMessage:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="litechain.contrib.OpenAIChatMessage.role"><code class="name">var <span class="ident">role</span> : Literal['system', 'user', 'assistant']</code></dt>
+<dt id="litechain.contrib.OpenAIChatMessage.role"><code class="name">var <span class="ident">role</span> : Literal['system', 'user', 'assistant', 'function']</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
