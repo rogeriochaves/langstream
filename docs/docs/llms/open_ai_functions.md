@@ -75,7 +75,7 @@ await collect_final_output(
 
 Notice how the output type of the chain is `Union[OpenAIChatDelta, WeatherReturn]`, this is because the chain now can return either a simple message reply, if the user says "hello, what's up" for example, or it may return a `WeatherReturn` because they user has asked about the weather and therefore called the function. The return types get wired up automatically by the type system so you get no surprises of what things you are possibly getting back from the chain.
 
-Now, to go one step beyond, not necessarily you function has to return simple values, you can also call other chains from it, so effectively one LLM is calling the other, directly! 🤯 Check out this example:
+Now, to go one step beyond, not necessarily you function has to return simple values, you can also call other chains from it, so effectively one LLM is calling the other! 🤯 Check out this example:
 
 ```python
 from typing import TypedDict, Literal, Union
@@ -153,7 +153,7 @@ await collect_final_output(
 
 Here we used the [`debug`](pathname:///reference/litechain/utils/chain.html#litechain.utils.chain.debug) function to show what is going on, you can see it first called the function, and then it gave a proper reply about the Amsterdam weather.
 
-The way it works is that we create a function `chain`, which takes the `user_input`, creates the `reply_with_current_weather` function and two chains, the `weather_chain` and the `weather_reply_chain`. The first chain just take the use input and find the appropriate function to call, the function `reply_with_current_weather` then actually fetches the weather and call the second chain `weather_reply_chain`, which reuses the `user_input` plus the weather output and generate the final reply.
+The way it works is that we create a function `chain`, which takes the `user_input`, creates the `reply_with_current_weather` function and two chains, the `weather_chain` and the `weather_reply_chain`. The first chain just take the user input and find the appropriate function to call, the function `reply_with_current_weather` then actually fetches the weather and call the second chain `weather_reply_chain`, which reuses the `user_input` plus takes the `WeatherReturn` as input and generate the final reply.
 
 That's it for OpenAI Function Calling, now if want to run an LLM locally, check it out the next guide on GPT4All.
 
