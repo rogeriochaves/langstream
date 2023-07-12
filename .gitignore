@@ -6,6 +6,7 @@ repl.ipynb
 docs/static/reference
 .chainlit
 chainlit.md
+!docs/**/chainlit.md
 test.py
 build/
 litechain.egg-info/
