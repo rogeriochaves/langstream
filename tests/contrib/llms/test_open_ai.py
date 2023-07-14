@@ -261,3 +261,97 @@ class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
             result,
             "Based on the current weather forecast in Amsterdam, it is sunny with a temperature of 25°C. Since it is not raining, you do not need to take an umbrella for your pet chicken. Enjoy the sunny weather!",
         )
+
+    @pytest.mark.integration
+    async def test_it_keeps_function_calls_in_memory(self):
+        class WeatherReturn(TypedDict):
+            location: str
+            forecast: str
+            temperature: str
+
+        def get_current_weather(
+            location: str, format: Literal["celsius", "fahrenheit"] = "celsius"
+        ) -> WeatherReturn:
+            """
+            Gets the current weather in a given location, use this function for any questions related to the weather
+
+            Parameters
+            ----------
+            location
+                The city to get the weather, e.g. San Francisco. Guess the location from user messages
+
+            format
+                A string with the full content of what the given role said
+            """
+
+            return WeatherReturn(
+                location=location,
+                forecast="sunny",
+                temperature="25 C" if format == "celsius" else "77 F",
+            )
+
+        class Memory(TypedDict):
+            history: List[OpenAIChatMessage]
+
+        memory = Memory(history=[])
+
+        def save_message_to_memory(message: OpenAIChatMessage) -> OpenAIChatMessage:
+            memory["history"].append(message)
+            return message
+
+        def update_delta_on_memory(
+            delta: Union[OpenAIChatDelta, WeatherReturn]
+        ) -> Union[OpenAIChatDelta, WeatherReturn]:
+            if isinstance(delta, dict):
+                memory["history"].append(
+                    OpenAIChatMessage(
+                        role="function",
+                        content=json.dumps(delta),
+                        name="get_current_weather",
+                    )
+                )
+            elif memory["history"][-1].role != delta.role and delta.role is not None:
+                memory["history"].append(
+                    OpenAIChatMessage(
+                        role=delta.role, content=delta.content, name=delta.name
+                    )
+                )
+            else:
+                memory["history"][-1].content += delta.content
+            return delta
+
+        chain = debug(
+            OpenAIChatChain[str, Union[OpenAIChatDelta, WeatherReturn]](
+                "WeatherChain",
+                lambda user_input: [
+                    *memory["history"],
+                    save_message_to_memory(
+                        OpenAIChatMessage(role="user", content=user_input),
+                    ),
+                ],
+                model="gpt-3.5-turbo-0613",
+                functions=[get_current_weather],
+                temperature=0,
+            )
+        ).map(update_delta_on_memory)
+
+        outputs = await collect_final_output(
+            chain("What is the weather today in amsterdam?")
+        )
+        self.assertEqual(
+            list(outputs)[0],
+            {"location": "Amsterdam", "forecast": "sunny", "temperature": "25 C"},
+        )
+
+        outputs = await collect_final_output(chain("How many degrees again?"))
+        result = "".join(
+            [
+                output.content
+                for output in outputs
+                if isinstance(output, OpenAIChatDelta)
+            ]
+        )
+        self.assertIn(
+            "25 degrees",
+            result,
+        )

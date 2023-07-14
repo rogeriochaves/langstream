@@ -103,6 +103,9 @@ class OpenAIChatMessage:
     role : Literal["system", "user", "assistant", "function"]
         The role of who sent this message in the chat, can be one of `"system"`, `"user"`, `"assistant"` or "function"
 
+    name: Optional[str]
+        The name is used for when `role` is `"function"`, it represents the name of the function that was called
+
     content : str
         A string with the full content of what the given role said
 
@@ -110,6 +113,10 @@ class OpenAIChatMessage:
 
     role: Literal["system", "user", "assistant", "function"]
     content: str
+    name: Optional[str] = None
+
+    def to_dict(self):
+        return {k: v for k, v in self.__dict__.items() if v is not None}
 
 
 @dataclass
@@ -130,6 +137,9 @@ class OpenAIChatDelta:
         the subsequent partial content output ones will have the role as `None`.
         For now the only possible values it will have is either None or `"assistant"`
 
+    name: Optional[str]
+        The name is used for when `role` is `"function"`, it represents the name of the function that was called
+
     content : str
         A string with the partial content being outputted by the LLM, this generally
         translate to each token the LLM is producing
@@ -138,15 +148,27 @@ class OpenAIChatDelta:
 
     role: Optional[Literal["assistant", "function"]]
     content: str
+    name: Optional[str] = None
 
     def __chain_debug__(self):
         if self.role is not None:
             print(f"{Fore.YELLOW}{self.role.capitalize()}:{Fore.RESET} ", end="")
-        print(
-            self.content,
-            end="",
-            flush=True,
-        )
+        if self.role == "function":
+            arguments = json.loads(self.content)
+            stringified_keywords_list = ", ".join(
+                [f"{k}={repr(v)}" for k, v in arguments.items()]
+            )
+            print(
+                f"{self.name}({stringified_keywords_list})",
+                end="",
+                flush=True,
+            )
+        else:
+            print(
+                self.content,
+                end="",
+                flush=True,
+            )
 
 
 class OpenAIChatChain(Chain[T, U]):
@@ -280,7 +302,7 @@ class OpenAIChatChain(Chain[T, U]):
 
                 return openai.ChatCompletion.create(
                     model=model,
-                    messages=[m.__dict__ for m in messages],
+                    messages=[m.to_dict() for m in messages],
                     temperature=temperature,
                     stream=True,
                     max_tokens=max_tokens,
@@ -373,13 +395,11 @@ class OpenAIChatChain(Chain[T, U]):
             arguments = json.loads(function_call.arguments)
             output_chain_name = f"{self.name}@function_call->{function_call.name}"
 
-            stringified_keywords_list = ", ".join(
-                [f"{k}={repr(v)}" for k, v in arguments.items()]
-            )
             yield self._output_wrap(
                 OpenAIChatDelta(
                     role="function",
-                    content=f"{function_call.name}({stringified_keywords_list})",
+                    name=function_call.name,
+                    content=function_call.arguments,
                 ),
                 final=False,
             )
