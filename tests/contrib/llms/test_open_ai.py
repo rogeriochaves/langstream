@@ -264,6 +264,11 @@ class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
 
     @pytest.mark.integration
     async def test_it_keeps_function_calls_in_memory(self):
+        class Memory(TypedDict):
+            history: List[OpenAIChatMessage]
+
+        memory = Memory(history=[])
+
         class WeatherReturn(TypedDict):
             location: str
             forecast: str
@@ -284,16 +289,21 @@ class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
                 A string with the full content of what the given role said
             """
 
-            return WeatherReturn(
+            result = WeatherReturn(
                 location=location,
                 forecast="sunny",
                 temperature="25 C" if format == "celsius" else "77 F",
             )
 
-        class Memory(TypedDict):
-            history: List[OpenAIChatMessage]
+            save_message_to_memory(
+                OpenAIChatMessage(
+                    role="function",
+                    content=json.dumps(result),
+                    name="get_current_weather",
+                )
+            )
 
-        memory = Memory(history=[])
+            return result
 
         def save_message_to_memory(message: OpenAIChatMessage) -> OpenAIChatMessage:
             memory["history"].append(message)
@@ -302,15 +312,10 @@ class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
         def update_delta_on_memory(
             delta: Union[OpenAIChatDelta, WeatherReturn]
         ) -> Union[OpenAIChatDelta, WeatherReturn]:
-            if isinstance(delta, dict):
-                memory["history"].append(
-                    OpenAIChatMessage(
-                        role="function",
-                        content=json.dumps(delta),
-                        name="get_current_weather",
-                    )
-                )
-            elif memory["history"][-1].role != delta.role and delta.role is not None:
+            if not isinstance(delta, OpenAIChatDelta):
+                return delta
+
+            if memory["history"][-1].role != delta.role and delta.role is not None:
                 memory["history"].append(
                     OpenAIChatMessage(
                         role=delta.role, content=delta.content, name=delta.name
