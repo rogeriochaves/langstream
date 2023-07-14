@@ -1,6 +1,6 @@
 # 🪽🔗 LiteChain
 
-[![](https://dcbadge.vercel.app/api/server/AmEMWmFG?style=flat)](https://discord.gg/AmEMWmFG)
+[![](https://dcbadge.vercel.app/api/server/48ZM5KkKgw?style=flat)](https://discord.gg/48ZM5KkKgw)
 [![Release Notes](https://img.shields.io/github/release/rogeriochaves/litechain)](https://pypi.org/project/litechain/)
 [![tests](https://github.com/rogeriochaves/litechain/actions/workflows/run_tests.yml/badge.svg)](https://github.com/rogeriochaves/litechain/actions/workflows/run_tests.yml)
 [![docs](https://github.com/rogeriochaves/litechain/actions/workflows/publish_docs.yml/badge.svg)](https://github.com/rogeriochaves/litechain/actions/workflows/publish_docs.yml)
