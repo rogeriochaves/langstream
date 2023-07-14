@@ -227,6 +227,9 @@ class OpenAIChatMessage:
     role : Literal[&#34;system&#34;, &#34;user&#34;, &#34;assistant&#34;, &#34;function&#34;]
         The role of who sent this message in the chat, can be one of `&#34;system&#34;`, `&#34;user&#34;`, `&#34;assistant&#34;` or &#34;function&#34;
 
+    name: Optional[str]
+        The name is used for when `role` is `&#34;function&#34;`, it represents the name of the function that was called
+
     content : str
         A string with the full content of what the given role said
 
@@ -234,6 +237,10 @@ class OpenAIChatMessage:
 
     role: Literal[&#34;system&#34;, &#34;user&#34;, &#34;assistant&#34;, &#34;function&#34;]
     content: str
+    name: Optional[str] = None
+
+    def to_dict(self):
+        return {k: v for k, v in self.__dict__.items() if v is not None}
 
 
 @dataclass
@@ -254,6 +261,9 @@ class OpenAIChatDelta:
         the subsequent partial content output ones will have the role as `None`.
         For now the only possible values it will have is either None or `&#34;assistant&#34;`
 
+    name: Optional[str]
+        The name is used for when `role` is `&#34;function&#34;`, it represents the name of the function that was called
+
     content : str
         A string with the partial content being outputted by the LLM, this generally
         translate to each token the LLM is producing
@@ -262,15 +272,27 @@ class OpenAIChatDelta:
 
     role: Optional[Literal[&#34;assistant&#34;, &#34;function&#34;]]
     content: str
+    name: Optional[str] = None
 
     def __chain_debug__(self):
         if self.role is not None:
             print(f&#34;{Fore.YELLOW}{self.role.capitalize()}:{Fore.RESET} &#34;, end=&#34;&#34;)
-        print(
-            self.content,
-            end=&#34;&#34;,
-            flush=True,
-        )
+        if self.role == &#34;function&#34;:
+            arguments = json.loads(self.content)
+            stringified_keywords_list = &#34;, &#34;.join(
+                [f&#34;{k}={repr(v)}&#34; for k, v in arguments.items()]
+            )
+            print(
+                f&#34;{self.name}({stringified_keywords_list})&#34;,
+                end=&#34;&#34;,
+                flush=True,
+            )
+        else:
+            print(
+                self.content,
+                end=&#34;&#34;,
+                flush=True,
+            )
 
 
 class OpenAIChatChain(Chain[T, U]):
@@ -404,7 +426,7 @@ class OpenAIChatChain(Chain[T, U]):
 
                 return openai.ChatCompletion.create(
                     model=model,
-                    messages=[m.__dict__ for m in messages],
+                    messages=[m.to_dict() for m in messages],
                     temperature=temperature,
                     stream=True,
                     max_tokens=max_tokens,
@@ -497,13 +519,11 @@ class OpenAIChatChain(Chain[T, U]):
             arguments = json.loads(function_call.arguments)
             output_chain_name = f&#34;{self.name}@function_call-&gt;{function_call.name}&#34;
 
-            stringified_keywords_list = &#34;, &#34;.join(
-                [f&#34;{k}={repr(v)}&#34; for k, v in arguments.items()]
-            )
             yield self._output_wrap(
                 OpenAIChatDelta(
                     role=&#34;function&#34;,
-                    content=f&#34;{function_call.name}({stringified_keywords_list})&#34;,
+                    name=function_call.name,
+                    content=function_call.arguments,
                 ),
                 final=False,
             )
@@ -746,7 +766,7 @@ to learn more about OpenAI function calls in LiteChain.</p>
 
                 return openai.ChatCompletion.create(
                     model=model,
-                    messages=[m.__dict__ for m in messages],
+                    messages=[m.to_dict() for m in messages],
                     temperature=temperature,
                     stream=True,
                     max_tokens=max_tokens,
@@ -839,13 +859,11 @@ to learn more about OpenAI function calls in LiteChain.</p>
             arguments = json.loads(function_call.arguments)
             output_chain_name = f&#34;{self.name}@function_call-&gt;{function_call.name}&#34;
 
-            stringified_keywords_list = &#34;, &#34;.join(
-                [f&#34;{k}={repr(v)}&#34; for k, v in arguments.items()]
-            )
             yield self._output_wrap(
                 OpenAIChatDelta(
                     role=&#34;function&#34;,
-                    content=f&#34;{function_call.name}({stringified_keywords_list})&#34;,
+                    name=function_call.name,
+                    content=function_call.arguments,
                 ),
                 final=False,
             )
@@ -876,7 +894,7 @@ to learn more about OpenAI function calls in LiteChain.</p>
 </dd>
 <dt id="litechain.contrib.llms.open_ai.OpenAIChatDelta"><code class="flex name class">
 <span>class <span class="ident">OpenAIChatDelta</span></span>
-<span>(</span><span>role: Optional[Literal['assistant', 'function']], content: str)</span>
+<span>(</span><span>role: Optional[Literal['assistant', 'function']], content: str, name: Optional[str] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>OpenAIChatDelta is a data class that represents the output of an <code><a title="litechain.contrib.llms.open_ai.OpenAIChatChain" href="#litechain.contrib.llms.open_ai.OpenAIChatChain">OpenAIChatChain</a></code>.</p>
@@ -886,6 +904,8 @@ to learn more about OpenAI function calls in LiteChain.</p>
 <dd>The role of the output message, the first message will have the role, while
 the subsequent partial content output ones will have the role as <code>None</code>.
 For now the only possible values it will have is either None or <code>"assistant"</code></dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>Optional[str]</code></dt>
+<dd>The name is used for when <code>role</code> is <code>"function"</code>, it represents the name of the function that was called</dd>
 <dt><strong><code>content</code></strong> :&ensp;<code>str</code></dt>
 <dd>A string with the partial content being outputted by the LLM, this generally
 translate to each token the LLM is producing</dd>
@@ -906,6 +926,9 @@ class OpenAIChatDelta:
         the subsequent partial content output ones will have the role as `None`.
         For now the only possible values it will have is either None or `&#34;assistant&#34;`
 
+    name: Optional[str]
+        The name is used for when `role` is `&#34;function&#34;`, it represents the name of the function that was called
+
     content : str
         A string with the partial content being outputted by the LLM, this generally
         translate to each token the LLM is producing
@@ -914,19 +937,35 @@ class OpenAIChatDelta:
 
     role: Optional[Literal[&#34;assistant&#34;, &#34;function&#34;]]
     content: str
+    name: Optional[str] = None
 
     def __chain_debug__(self):
         if self.role is not None:
             print(f&#34;{Fore.YELLOW}{self.role.capitalize()}:{Fore.RESET} &#34;, end=&#34;&#34;)
-        print(
-            self.content,
-            end=&#34;&#34;,
-            flush=True,
-        )</code></pre>
+        if self.role == &#34;function&#34;:
+            arguments = json.loads(self.content)
+            stringified_keywords_list = &#34;, &#34;.join(
+                [f&#34;{k}={repr(v)}&#34; for k, v in arguments.items()]
+            )
+            print(
+                f&#34;{self.name}({stringified_keywords_list})&#34;,
+                end=&#34;&#34;,
+                flush=True,
+            )
+        else:
+            print(
+                self.content,
+                end=&#34;&#34;,
+                flush=True,
+            )</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
 <dt id="litechain.contrib.llms.open_ai.OpenAIChatDelta.content"><code class="name">var <span class="ident">content</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="litechain.contrib.llms.open_ai.OpenAIChatDelta.name"><code class="name">var <span class="ident">name</span> : Optional[str]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -938,7 +977,7 @@ class OpenAIChatDelta:
 </dd>
 <dt id="litechain.contrib.llms.open_ai.OpenAIChatMessage"><code class="flex name class">
 <span>class <span class="ident">OpenAIChatMessage</span></span>
-<span>(</span><span>role: Literal['system', 'user', 'assistant', 'function'], content: str)</span>
+<span>(</span><span>role: Literal['system', 'user', 'assistant', 'function'], content: str, name: Optional[str] = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>OpenAIChatMessage is a data class that represents a chat message for building <code><a title="litechain.contrib.llms.open_ai.OpenAIChatChain" href="#litechain.contrib.llms.open_ai.OpenAIChatChain">OpenAIChatChain</a></code> prompt.</p>
@@ -946,6 +985,8 @@ class OpenAIChatDelta:
 <dl>
 <dt><strong><code>role</code></strong> :&ensp;<code>Literal["system", "user", "assistant", "function"]</code></dt>
 <dd>The role of who sent this message in the chat, can be one of <code>"system"</code>, <code>"user"</code>, <code>"assistant"</code> or "function"</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>Optional[str]</code></dt>
+<dd>The name is used for when <code>role</code> is <code>"function"</code>, it represents the name of the function that was called</dd>
 <dt><strong><code>content</code></strong> :&ensp;<code>str</code></dt>
 <dd>A string with the full content of what the given role said</dd>
 </dl></div>
@@ -963,13 +1004,20 @@ class OpenAIChatMessage:
     role : Literal[&#34;system&#34;, &#34;user&#34;, &#34;assistant&#34;, &#34;function&#34;]
         The role of who sent this message in the chat, can be one of `&#34;system&#34;`, `&#34;user&#34;`, `&#34;assistant&#34;` or &#34;function&#34;
 
+    name: Optional[str]
+        The name is used for when `role` is `&#34;function&#34;`, it represents the name of the function that was called
+
     content : str
         A string with the full content of what the given role said
 
     &#34;&#34;&#34;
 
     role: Literal[&#34;system&#34;, &#34;user&#34;, &#34;assistant&#34;, &#34;function&#34;]
-    content: str</code></pre>
+    content: str
+    name: Optional[str] = None
+
+    def to_dict(self):
+        return {k: v for k, v in self.__dict__.items() if v is not None}</code></pre>
 </details>
 <h3>Class variables</h3>
 <dl>
@@ -977,9 +1025,29 @@ class OpenAIChatMessage:
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="litechain.contrib.llms.open_ai.OpenAIChatMessage.name"><code class="name">var <span class="ident">name</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="litechain.contrib.llms.open_ai.OpenAIChatMessage.role"><code class="name">var <span class="ident">role</span> : Literal['system', 'user', 'assistant', 'function']</code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="litechain.contrib.llms.open_ai.OpenAIChatMessage.to_dict"><code class="name flex">
+<span>def <span class="ident">to_dict</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_dict(self):
+    return {k: v for k, v in self.__dict__.items() if v is not None}</code></pre>
+</details>
 </dd>
 </dl>
 </dd>
@@ -1122,6 +1190,7 @@ class OpenAIChatMessage:
 <h4><code><a title="litechain.contrib.llms.open_ai.OpenAIChatDelta" href="#litechain.contrib.llms.open_ai.OpenAIChatDelta">OpenAIChatDelta</a></code></h4>
 <ul class="">
 <li><code><a title="litechain.contrib.llms.open_ai.OpenAIChatDelta.content" href="#litechain.contrib.llms.open_ai.OpenAIChatDelta.content">content</a></code></li>
+<li><code><a title="litechain.contrib.llms.open_ai.OpenAIChatDelta.name" href="#litechain.contrib.llms.open_ai.OpenAIChatDelta.name">name</a></code></li>
 <li><code><a title="litechain.contrib.llms.open_ai.OpenAIChatDelta.role" href="#litechain.contrib.llms.open_ai.OpenAIChatDelta.role">role</a></code></li>
 </ul>
 </li>
@@ -1129,7 +1198,9 @@ class OpenAIChatMessage:
 <h4><code><a title="litechain.contrib.llms.open_ai.OpenAIChatMessage" href="#litechain.contrib.llms.open_ai.OpenAIChatMessage">OpenAIChatMessage</a></code></h4>
 <ul class="">
 <li><code><a title="litechain.contrib.llms.open_ai.OpenAIChatMessage.content" href="#litechain.contrib.llms.open_ai.OpenAIChatMessage.content">content</a></code></li>
+<li><code><a title="litechain.contrib.llms.open_ai.OpenAIChatMessage.name" href="#litechain.contrib.llms.open_ai.OpenAIChatMessage.name">name</a></code></li>
 <li><code><a title="litechain.contrib.llms.open_ai.OpenAIChatMessage.role" href="#litechain.contrib.llms.open_ai.OpenAIChatMessage.role">role</a></code></li>
+<li><code><a title="litechain.contrib.llms.open_ai.OpenAIChatMessage.to_dict" href="#litechain.contrib.llms.open_ai.OpenAIChatMessage.to_dict">to_dict</a></code></li>
 </ul>
 </li>
 <li>
