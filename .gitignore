@@ -7,6 +7,9 @@ docs/static/reference
 .chainlit
 chainlit.md
 !docs/**/chainlit.md
-test.py
+test*.py
 build/
 litechain.egg-info/
+
+# Generated markdown files from jupyter notebooks
+docs/docs/examples/weather-bot.md

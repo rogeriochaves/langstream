@@ -113,7 +113,7 @@ To continue developing with LiteChain, take a look at our [documentation](https:
 
 # 👥 Community
 
-[Join our discord](https://discord.gg/AmEMWmFG) community to connect with other LiteChain developers, ask questions, get support, and stay updated with the latest news and announcements.
+[Join our discord](https://discord.gg/48ZM5KkKgw) community to connect with other LiteChain developers, ask questions, get support, and stay updated with the latest news and announcements.
 
 [![Join our Discord community](https://img.shields.io/badge/Join-Discord-7289DA.svg)](https://discord.gg/AmEMWmFG)
 

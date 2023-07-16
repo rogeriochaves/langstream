@@ -8,7 +8,8 @@ gpt4all
 # Function parsing
 docstring_parser
 
-# Test
+# Test and Docs
 pdoc3
 pytest
 pytest-timeout
+nbdoc
