@@ -647,3 +647,38 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
                 final=True,
             ),
         )
+
+    async def test_it_handles_errors(
+        self,
+    ):
+        def raising_function(input: str):
+            raise Exception(f"{input} I'm a teapot")
+
+        chain = SingleOutputChain[str, str](
+            "GreetingChain",
+            raising_function,
+        ).on_error(
+            lambda err: f"I'm Sorry Dave, I'm Afraid I Can't Do That: {str(err)}"
+        ).and_then(
+            lambda greeting: greeting + " :)"
+        )
+
+        outputs = chain("418")
+
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="GreetingChain@on_error",
+                data="I'm Sorry Dave, I'm Afraid I Can't Do That: 418 I'm a teapot",
+                final=False,
+            ),
+        )
+
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="GreetingChain@on_error@and_then",
+                data="I'm Sorry Dave, I'm Afraid I Can't Do That: 418 I'm a teapot :)",
+                final=True,
+            ),
+        )

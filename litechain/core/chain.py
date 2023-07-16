@@ -367,7 +367,7 @@ class Chain(Generic[T, U]):
         handler: Callable[
             [Exception], Union[AsyncGenerator[ChainOutput[V, W], Any], V]
         ],
-    ):
+    ) -> "Chain[T, Union[U, V]]":
         next_name = f"{self.name}@on_error"
         if hasattr(next, "name"):
             next_name = next.name
@@ -534,3 +534,27 @@ class SingleOutputChain(Chain[T, U]):
             yield cast(ChainOutput[List[List[V]], Union[U, List[List[V]]]], clean_vss)
 
         return SingleOutputChain[T, List[List[V]]](f"{self.name}@gather", gather)
+
+    def on_error(
+        self,
+        handler: Callable[
+            [Exception], Union[AsyncGenerator[ChainOutput[V, W], Any], V]
+        ],
+    ) -> "SingleOutputChain[T, Union[U, V]]":
+        next_name = f"{self.name}@on_error"
+        if hasattr(next, "name"):
+            next_name = next.name
+
+        async def on_error(
+            input: T,
+        ) -> AsyncGenerator[ChainOutput[Union[U, V], Any], Any]:
+            try:
+                async for output in self(input):
+                    yield cast(ChainOutput[Union[U, V], Any], output)
+            except Exception as e:
+                async for output in self._wrap(handler(e), name=next_name):
+                    yield cast(ChainOutput[Union[U, V], Any], output)
+
+        return SingleOutputChain[T, Union[U, V]](
+            next_name, lambda input: on_error(input)
+        )
