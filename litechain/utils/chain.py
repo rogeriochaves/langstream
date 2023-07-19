@@ -38,10 +38,6 @@ def debug(
     <BLANKLINE>
     Hello, Alice!
     <BLANKLINE>
-    \x1b[32m> GreetingChain@join\x1b[39m
-    <BLANKLINE>
-    Hello, Alice!
-    <BLANKLINE>
     \x1b[32m> PoliteChain\x1b[39m
     <BLANKLINE>
     Hello, Alice! How are you?

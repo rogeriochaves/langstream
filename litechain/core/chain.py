@@ -368,6 +368,39 @@ class Chain(Generic[T, U]):
             [Exception], Union[AsyncGenerator[ChainOutput[V, W], Any], V]
         ],
     ) -> "Chain[T, Union[U, V]]":
+        """
+        Handles any uncaught exceptions that might occur during the execution of the current chain.
+
+        The `handler` function takes an exception as its argument and returns a new value that
+        will be used as the output of the chain instead of the exception. The function can also re-raise
+        the exception or raise a new one, which will then be propagated further up the chain.
+
+        If an exception occurs in the `handler` function itself, it will be propagated without any
+        further handling.
+
+        Example:
+
+        >>> from litechain import Chain, join_final_output
+        >>> import asyncio
+        ...
+        >>> def failed_greeting(name: str):
+        ...     raise Exception(f"Giving {name} a cold shoulder")
+        ...
+        >>> async def example():
+        ...     greet_chain = Chain[str, str](
+        ...         "GreetingChain",
+        ...         failed_greeting
+        ...     ).on_error(lambda e: f"Sorry, an error occurred: {str(e)}")
+        ...
+        ...     async for output in greet_chain("Alice"):
+        ...         # Output is of type ChainOutput
+        ...         print(output)
+        ...
+        >>> asyncio.run(example())
+        ChainOutput(chain='GreetingChain', data=Exception('Giving Alice a cold shoulder'), final=False)
+        ChainOutput(chain='GreetingChain@on_error', data='Sorry, an error occurred: ...', final=True)
+        """
+
         next_name = f"{self.name}@on_error"
         if hasattr(next, "name"):
             next_name = next.name
@@ -544,6 +577,12 @@ class SingleOutputChain(Chain[T, U]):
             [Exception], Union[AsyncGenerator[ChainOutput[V, W], Any], V]
         ],
     ) -> "SingleOutputChain[T, Union[U, V]]":
+        """
+        Similar to `Chain.on_error`, this method handles any uncaught exceptions that might occur during the execution of the current chain.
+
+        For detailed examples, refer to the documentation of `Chain.gather`.
+        """
+
         next_name = f"{self.name}@on_error"
         if hasattr(next, "name"):
             next_name = next.name
