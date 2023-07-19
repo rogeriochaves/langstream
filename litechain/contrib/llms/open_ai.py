@@ -215,12 +215,10 @@ class OpenAIChatChain(Chain[T, U]):
     >>> asyncio.run(example()) # doctest:+SKIP
     "Of course! Here's a simple and delicious recipe"
 
-    You can also pass python functions to be called by the model, LiteChain will convert those functions to OpenAI function schema and call it back automatically.
-    The functions you pass must have type signatures and doctypes including for the parameters, otherwise you will get a runtime error. The docs are important because
-    this is how you tell the model why should it use that function, and what each parameter means, for better results.
+    You can also pass OpenAI function schemas in the `function` argument with all parameter definitions, the model may then produce a `function` role `OpenAIChatDelta`,
+    using your function, with the `content` field as a json which you can parse to call an actual function.
 
-    The function you pass may return either a static value or an `AsyncGenerator`, which means you can call other chains from it. Take a look [at our guide](https://rogeriochaves.github.io/litechain/docs/llms/open_ai_functions)
-    to learn more about OpenAI function calls in LiteChain.
+    Take a look [at our guide](https://rogeriochaves.github.io/litechain/docs/llms/open_ai_functions) to learn more about OpenAI function calls in LiteChain.
 
     Function Call Example
     ---------------------
