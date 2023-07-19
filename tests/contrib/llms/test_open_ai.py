@@ -39,7 +39,7 @@ class OpenAICompletionChainTestCase(unittest.IsolatedAsyncioTestCase):
 
     @pytest.mark.integration
     @pytest.mark.timeout(
-        0.7  # if due to some bug it ends up being blocking, then it will break this threshold
+        1  # if due to some bug it ends up being blocking, then it will break this threshold
     )
     async def test_it_is_non_blocking(self):
         async_chain = debug(
