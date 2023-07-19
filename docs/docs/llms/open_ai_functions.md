@@ -84,6 +84,8 @@ With the `functions` schema in place, we then map the deltas comming from `OpenA
 
 Notice how the output type of the chain becomes `Union[OpenAIChatDelta, WeatherReturn]`, this is because the chain now can return either a simple message reply, if the user says "hello, what's up" for example, or it may return a `WeatherReturn` because they user has asked about the weather and therefore we called the function. You could then wire this response to another LLM call to reply the user message for example.
 
+As a tip, if you don't want to write the schema yourself, you can extract it from the function definition, check it out our [example on it](../examples/openai-function-call-extract-schema).
+
 That's it for OpenAI Function Calling, now if want to run an LLM locally, check it out the next guide on GPT4All.
 
 [[1]](https://github.com/newhouseb/clownfish/): Long read if you are interested on how logits constraining work: https://github.com/newhouseb/clownfish/

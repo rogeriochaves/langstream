@@ -12,4 +12,5 @@ build/
 litechain.egg-info/
 
 # Generated markdown files from jupyter notebooks
-docs/docs/examples/weather-bot.md
+docs/docs/examples/*.md
+!docs/docs/examples/index.md

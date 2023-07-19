@@ -1,6 +1,5 @@
 import asyncio
 from dataclasses import dataclass
-import json
 from typing import (
     Any,
     AsyncGenerator,
@@ -10,7 +9,6 @@ from typing import (
     Literal,
     Optional,
     TypeVar,
-    TypedDict,
     Union,
     cast,
 )
@@ -117,13 +115,6 @@ class OpenAIChatMessage:
 
     def to_dict(self):
         return {k: v for k, v in self.__dict__.items() if v is not None}
-
-
-class OpenAIFunction(TypedDict):
-    name: str
-    description: str
-    parameters: Dict[str, Any]
-    required: List[str]
 
 
 @dataclass
@@ -279,7 +270,7 @@ class OpenAIChatChain(Chain[T, U]):
             List[OpenAIChatMessage],
         ],
         model: str,
-        functions: Optional[List[OpenAIFunction]] = None,
+        functions: Optional[List[Dict[str, Any]]] = None,
         function_call: Optional[Union[Literal["none", "auto"], str]] = None,
         temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
