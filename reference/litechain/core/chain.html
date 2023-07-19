@@ -305,7 +305,10 @@ class Chain(Generic[T, U]):
 
     def and_then(
         self,
-        next: Callable[[Iterable[U]], Union[AsyncGenerator[ChainOutput[V, W], Any], V]],
+        next: Callable[
+            [Iterable[U]],
+            Union[AsyncGenerator[ChainOutput[V, W], Any], AsyncGenerator[V, Any], V],
+        ],
     ) -&gt; &#34;Chain[T, V]&#34;:
         &#34;&#34;&#34;
         Processes the output of the current chain through a transformation function or another chain.
@@ -767,7 +770,10 @@ class SingleOutputChain(Chain[T, U]):
 
     def and_then(
         self,
-        next: Callable[[Iterable[U]], Union[AsyncGenerator[ChainOutput[V, W], Any], V]],
+        next: Callable[
+            [Iterable[U]],
+            Union[AsyncGenerator[ChainOutput[V, W], Any], AsyncGenerator[V, Any], V],
+        ],
     ) -&gt; &#34;Chain[T, V]&#34;:
         &#34;&#34;&#34;
         Processes the output of the current chain through a transformation function or another chain.
@@ -960,7 +966,7 @@ class SingleOutputChain(Chain[T, U]):
 <h3>Methods</h3>
 <dl>
 <dt id="litechain.core.chain.Chain.and_then"><code class="name flex">
-<span>def <span class="ident">and_then</span></span>(<span>self, next: Callable[[Iterable[~U]], Union[AsyncGenerator[<a title="litechain.core.chain.ChainOutput" href="#litechain.core.chain.ChainOutput">ChainOutput</a>[~V, ~W], Any], ~V]]) ‑> <a title="litechain.core.chain.Chain" href="#litechain.core.chain.Chain">Chain</a>[~T, ~V]</span>
+<span>def <span class="ident">and_then</span></span>(<span>self, next: Callable[[Iterable[~U]], Union[AsyncGenerator[<a title="litechain.core.chain.ChainOutput" href="#litechain.core.chain.ChainOutput">ChainOutput</a>[~V, ~W], Any], AsyncGenerator[~V, Any], ~V]]) ‑> <a title="litechain.core.chain.Chain" href="#litechain.core.chain.Chain">Chain</a>[~T, ~V]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Processes the output of the current chain through a transformation function or another chain.</p>
@@ -1001,7 +1007,10 @@ If <code>transform</code> is another chain, it is used to process the list of co
 </summary>
 <pre><code class="python">def and_then(
     self,
-    next: Callable[[Iterable[U]], Union[AsyncGenerator[ChainOutput[V, W], Any], V]],
+    next: Callable[
+        [Iterable[U]],
+        Union[AsyncGenerator[ChainOutput[V, W], Any], AsyncGenerator[V, Any], V],
+    ],
 ) -&gt; &#34;Chain[T, V]&#34;:
     &#34;&#34;&#34;
     Processes the output of the current chain through a transformation function or another chain.
