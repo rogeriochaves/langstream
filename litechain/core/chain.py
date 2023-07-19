@@ -379,6 +379,9 @@ class Chain(Generic[T, U]):
                 async for output in self(input):
                     yield cast(ChainOutput[Union[U, V], Any], output)
             except Exception as e:
+                yield cast(
+                    ChainOutput[Union[U, V], Any], self._output_wrap(e, final=False)
+                )
                 async for output in self._wrap(handler(e), name=next_name):
                     yield cast(ChainOutput[Union[U, V], Any], output)
 

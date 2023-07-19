@@ -66,19 +66,27 @@ def debug(
 
     async def debug(input: T) -> AsyncGenerator[ChainOutput[U, Any], Any]:
         last_chain = ""
+        last_output = ""
         async for output in chain(input):
+            if output.chain != last_chain and last_output == output.data:
+                yield output
+                continue
+
             if output.chain != last_chain:
                 print("\n", end="", flush=True)
                 last_chain = output.chain
                 print(f"\n{Fore.GREEN}> {output.chain}{Fore.RESET}\n")
             if hasattr(output.data, "__chain_debug__"):
                 output.data.__chain_debug__()
+            elif isinstance(output.data, Exception):
+                print(f"{Fore.RED}Exception:{Fore.RESET} {output.data}", end="")
             else:
                 print(
                     output.data,
                     end=("" if isinstance(output.data, str) else ", "),
                     flush=True,
                 )
+            last_output = output.data
             yield output
 
     next_name = f"@debug"

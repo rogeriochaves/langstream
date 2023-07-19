@@ -371,6 +371,17 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
         outputs = chain("418")
 
         self.assertEqual(
+            str(await next_item(outputs)),
+            str(
+                ChainOutput(
+                    chain="GreetingChain",
+                    data=Exception(f"418 I'm a teapot"),
+                    final=False,
+                )
+            ),
+        )
+
+        self.assertEqual(
             await next_item(outputs),
             ChainOutput(
                 chain="GreetingChain@on_error",
@@ -448,6 +459,17 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(
+            str(await next_item(outputs)),
+            str(
+                ChainOutput(
+                    chain="GreetingChain",
+                    data=Exception(f"418 I'm a teapot"),
+                    final=False,
+                )
+            ),
+        )
+
+        self.assertEqual(
             await next_item(outputs),
             ChainOutput(
                 chain="GreetingChain@on_error",
@@ -504,6 +526,17 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
         )
 
         outputs = chain("418")
+
+        self.assertEqual(
+            str(await next_item(outputs)),
+            str(
+                ChainOutput(
+                    chain="GreetingChain",
+                    data=Exception(f"418 I'm a teapot"),
+                    final=False,
+                )
+            ),
+        )
 
         self.assertEqual(
             await next_item(outputs),
@@ -654,13 +687,15 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
         def raising_function(input: str):
             raise Exception(f"{input} I'm a teapot")
 
-        chain = SingleOutputChain[str, str](
-            "GreetingChain",
-            raising_function,
-        ).on_error(
-            lambda err: f"I'm Sorry Dave, I'm Afraid I Can't Do That: {str(err)}"
-        ).and_then(
-            lambda greeting: greeting + " :)"
+        chain = (
+            SingleOutputChain[str, str](
+                "GreetingChain",
+                raising_function,
+            )
+            .on_error(
+                lambda err: f"I'm Sorry Dave, I'm Afraid I Can't Do That: {str(err)}"
+            )
+            .and_then(lambda greeting: greeting + " :)")
         )
 
         outputs = chain("418")
