@@ -228,7 +228,7 @@ class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
             )
 
             return OpenAIChatDelta(
-                role="function", content=json.dumps(result), name="get_current_weather"
+                role="function", name="get_current_weather", content=json.dumps(result)
             )
 
         def save_message_to_memory(message: OpenAIChatMessage) -> OpenAIChatMessage:
