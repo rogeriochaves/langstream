@@ -18,7 +18,6 @@ from litechain.contrib.llms.open_ai import (
     OpenAIChatMessage,
     OpenAICompletionChain,
     OpenAIChatChain,
-    OpenAIFunction,
 )
 from litechain.utils.chain import collect_final_output, debug, join_final_output
 
@@ -155,33 +154,45 @@ class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
         def get_current_weather(
             location: str, format: Literal["celsius", "fahrenheit"] = "celsius"
         ) -> WeatherReturn:
-            """
-            Gets the current weather in a given location, use this function for any questions related to the weather
-
-            Parameters
-            ----------
-            location
-                The city to get the weather, e.g. San Francisco. Guess the location from user messages
-
-            format
-                A string with the full content of what the given role said
-            """
-
             return WeatherReturn(
                 location=location,
                 forecast="sunny",
                 temperature="25 C" if format == "celsius" else "77 F",
             )
 
-        chain = debug(
-            OpenAIChatChain[str, Union[OpenAIChatDelta, WeatherReturn]](
+        chain: Chain[str, Union[OpenAIChatDelta, WeatherReturn]] = debug(
+            OpenAIChatChain[str, OpenAIChatDelta](
                 "WeatherChain",
                 lambda user_input: [
                     OpenAIChatMessage(role="user", content=user_input),
                 ],
                 model="gpt-3.5-turbo-0613",
-                functions=[get_current_weather],
+                functions=[
+                    {
+                        "name": "get_current_weather",
+                        "description": "Gets the current weather in a given location, use this function for any questions related to the weather",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "location": {
+                                    "description": "The city to get the weather, e.g. San Francisco. Guess the location from user messages",
+                                    "type": "string",
+                                },
+                                "format": {
+                                    "description": "A string with the full content of what the given role said",
+                                    "type": "string",
+                                    "enum": ("celsius", "fahrenheit"),
+                                },
+                            },
+                        },
+                        "required": ["location"],
+                    }
+                ],
                 temperature=0,
+            ).map(
+                lambda delta: get_current_weather(**json.loads(delta.content))
+                if delta.role == "function" and delta.name == "get_current_weather"
+                else delta
             )
         )
 
@@ -193,73 +204,6 @@ class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             list(outputs)[0],
             {"location": "Amsterdam", "forecast": "sunny", "temperature": "25 C"},
-        )
-
-    @pytest.mark.integration
-    async def test_it_calls_functions_that_call_other_chains(self):
-        class WeatherReturn(TypedDict):
-            location: str
-            forecast: str
-            temperature: str
-
-        def chain(user_input: str):
-            def reply_with_current_weather(
-                location: str, format: Literal["celsius", "fahrenheit"] = "celsius"
-            ):
-                """
-                Gets the current weather in a given location and replies user, use this function for any questions related to the weather"
-
-                Parameters
-                ----------
-                location
-                    The city to get the weather, e.g. San Francisco. Guess the location from user messages
-
-                format
-                    A string with the full content of what the given role said
-                """
-
-                weather: WeatherReturn = {
-                    "location": location,
-                    "forecast": "sunny",
-                    "temperature": "25 C" if format == "celsius" else "77 F",
-                }
-
-                return weather_reply_chain(weather)
-
-            weather_chain = OpenAIChatChain[str, OpenAIChatDelta](
-                "WeatherChain",
-                lambda user_input: [
-                    OpenAIChatMessage(role="user", content=user_input),
-                ],
-                model="gpt-3.5-turbo-0613",
-                functions=[reply_with_current_weather],
-                temperature=0,
-            )
-
-            weather_reply_chain = OpenAIChatChain[WeatherReturn, OpenAIChatDelta](
-                "WeatherReplyChain",
-                lambda weather: [
-                    OpenAIChatMessage(role="user", content=user_input),
-                    OpenAIChatMessage(
-                        role="user",
-                        content=f"Output from the weather system: {json.dumps(weather)}",
-                    ),
-                ],
-                model="gpt-3.5-turbo-0613",
-                temperature=0,
-            )
-
-            return debug(weather_chain)(user_input)
-
-        outputs = await collect_final_output(
-            chain(
-                "I'm in my appartment in Amsterdam, thinking... should I take an umbrella for my pet chicken?"
-            )
-        )
-        result = "".join([output.content for output in outputs])
-        self.assertEqual(
-            result,
-            "Based on the current weather forecast in Amsterdam, it is sunny with a temperature of 25°C. Since it is not raining, you do not need to take an umbrella for your pet chicken. Enjoy the sunny weather!",
         )
 
     @pytest.mark.integration
@@ -276,45 +220,22 @@ class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
 
         def get_current_weather(
             location: str, format: Literal["celsius", "fahrenheit"] = "celsius"
-        ) -> WeatherReturn:
-            """
-            Gets the current weather in a given location, use this function for any questions related to the weather
-
-            Parameters
-            ----------
-            location
-                The city to get the weather, e.g. San Francisco. Guess the location from user messages
-
-            format
-                A string with the full content of what the given role said
-            """
-
+        ) -> OpenAIChatDelta:
             result = WeatherReturn(
                 location=location,
                 forecast="sunny",
                 temperature="25 C" if format == "celsius" else "77 F",
             )
 
-            save_message_to_memory(
-                OpenAIChatMessage(
-                    role="function",
-                    content=json.dumps(result),
-                    name="get_current_weather",
-                )
+            return OpenAIChatDelta(
+                role="function", content=json.dumps(result), name="get_current_weather"
             )
-
-            return result
 
         def save_message_to_memory(message: OpenAIChatMessage) -> OpenAIChatMessage:
             memory["history"].append(message)
             return message
 
-        def update_delta_on_memory(
-            delta: Union[OpenAIChatDelta, WeatherReturn]
-        ) -> Union[OpenAIChatDelta, WeatherReturn]:
-            if not isinstance(delta, OpenAIChatDelta):
-                return delta
-
+        def update_delta_on_memory(delta: OpenAIChatDelta) -> OpenAIChatDelta:
             if memory["history"][-1].role != delta.role and delta.role is not None:
                 memory["history"].append(
                     OpenAIChatMessage(
@@ -325,27 +246,65 @@ class OpenAIChatChainTestCase(unittest.IsolatedAsyncioTestCase):
                 memory["history"][-1].content += delta.content
             return delta
 
-        chain = debug(
-            OpenAIChatChain[str, Union[OpenAIChatDelta, WeatherReturn]](
-                "WeatherChain",
-                lambda user_input: [
-                    *memory["history"],
-                    save_message_to_memory(
-                        OpenAIChatMessage(role="user", content=user_input),
-                    ),
-                ],
-                model="gpt-3.5-turbo-0613",
-                functions=[get_current_weather],
-                temperature=0,
+        chain = (
+            debug(
+                OpenAIChatChain[str, OpenAIChatDelta](
+                    "WeatherChain",
+                    lambda user_input: [
+                        *memory["history"],
+                        save_message_to_memory(
+                            OpenAIChatMessage(role="user", content=user_input),
+                        ),
+                    ],
+                    model="gpt-3.5-turbo-0613",
+                    functions=[
+                        {
+                            "name": "get_current_weather",
+                            "description": "Gets the current weather in a given location, use this function for any questions related to the weather",
+                            "parameters": {
+                                "type": "object",
+                                "properties": {
+                                    "location": {
+                                        "description": "The city to get the weather, e.g. San Francisco. Guess the location from user messages",
+                                        "type": "string",
+                                    },
+                                    "format": {
+                                        "description": "A string with the full content of what the given role said",
+                                        "type": "string",
+                                        "enum": ("celsius", "fahrenheit"),
+                                    },
+                                },
+                            },
+                            "required": ["location"],
+                        }
+                    ],
+                    temperature=0,
+                )
             )
-        ).map(update_delta_on_memory)
+            .map(
+                lambda delta: get_current_weather(**json.loads(delta.content))
+                if delta.role == "function" and delta.name == "get_current_weather"
+                else delta
+            )
+            .map(update_delta_on_memory)
+        )
 
         outputs = await collect_final_output(
             chain("What is the weather today in amsterdam?")
         )
         self.assertEqual(
             list(outputs)[0],
-            {"location": "Amsterdam", "forecast": "sunny", "temperature": "25 C"},
+            OpenAIChatDelta(
+                role="function",
+                content=json.dumps(
+                    {
+                        "location": "Amsterdam",
+                        "forecast": "sunny",
+                        "temperature": "25 C",
+                    }
+                ),
+                name="get_current_weather",
+            ),
         )
 
         outputs = await collect_final_output(chain("How many degrees again?"))
