@@ -152,24 +152,16 @@ class OpenAIChatDelta:
     name: Optional[str] = None
 
     def __chain_debug__(self):
+        name = ""
+        if self.name:
+            name = f" {self.name}"
         if self.role is not None:
-            print(f"{Fore.YELLOW}{self.role.capitalize()}:{Fore.RESET} ", end="")
-        if self.role == "function":
-            arguments = json.loads(self.content)
-            stringified_keywords_list = ", ".join(
-                [f"{k}={repr(v)}" for k, v in arguments.items()]
-            )
-            print(
-                f"{self.name}({stringified_keywords_list})",
-                end="",
-                flush=True,
-            )
-        else:
-            print(
-                self.content,
-                end="",
-                flush=True,
-            )
+            print(f"{Fore.YELLOW}{self.role.capitalize()}{name}:{Fore.RESET} ", end="")
+        print(
+            self.content,
+            end="",
+            flush=True,
+        )
 
 
 class OpenAIChatChain(Chain[T, U]):
