@@ -180,7 +180,10 @@ class Chain(Generic[T, U]):
 
     def and_then(
         self,
-        next: Callable[[Iterable[U]], Union[AsyncGenerator[ChainOutput[V, W], Any], V]],
+        next: Callable[
+            [Iterable[U]],
+            Union[AsyncGenerator[ChainOutput[V, W], Any], AsyncGenerator[V, Any], V],
+        ],
     ) -> "Chain[T, V]":
         """
         Processes the output of the current chain through a transformation function or another chain.

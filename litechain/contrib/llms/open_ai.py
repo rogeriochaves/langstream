@@ -1,6 +1,5 @@
 import asyncio
 from dataclasses import dataclass
-import json
 from typing import (
     Any,
     AsyncGenerator,
@@ -16,7 +15,6 @@ from typing import (
 
 import openai
 from colorama import Fore
-from litechain.contrib.utils.open_ai_functions import OpenAIFunction, py2gpt
 
 from litechain.core.chain import Chain, ChainOutput
 
@@ -120,12 +118,6 @@ class OpenAIChatMessage:
 
 
 @dataclass
-class _OpenAIFunctionCall:
-    name: str
-    arguments: str
-
-
-@dataclass
 class OpenAIChatDelta:
     """
     OpenAIChatDelta is a data class that represents the output of an `OpenAIChatChain`.
@@ -151,24 +143,16 @@ class OpenAIChatDelta:
     name: Optional[str] = None
 
     def __chain_debug__(self):
+        name = ""
+        if self.name:
+            name = f" {self.name}"
         if self.role is not None:
-            print(f"{Fore.YELLOW}{self.role.capitalize()}:{Fore.RESET} ", end="")
-        if self.role == "function":
-            arguments = json.loads(self.content)
-            stringified_keywords_list = ", ".join(
-                [f"{k}={repr(v)}" for k, v in arguments.items()]
-            )
-            print(
-                f"{self.name}({stringified_keywords_list})",
-                end="",
-                flush=True,
-            )
-        else:
-            print(
-                self.content,
-                end="",
-                flush=True,
-            )
+            print(f"{Fore.YELLOW}{self.role.capitalize()}{name}:{Fore.RESET} ", end="")
+        print(
+            self.content,
+            end="",
+            flush=True,
+        )
 
 
 class OpenAIChatChain(Chain[T, U]):
@@ -214,12 +198,10 @@ class OpenAIChatChain(Chain[T, U]):
     >>> asyncio.run(example()) # doctest:+SKIP
     "Of course! Here's a simple and delicious recipe"
 
-    You can also pass python functions to be called by the model, LiteChain will convert those functions to OpenAI function schema and call it back automatically.
-    The functions you pass must have type signatures and doctypes including for the parameters, otherwise you will get a runtime error. The docs are important because
-    this is how you tell the model why should it use that function, and what each parameter means, for better results.
+    You can also pass OpenAI function schemas in the `function` argument with all parameter definitions, the model may then produce a `function` role `OpenAIChatDelta`,
+    using your function, with the `content` field as a json which you can parse to call an actual function.
 
-    The function you pass may return either a static value or an `AsyncGenerator`, which means you can call other chains from it. Take a look [at our guide](https://rogeriochaves.github.io/litechain/docs/llms/open_ai_functions)
-    to learn more about OpenAI function calls in LiteChain.
+    Take a look [at our guide](https://rogeriochaves.github.io/litechain/docs/llms/open_ai_functions) to learn more about OpenAI function calls in LiteChain.
 
     Function Call Example
     ---------------------
@@ -233,32 +215,44 @@ class OpenAIChatChain(Chain[T, U]):
     ...     def get_current_weather(
     ...         location: str, format: Literal["celsius", "fahrenheit"] = "celsius"
     ...     ) -> Dict[str, str]:
-    ...         \"""
-    ...         Gets the current weather in a given location, use this function for any questions related to the weather
-    ...
-    ...         Parameters
-    ...         ----------
-    ...         location
-    ...             The city to get the weather, e.g. San Francisco. Guess the location from user messages
-    ...
-    ...         format
-    ...             A string with the full content of what the given role said
-    ...         \"""
-    ...
     ...         return {
     ...             "location": location,
     ...             "forecast": "sunny",
     ...             "temperature": "25 C" if format == "celsius" else "77 F",
     ...         }
     ...
-    ...     chain = OpenAIChatChain[str, Union[OpenAIChatDelta, Dict[str, str]]](
+    ...     chain : Chain[str, Union[OpenAIChatDelta, Dict[str, str]]] = OpenAIChatChain[str, Union[OpenAIChatDelta, Dict[str, str]]](
     ...         "WeatherChain",
     ...         lambda user_input: [
     ...             OpenAIChatMessage(role="user", content=user_input),
     ...         ],
     ...         model="gpt-3.5-turbo",
-    ...         functions=[get_current_weather],
+    ...         functions=[
+    ...             {
+    ...                 "name": "get_current_weather",
+    ...                 "description": "Gets the current weather in a given location, use this function for any questions related to the weather",
+    ...                 "parameters": {
+    ...                     "type": "object",
+    ...                     "properties": {
+    ...                         "location": {
+    ...                             "description": "The city to get the weather, e.g. San Francisco. Guess the location from user messages",
+    ...                             "type": "string",
+    ...                         },
+    ...                         "format": {
+    ...                             "description": "A string with the full content of what the given role said",
+    ...                             "type": "string",
+    ...                             "enum": ("celsius", "fahrenheit"),
+    ...                         },
+    ...                     },
+    ...                 },
+    ...                 "required": ["location"],
+    ...             }
+    ...         ],
     ...         temperature=0,
+    ...     ).map(
+    ...         lambda delta: get_current_weather(**json.loads(delta.content))
+    ...         if delta.role == "function" and delta.name == "get_current_weather"
+    ...         else delta
     ...     )
     ...
     ...     return await collect_final_output(chain("how is the weather today in Rio de Janeiro?"))
@@ -276,17 +270,12 @@ class OpenAIChatChain(Chain[T, U]):
             List[OpenAIChatMessage],
         ],
         model: str,
-        functions: Union[
-            Optional[List[Callable[..., AsyncGenerator[ChainOutput[V, Any], Any]]]],
-            Optional[List[Callable[..., AsyncGenerator[V, Any]]]],
-            Optional[List[Callable[..., V]]],
-        ] = cast(List[Callable[..., OpenAIChatDelta]], None),
+        functions: Optional[List[Dict[str, Any]]] = None,
         function_call: Optional[Union[Literal["none", "auto"], str]] = None,
         temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
     ) -> None:
         self.name = name
-        name_to_function, openai_functions = self._parse_functions(functions)
 
         async def chat_completion(
             messages: List[OpenAIChatMessage],
@@ -296,7 +285,7 @@ class OpenAIChatChain(Chain[T, U]):
             def get_completions():
                 function_kwargs = {}
                 if functions is not None:
-                    function_kwargs["functions"] = openai_functions
+                    function_kwargs["functions"] = functions
                 if function_call is not None:
                     function_kwargs["function_call"] = function_call
 
@@ -311,7 +300,7 @@ class OpenAIChatChain(Chain[T, U]):
 
             completions = await loop.run_in_executor(None, get_completions)
 
-            pending_function_calls: List[_OpenAIFunctionCall] = []
+            pending_function_call: Optional[OpenAIChatDelta] = None
 
             for output in completions:
                 output = cast(dict, output)
@@ -333,17 +322,16 @@ class OpenAIChatChain(Chain[T, U]):
                     )
 
                     if function_name is not None:
-                        pending_function_calls = [
-                            _OpenAIFunctionCall(
-                                name=function_name,
-                                arguments=function_arguments or "",
-                            )
-                        ]
+                        pending_function_call = OpenAIChatDelta(
+                            role="function",
+                            name=function_name,
+                            content=function_arguments or "",
+                        )
                     elif (
-                        len(pending_function_calls) > 0
+                        pending_function_call is not None
                         and function_arguments is not None
                     ):
-                        pending_function_calls[-1].arguments += function_arguments
+                        pending_function_call.content += function_arguments
                 elif "content" in output["choices"][0]["delta"]:
                     delta = output["choices"][0]["delta"]
                     role = delta["role"] if "role" in delta else None
@@ -354,58 +342,11 @@ class OpenAIChatChain(Chain[T, U]):
                         )
                     )
                 else:
-                    async for value in self._run_pending_function_call(
-                        name_to_function, pending_function_calls
-                    ):
-                        yield value
-            async for value in self._run_pending_function_call(
-                name_to_function, pending_function_calls
-            ):
-                yield value
+                    if pending_function_call:
+                        yield self._output_wrap(pending_function_call)
+                        pending_function_call = None
+            if pending_function_call:
+                yield self._output_wrap(pending_function_call)
+                pending_function_call = None
 
         self._call = lambda input: chat_completion(call(input))
-
-    def _parse_functions(self, functions: Optional[List[Callable]]):
-        name_to_function: Dict[str, Callable] = dict()
-        openai_functions: List[OpenAIFunction] = []
-        if functions is not None:
-            for fn in functions:
-                try:
-                    openai_functions = [py2gpt(fn) for fn in functions]
-                except ValueError as e:
-                    raise ValueError(
-                        f"The function {fn} that you passed in the 'functions' argument when creating a OpenAIChatChain could not be converted to a valid OpenAI function: {str(e)}"
-                    )
-            name_to_function = dict(
-                [
-                    (openai_fn["name"], fn)
-                    for fn, openai_fn in zip(functions, openai_functions)
-                ]
-            )
-
-        return name_to_function, openai_functions
-
-    async def _run_pending_function_call(
-        self,
-        name_to_function: Dict[str, Callable],
-        pending_function_calls: List[_OpenAIFunctionCall],
-    ) -> AsyncGenerator[ChainOutput, None]:
-        for function_call in pending_function_calls:
-            function_to_call = name_to_function[function_call.name]
-            arguments = json.loads(function_call.arguments)
-            output_chain_name = f"{self.name}@function_call->{function_call.name}"
-
-            yield self._output_wrap(
-                OpenAIChatDelta(
-                    role="function",
-                    name=function_call.name,
-                    content=function_call.arguments,
-                ),
-                final=False,
-            )
-
-            result = function_to_call(**arguments)
-            wrapped = self._wrap(result, name=output_chain_name)
-            async for output in wrapped:
-                yield output
-        pending_function_calls.clear()
