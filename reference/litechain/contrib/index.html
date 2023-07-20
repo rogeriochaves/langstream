@@ -537,7 +537,7 @@ using your function, with the <code>content</code> field as a json which you can
 
         async def chat_completion(
             messages: List[OpenAIChatMessage],
-        ) -&gt; AsyncGenerator[ChainOutput[Union[OpenAIChatDelta, V], Any], Any]:
+        ) -&gt; AsyncGenerator[ChainOutput[Union[OpenAIChatDelta, V]], Any]:
             loop = asyncio.get_event_loop()
 
             def get_completions():

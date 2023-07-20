@@ -138,7 +138,7 @@ U = TypeVar(&#34;U&#34;)
 
 
 def debug(
-    chain: Callable[[T], AsyncGenerator[ChainOutput[U, Any], Any]]
+    chain: Callable[[T], AsyncGenerator[ChainOutput[U], Any]]
 ) -&gt; Chain[T, U]:
     &#34;&#34;&#34;
     A helper for helping you debugging chains. Simply wrap any piece of the chain or the whole chain together
@@ -185,7 +185,7 @@ def debug(
     Hello, Alice!
     &#34;&#34;&#34;
 
-    async def debug(input: T) -&gt; AsyncGenerator[ChainOutput[U, Any], Any]:
+    async def debug(input: T) -&gt; AsyncGenerator[ChainOutput[U], Any]:
         last_chain = &#34;&#34;
         last_output = &#34;&#34;
         async for output in chain(input):
@@ -198,7 +198,7 @@ def debug(
                 last_chain = output.chain
                 print(f&#34;\n{Fore.GREEN}&gt; {output.chain}{Fore.RESET}\n&#34;)
             if hasattr(output.data, &#34;__chain_debug__&#34;):
-                output.data.__chain_debug__()
+                output.data.__chain_debug__() # type: ignore
             elif isinstance(output.data, Exception):
                 print(f&#34;{Fore.RED}Exception:{Fore.RESET} {output.data}&#34;, end=&#34;&#34;)
             else:
@@ -217,7 +217,7 @@ def debug(
 
 
 async def filter_final_output(
-    async_iterable: AsyncGenerator[ChainOutput[T, Any], Any]
+    async_iterable: AsyncGenerator[ChainOutput[T], Any]
 ) -&gt; AsyncGenerator[T, Any]:
     &#34;&#34;&#34;
     Filters only the final output values of a Chain&#39;s outputs.
@@ -251,7 +251,7 @@ async def filter_final_output(
 
 
 async def collect_final_output(
-    async_iterable: AsyncGenerator[ChainOutput[T, Any], Any]
+    async_iterable: AsyncGenerator[ChainOutput[T], Any]
 ) -&gt; Iterable[T]:
     &#34;&#34;&#34;
     Blocks the chain until it is done, then joins the final output values into a single list.
@@ -282,7 +282,7 @@ async def collect_final_output(
 
 
 async def join_final_output(
-    async_iterable: AsyncGenerator[ChainOutput[str, Any], Any]
+    async_iterable: AsyncGenerator[ChainOutput[str], Any]
 ) -&gt; str:
     &#34;&#34;&#34;
     Blocks a string producing chain until it is done, then joins the final output values into a single string.
@@ -320,7 +320,7 @@ async def join_final_output(
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="litechain.utils.chain.collect_final_output"><code class="name flex">
-<span>async def <span class="ident">collect_final_output</span></span>(<span>async_iterable: AsyncGenerator[<a title="litechain.core.chain.ChainOutput" href="../core/chain.html#litechain.core.chain.ChainOutput">ChainOutput</a>[~T, Any], Any]) ‑> Iterable[~T]</span>
+<span>async def <span class="ident">collect_final_output</span></span>(<span>async_iterable: AsyncGenerator[<a title="litechain.core.chain.ChainOutput" href="../core/chain.html#litechain.core.chain.ChainOutput">ChainOutput</a>[~T], Any]) ‑> Iterable[~T]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Blocks the chain until it is done, then joins the final output values into a single list.</p>
@@ -350,7 +350,7 @@ ChainOutput(chain='GreetingChain', data='!', final=True)
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">async def collect_final_output(
-    async_iterable: AsyncGenerator[ChainOutput[T, Any], Any]
+    async_iterable: AsyncGenerator[ChainOutput[T], Any]
 ) -&gt; Iterable[T]:
     &#34;&#34;&#34;
     Blocks the chain until it is done, then joins the final output values into a single list.
@@ -381,7 +381,7 @@ ChainOutput(chain='GreetingChain', data='!', final=True)
 </details>
 </dd>
 <dt id="litechain.utils.chain.debug"><code class="name flex">
-<span>def <span class="ident">debug</span></span>(<span>chain: Callable[[~T], AsyncGenerator[<a title="litechain.core.chain.ChainOutput" href="../core/chain.html#litechain.core.chain.ChainOutput">ChainOutput</a>[~U, Any], Any]]) ‑> <a title="litechain.core.chain.Chain" href="../core/chain.html#litechain.core.chain.Chain">Chain</a>[~T, ~U]</span>
+<span>def <span class="ident">debug</span></span>(<span>chain: Callable[[~T], AsyncGenerator[<a title="litechain.core.chain.ChainOutput" href="../core/chain.html#litechain.core.chain.ChainOutput">ChainOutput</a>[~U], Any]]) ‑> <a title="litechain.core.chain.Chain" href="../core/chain.html#litechain.core.chain.Chain">Chain</a>[~T, ~U]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A helper for helping you debugging chains. Simply wrap any piece of the chain or the whole chain together
@@ -431,7 +431,7 @@ Hello, Alice!
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def debug(
-    chain: Callable[[T], AsyncGenerator[ChainOutput[U, Any], Any]]
+    chain: Callable[[T], AsyncGenerator[ChainOutput[U], Any]]
 ) -&gt; Chain[T, U]:
     &#34;&#34;&#34;
     A helper for helping you debugging chains. Simply wrap any piece of the chain or the whole chain together
@@ -478,7 +478,7 @@ Hello, Alice!
     Hello, Alice!
     &#34;&#34;&#34;
 
-    async def debug(input: T) -&gt; AsyncGenerator[ChainOutput[U, Any], Any]:
+    async def debug(input: T) -&gt; AsyncGenerator[ChainOutput[U], Any]:
         last_chain = &#34;&#34;
         last_output = &#34;&#34;
         async for output in chain(input):
@@ -491,7 +491,7 @@ Hello, Alice!
                 last_chain = output.chain
                 print(f&#34;\n{Fore.GREEN}&gt; {output.chain}{Fore.RESET}\n&#34;)
             if hasattr(output.data, &#34;__chain_debug__&#34;):
-                output.data.__chain_debug__()
+                output.data.__chain_debug__() # type: ignore
             elif isinstance(output.data, Exception):
                 print(f&#34;{Fore.RED}Exception:{Fore.RESET} {output.data}&#34;, end=&#34;&#34;)
             else:
@@ -510,7 +510,7 @@ Hello, Alice!
 </details>
 </dd>
 <dt id="litechain.utils.chain.filter_final_output"><code class="name flex">
-<span>async def <span class="ident">filter_final_output</span></span>(<span>async_iterable: AsyncGenerator[<a title="litechain.core.chain.ChainOutput" href="../core/chain.html#litechain.core.chain.ChainOutput">ChainOutput</a>[~T, Any], Any]) ‑> AsyncGenerator[~T, Any]</span>
+<span>async def <span class="ident">filter_final_output</span></span>(<span>async_iterable: AsyncGenerator[<a title="litechain.core.chain.ChainOutput" href="../core/chain.html#litechain.core.chain.ChainOutput">ChainOutput</a>[~T], Any]) ‑> AsyncGenerator[~T, Any]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Filters only the final output values of a Chain's outputs.</p>
@@ -541,7 +541,7 @@ Hello, Alice! How are you?
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">async def filter_final_output(
-    async_iterable: AsyncGenerator[ChainOutput[T, Any], Any]
+    async_iterable: AsyncGenerator[ChainOutput[T], Any]
 ) -&gt; AsyncGenerator[T, Any]:
     &#34;&#34;&#34;
     Filters only the final output values of a Chain&#39;s outputs.
@@ -575,7 +575,7 @@ Hello, Alice! How are you?
 </details>
 </dd>
 <dt id="litechain.utils.chain.join_final_output"><code class="name flex">
-<span>async def <span class="ident">join_final_output</span></span>(<span>async_iterable: AsyncGenerator[<a title="litechain.core.chain.ChainOutput" href="../core/chain.html#litechain.core.chain.ChainOutput">ChainOutput</a>[str, Any], Any]) ‑> str</span>
+<span>async def <span class="ident">join_final_output</span></span>(<span>async_iterable: AsyncGenerator[<a title="litechain.core.chain.ChainOutput" href="../core/chain.html#litechain.core.chain.ChainOutput">ChainOutput</a>[str], Any]) ‑> str</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Blocks a string producing chain until it is done, then joins the final output values into a single string.</p>
@@ -605,7 +605,7 @@ Hello, Alice!
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">async def join_final_output(
-    async_iterable: AsyncGenerator[ChainOutput[str, Any], Any]
+    async_iterable: AsyncGenerator[ChainOutput[str], Any]
 ) -&gt; str:
     &#34;&#34;&#34;
     Blocks a string producing chain until it is done, then joins the final output values into a single string.
