@@ -244,8 +244,8 @@ class OpenAIChatChain(Chain[T, U]):
     ...                             "enum": ("celsius", "fahrenheit"),
     ...                         },
     ...                     },
+    ...                     "required": ["location"],
     ...                 },
-    ...                 "required": ["location"],
     ...             }
     ...         ],
     ...         temperature=0,

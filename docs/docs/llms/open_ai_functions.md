@@ -61,8 +61,8 @@ chain: Chain[str, Union[OpenAIChatDelta, WeatherReturn]] = OpenAIChatChain[
                         "enum": ("celsius", "fahrenheit"),
                     },
                 },
+                "required": ["location"],
             },
-            "required": ["location"],
         }
     ],
     temperature=0,

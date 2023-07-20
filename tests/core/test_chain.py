@@ -355,6 +355,207 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
         result = await join_final_output(chain("hello"))
         self.assertEqual(result, "how are you?")
 
+    async def test_it_handles_errors(
+        self,
+    ):
+        def raising_function(input: str):
+            raise Exception(f"{input} I'm a teapot")
+
+        chain = Chain[str, str](
+            "GreetingChain",
+            raising_function,
+        ).on_error(
+            lambda err: f"I'm Sorry Dave, I'm Afraid I Can't Do That: {str(err)}"
+        )
+
+        outputs = chain("418")
+
+        self.assertEqual(
+            str(await next_item(outputs)),
+            str(
+                ChainOutput(
+                    chain="GreetingChain",
+                    data=Exception(f"418 I'm a teapot"),
+                    final=False,
+                )
+            ),
+        )
+
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="GreetingChain@on_error",
+                data="I'm Sorry Dave, I'm Afraid I Can't Do That: 418 I'm a teapot",
+                final=True,
+            ),
+        )
+
+    async def test_it_handles_errors_only_if_they_happen_before_the_specified_handler(
+        self,
+    ):
+        def raising_function(input: str):
+            raise Exception(f"{input} I'm a teapot")
+
+        chain = (
+            Chain[str, str](
+                "GreetingChain",
+                lambda input: f"Hello {input}, how are you doing?",
+            )
+            .on_error(
+                lambda err: f"I'm Sorry Dave, I'm Afraid I Can't Do That: {str(err)}"
+            )
+            .and_then(lambda input: [raising_function(item) for item in input])
+        )
+
+        outputs = chain("Dave")
+
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="GreetingChain",
+                data="Hello Dave, how are you doing?",
+                final=False,
+            ),
+        )
+
+        with self.assertRaises(Exception) as raised:
+            await next_item(outputs)
+
+        self.assertIn("I'm a teapot", str(raised.exception))
+
+    async def test_it_handles_errors_happening_mid_stream(
+        self,
+    ):
+        async def raising_function(input: str):
+            yield "hi"
+            yield "there"
+            raise Exception(f"{input} I'm a teapot")
+
+        chain = Chain[str, str](
+            "GreetingChain",
+            raising_function,
+        ).on_error(
+            lambda err: f"I'm Sorry Dave, I'm Afraid I Can't Do That: {str(err)}"
+        )
+
+        outputs = chain("418")
+
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="GreetingChain",
+                data="hi",
+                final=True,
+            ),
+        )
+
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="GreetingChain",
+                data="there",
+                final=True,
+            ),
+        )
+
+        self.assertEqual(
+            str(await next_item(outputs)),
+            str(
+                ChainOutput(
+                    chain="GreetingChain",
+                    data=Exception(f"418 I'm a teapot"),
+                    final=False,
+                )
+            ),
+        )
+
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="GreetingChain@on_error",
+                data="I'm Sorry Dave, I'm Afraid I Can't Do That: 418 I'm a teapot",
+                final=True,
+            ),
+        )
+
+    async def test_it_accepts_a_different_type_coming_from_the_error_handling(
+        self,
+    ):
+        def raising_function(input: str):
+            if input == "418":
+                raise Exception(f"{input} I'm a teapot")
+            else:
+                return "all good?"
+
+        chain = (
+            Chain[str, str](
+                "GreetingChain",
+                raising_function,
+            )
+            .on_error(lambda err: 500)
+            .and_then(
+                lambda tokens: "".join(
+                    [
+                        f"an int {token}"
+                        if isinstance(token, int)
+                        else f"a str {token}"
+                        for token in tokens
+                    ]
+                )
+            )
+        )
+
+        outputs = chain("200")
+
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="GreetingChain",
+                data="all good?",
+                final=False,
+            ),
+        )
+
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="GreetingChain@on_error@and_then",
+                data="a str all good?",
+                final=True,
+            ),
+        )
+
+        outputs = chain("418")
+
+        self.assertEqual(
+            str(await next_item(outputs)),
+            str(
+                ChainOutput(
+                    chain="GreetingChain",
+                    data=Exception(f"418 I'm a teapot"),
+                    final=False,
+                )
+            ),
+        )
+
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="GreetingChain@on_error",
+                data=500,
+                final=False,
+            ),
+        )
+
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="GreetingChain@on_error@and_then",
+                data="an int 500",
+                final=True,
+            ),
+        )
+
 
 class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
     async def test_it_is_callable_with_single_value_return(self):
@@ -393,9 +594,7 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(
             await next_item(outputs),
-            ChainOutput(
-                chain="ExclamationChain@map", data="hello planet!", final=True
-            ),
+            ChainOutput(chain="ExclamationChain@map", data="hello planet!", final=True),
         )
 
     async def test_it_is_thenable_keeping_the_proper_chain_names(self):
@@ -478,6 +677,43 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
             ChainOutput(
                 chain="ExclamationListChain@and_then",
                 data="!, ",
+                final=True,
+            ),
+        )
+
+    async def test_it_handles_errors(
+        self,
+    ):
+        def raising_function(input: str):
+            raise Exception(f"{input} I'm a teapot")
+
+        chain = (
+            SingleOutputChain[str, str](
+                "GreetingChain",
+                raising_function,
+            )
+            .on_error(
+                lambda err: f"I'm Sorry Dave, I'm Afraid I Can't Do That: {str(err)}"
+            )
+            .and_then(lambda greeting: greeting + " :)")
+        )
+
+        outputs = chain("418")
+
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="GreetingChain@on_error",
+                data="I'm Sorry Dave, I'm Afraid I Can't Do That: 418 I'm a teapot",
+                final=False,
+            ),
+        )
+
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="GreetingChain@on_error@and_then",
+                data="I'm Sorry Dave, I'm Afraid I Can't Do That: 418 I'm a teapot :)",
                 final=True,
             ),
         )

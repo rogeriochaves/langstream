@@ -61,6 +61,4 @@ await collect_final_output(first_item_chain("Foo Bar")) # ❌ type error
 #=> ["F"]
 ```
 
-## Next Steps
-
-This concludes the guides for Chain Basics, congratulations! On the next steps, we are going to build some real application with real LLMs, stay tuned!
+Now types cannot prevent all errors, some will still happen at runtime. Go to the next page to check out on error handling.
