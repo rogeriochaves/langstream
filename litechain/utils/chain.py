@@ -13,7 +13,7 @@ U = TypeVar("U")
 
 
 def debug(
-    chain: Callable[[T], AsyncGenerator[ChainOutput[U, Any], Any]]
+    chain: Callable[[T], AsyncGenerator[ChainOutput[U], Any]]
 ) -> Chain[T, U]:
     """
     A helper for helping you debugging chains. Simply wrap any piece of the chain or the whole chain together
@@ -60,7 +60,7 @@ def debug(
     Hello, Alice!
     """
 
-    async def debug(input: T) -> AsyncGenerator[ChainOutput[U, Any], Any]:
+    async def debug(input: T) -> AsyncGenerator[ChainOutput[U], Any]:
         last_chain = ""
         last_output = ""
         async for output in chain(input):
@@ -73,7 +73,7 @@ def debug(
                 last_chain = output.chain
                 print(f"\n{Fore.GREEN}> {output.chain}{Fore.RESET}\n")
             if hasattr(output.data, "__chain_debug__"):
-                output.data.__chain_debug__()
+                output.data.__chain_debug__() # type: ignore
             elif isinstance(output.data, Exception):
                 print(f"{Fore.RED}Exception:{Fore.RESET} {output.data}", end="")
             else:
@@ -92,7 +92,7 @@ def debug(
 
 
 async def filter_final_output(
-    async_iterable: AsyncGenerator[ChainOutput[T, Any], Any]
+    async_iterable: AsyncGenerator[ChainOutput[T], Any]
 ) -> AsyncGenerator[T, Any]:
     """
     Filters only the final output values of a Chain's outputs.
@@ -126,7 +126,7 @@ async def filter_final_output(
 
 
 async def collect_final_output(
-    async_iterable: AsyncGenerator[ChainOutput[T, Any], Any]
+    async_iterable: AsyncGenerator[ChainOutput[T], Any]
 ) -> Iterable[T]:
     """
     Blocks the chain until it is done, then joins the final output values into a single list.
@@ -157,7 +157,7 @@ async def collect_final_output(
 
 
 async def join_final_output(
-    async_iterable: AsyncGenerator[ChainOutput[str, Any], Any]
+    async_iterable: AsyncGenerator[ChainOutput[str], Any]
 ) -> str:
     """
     Blocks a string producing chain until it is done, then joins the final output values into a single string.

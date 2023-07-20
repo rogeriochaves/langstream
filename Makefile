@@ -10,7 +10,7 @@ doctest:
 	PYTHONPATH=$$PYTHONPATH:. pytest --doctest-modules litechain/utils && PYTHONPATH=$PYTHONPATH:. pytest --doctest-modules litechain/core && PYTHONPATH=$PYTHONPATH:. pytest --doctest-modules litechain/contrib/llms
 
 nbtest:
-	nbdoc_test --fname docs/docs/**/*.ipynb
+	nbdoc_test --fname docs/docs/
 
 docs:
 	make pdocs && make nbdocs && cd docs && npm run build

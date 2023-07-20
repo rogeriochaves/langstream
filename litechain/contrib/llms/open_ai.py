@@ -279,7 +279,7 @@ class OpenAIChatChain(Chain[T, U]):
 
         async def chat_completion(
             messages: List[OpenAIChatMessage],
-        ) -> AsyncGenerator[ChainOutput[Union[OpenAIChatDelta, V], Any], Any]:
+        ) -> AsyncGenerator[ChainOutput[Union[OpenAIChatDelta, V]], Any]:
             loop = asyncio.get_event_loop()
 
             def get_completions():

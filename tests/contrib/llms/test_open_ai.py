@@ -53,7 +53,7 @@ class OpenAICompletionChainTestCase(unittest.IsolatedAsyncioTestCase):
         )
 
         parallel_chain: Chain[str, List[List[str]]] = Chain[
-            str, AsyncGenerator[ChainOutput[str, Any], None]
+            str, AsyncGenerator[ChainOutput[str], None]
         ](
             "ParallelChain",
             lambda input: as_async_generator(

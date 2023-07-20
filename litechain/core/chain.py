@@ -27,7 +27,7 @@ X = TypeVar("X")
 
 
 @dataclass
-class ChainOutput(Generic[T, V]):
+class ChainOutput(Generic[T]):
     """
     ChainOutput is a data class that represents the output of a Chain at each step.
 
@@ -37,11 +37,12 @@ class ChainOutput(Generic[T, V]):
         The name of the chain that produced this output. This helps in identifying
         which part of the processing pipeline the output is coming from.
 
-    output : V
-        The actual output data produced by the Chain. This can be of any type produced by any step of the whole Chain.
+    output : Union[T, Any]
+        The actual output data produced by the chain. This will be type T for final chain output,
+        but can be also be of any type produced by any step of the whole chain.
 
     final : bool
-        A boolean flag indicating whether this output is the final output of the Chain.
+        A boolean flag indicating whether this output is the final output of the chain.
         Only the outputs at the end of the chain are marked as "final".
 
     Example
@@ -64,7 +65,7 @@ class ChainOutput(Generic[T, V]):
     """
 
     chain: str
-    data: V
+    data: Union[T, Any]
     final: bool
 
 
@@ -72,7 +73,7 @@ class Chain(Generic[T, U]):
     """"""
 
     _call: Callable[
-        [T], Union[AsyncGenerator[ChainOutput[U, Any], Any], AsyncGenerator[U, Any], U]
+        [T], Union[AsyncGenerator[ChainOutput[U], Any], AsyncGenerator[U, Any], U]
     ]
 
     def __init__(
@@ -80,26 +81,26 @@ class Chain(Generic[T, U]):
         name: str,
         call: Callable[
             [T],
-            Union[AsyncGenerator[ChainOutput[U, W], Any], AsyncGenerator[U, Any], U],
+            Union[AsyncGenerator[ChainOutput[U], Any], AsyncGenerator[U, Any], U],
         ],
     ) -> None:
         self.name = name
         self._call = call
 
-    def __call__(self, input: T) -> AsyncGenerator[ChainOutput[U, Union[U, Any]], Any]:
+    def __call__(self, input: T) -> AsyncGenerator[ChainOutput[U], Any]:
         result = self._call(input)
         return self._wrap(result)
 
     def _wrap(
         self,
-        value: Union[AsyncGenerator[ChainOutput[V, W], Any], AsyncGenerator[V, Any], V],
+        value: Union[AsyncGenerator[ChainOutput[V], Any], AsyncGenerator[V, Any], V],
         name: Optional[str] = None,
-    ) -> AsyncGenerator[ChainOutput[V, Union[V, W]], Any]:
+    ) -> AsyncGenerator[ChainOutput[V], Any]:
         async def _wrap(
             values: Union[
-                AsyncGenerator[ChainOutput[V, W], Any], AsyncGenerator[V, Any]
+                AsyncGenerator[ChainOutput[V], Any], AsyncGenerator[V, Any]
             ],
-        ) -> AsyncGenerator[ChainOutput[V, Union[V, W]], Any]:
+        ) -> AsyncGenerator[ChainOutput[V], Any]:
             async for value in values:
                 yield self._output_wrap(value, name=name)
 
@@ -108,22 +109,22 @@ class Chain(Generic[T, U]):
         return _wrap(as_async_generator(value))
 
     def _output_wrap(
-        self, value: Union[ChainOutput[V, W], V], final=None, name=None
-    ) -> ChainOutput[V, Union[V, W]]:
+        self, value: Union[ChainOutput[V], V], final=None, name=None
+    ) -> ChainOutput[V]:
         if isinstance(value, ChainOutput):
             final = final if final is not None else value.final
-            return ChainOutput[V, Union[V, W]](
+            return ChainOutput[V](
                 chain=value.chain, data=value.data, final=final
             )
 
         final = final if final is not None else True
-        return ChainOutput[V, Union[V, W]](
+        return ChainOutput[V](
             chain=self.name if name is None else name, data=value, final=final
         )
 
     async def _reyield(
-        self, async_iterable: AsyncGenerator[ChainOutput[U, U], Any]
-    ) -> AsyncGenerator[Tuple[List[U], ChainOutput[U, U]], Any]:
+        self, async_iterable: AsyncGenerator[ChainOutput[U], Any]
+    ) -> AsyncGenerator[Tuple[List[U], ChainOutput[U]], Any]:
         values: List[U] = []
         async for u in async_iterable:
             u_rewrapped = self._output_wrap(u, final=False)
@@ -167,14 +168,14 @@ class Chain(Generic[T, U]):
         'ASAP'
         """
 
-        async def map(input: T) -> AsyncGenerator[ChainOutput[V, Union[U, V]], Any]:
+        async def map(input: T) -> AsyncGenerator[ChainOutput[V], Any]:
             # Reyield previous chain so we never block the stream, and at the same time yield mapped values
             prev_len_values = 0
             async for values, to_reyield in self._reyield(self(input)):
-                yield cast(ChainOutput[V, Union[U, V]], to_reyield)
+                yield cast(ChainOutput[V], to_reyield)
                 if len(values) > prev_len_values:  # as soon as there is a new value
                     prev_len_values = len(values)
-                    yield cast(ChainOutput[V, Union[U, V]], fn(values[-1]))
+                    yield cast(ChainOutput[V], fn(values[-1]))
 
         return Chain[T, V](f"{self.name}@map", lambda input: map(input))
 
@@ -182,7 +183,7 @@ class Chain(Generic[T, U]):
         self,
         next: Callable[
             [Iterable[U]],
-            Union[AsyncGenerator[ChainOutput[V, W], Any], AsyncGenerator[V, Any], V],
+            Union[AsyncGenerator[ChainOutput[V], Any], AsyncGenerator[V, Any], V],
         ],
     ) -> "Chain[T, V]":
         """
@@ -231,17 +232,17 @@ class Chain(Generic[T, U]):
 
         async def and_then(
             input: T,
-        ) -> AsyncGenerator[ChainOutput[V, Union[U, V]], Any]:
+        ) -> AsyncGenerator[ChainOutput[V], Any]:
             # First, reyield previous chain so we never block the stream, and collect the results until they are done
             iter_u: Iterable[U] = []
             async for values, to_reyield in self._reyield(self(input)):
-                yield cast(ChainOutput[V, Union[U, V]], to_reyield)
+                yield cast(ChainOutput[V], to_reyield)
                 iter_u = values
 
             # Then, call in the next chain
             iter_v = self._wrap(next(iter_u), name=next_name)
             async for v in iter_v:
-                yield cast(ChainOutput[V, Union[U, V]], v)
+                yield cast(ChainOutput[V], v)
 
         return Chain[T, V](next_name, and_then)
 
@@ -269,15 +270,15 @@ class Chain(Generic[T, U]):
 
         async def _collect(
             input: T,
-        ) -> AsyncGenerator[ChainOutput[List[U], Union[U, List[U]]], Any]:
+        ) -> AsyncGenerator[ChainOutput[List[U]], Any]:
             # First, reyield previous chain so we never block the stream, and collect the results until they are done
             iter_u: Iterable[U] = []
             async for values, to_reyield in self._reyield(self(input)):
-                yield cast(ChainOutput[List[U], Union[U, List[U]]], to_reyield)
+                yield cast(ChainOutput[List[U]], to_reyield)
                 iter_u = values
 
             # Then, yield the collected results
-            yield cast(ChainOutput[List[U], Union[U, List[U]]], iter_u)
+            yield cast(ChainOutput[List[U]], iter_u)
 
         return SingleOutputChain[T, List[U]](f"{self.name}@collect", _collect)
 
@@ -314,21 +315,21 @@ class Chain(Generic[T, U]):
 
         async def _join(
             input: T,
-        ) -> AsyncGenerator[ChainOutput[str, Union[U, str]], Any]:
+        ) -> AsyncGenerator[ChainOutput[str], Any]:
             # First, reyield previous chain so we never block the stream, and collect the results until they are done
             iter_u: Iterable[str] = []
             async for values, to_reyield in self._reyield(self(input)):
-                yield cast(ChainOutput[str, Union[U, str]], to_reyield)
+                yield cast(ChainOutput[str], to_reyield)
                 iter_u = values
 
             # Then, return the joined result
             output: str = separator.join(iter_u)
-            yield cast(ChainOutput[str, Union[U, str]], output)
+            yield cast(ChainOutput[str], output)
 
         return SingleOutputChain[T, str](f"{self.name}@join", _join)
 
     def gather(
-        self: "Union[Chain[T, AsyncGenerator[ChainOutput[V, W], Any]], Chain[T, AsyncGenerator[V, Any]]]",
+        self: "Union[Chain[T, AsyncGenerator[ChainOutput[V], Any]], Chain[T, AsyncGenerator[V, Any]]]",
     ) -> "SingleOutputChain[T, List[List[V]]]":
         """
         Gathers results from multiple chains and processes them in parallel.
@@ -365,7 +366,7 @@ class Chain(Generic[T, U]):
     def on_error(
         self,
         handler: Callable[
-            [Exception], Union[AsyncGenerator[ChainOutput[V, W], Any], V]
+            [Exception], Union[AsyncGenerator[ChainOutput[V], Any], V]
         ],
     ) -> "Chain[T, Union[U, V]]":
         """
@@ -406,16 +407,16 @@ class Chain(Generic[T, U]):
 
         async def on_error(
             input: T,
-        ) -> AsyncGenerator[ChainOutput[Union[U, V], Any], Any]:
+        ) -> AsyncGenerator[ChainOutput[Union[U, V]], Any]:
             try:
                 async for output in self(input):
-                    yield cast(ChainOutput[Union[U, V], Any], output)
+                    yield cast(ChainOutput[Union[U, V]], output)
             except Exception as e:
                 yield cast(
-                    ChainOutput[Union[U, V], Any], self._output_wrap(e, final=False)
+                    ChainOutput[Union[U, V]], self._output_wrap(e, final=False)
                 )
                 async for output in self._wrap(handler(e), name=next_name):
-                    yield cast(ChainOutput[Union[U, V], Any], output)
+                    yield cast(ChainOutput[Union[U, V]], output)
 
         return Chain[T, Union[U, V]](next_name, lambda input: on_error(input))
 
@@ -424,12 +425,12 @@ class SingleOutputChain(Chain[T, U]):
     """"""
 
     _call: Callable[
-        [T], Union[AsyncGenerator[ChainOutput[U, Any], Any], AsyncGenerator[U, Any], U]
+        [T], Union[AsyncGenerator[ChainOutput[U], Any], AsyncGenerator[U, Any], U]
     ]
 
     async def _reyield(
-        self, async_iterable: AsyncGenerator[ChainOutput[U, U], Any], at: str
-    ) -> AsyncGenerator[Tuple[Optional[U], ChainOutput[U, U]], Any]:
+        self, async_iterable: AsyncGenerator[ChainOutput[U], Any], at: str
+    ) -> AsyncGenerator[Tuple[Optional[U], ChainOutput[U]], Any]:
         final_value: Optional[U] = None
         async for u in async_iterable:
             u_rewrapped = self._output_wrap(u, final=False)
@@ -451,11 +452,11 @@ class SingleOutputChain(Chain[T, U]):
         For detailed examples, refer to the documentation of `Chain.map`.
         """
 
-        async def map(input: T) -> AsyncGenerator[ChainOutput[V, Union[U, V]], Any]:
+        async def map(input: T) -> AsyncGenerator[ChainOutput[V], Any]:
             # Reyield previous chain so we never block the stream, and at the same time yield mapped values
             final_u: Optional[U] = None
             async for value, to_reyield in self._reyield(self(input), "map"):
-                yield cast(ChainOutput[V, Union[U, V]], to_reyield)
+                yield cast(ChainOutput[V], to_reyield)
                 final_u = value
 
             if final_u is None:
@@ -463,7 +464,7 @@ class SingleOutputChain(Chain[T, U]):
                 raise Exception(
                     f"Expected item at the end of the chain, found None for {self.name}@map"
                 )
-            yield cast(ChainOutput[V, Union[U, V]], fn(final_u))
+            yield cast(ChainOutput[V], fn(final_u))
 
         return SingleOutputChain[T, V](f"{self.name}@map", lambda input: map(input))
 
@@ -471,7 +472,7 @@ class SingleOutputChain(Chain[T, U]):
         self,
         next: Callable[
             [U],
-            Union[AsyncGenerator[ChainOutput[V, W], Any], AsyncGenerator[V, Any], V],
+            Union[AsyncGenerator[ChainOutput[V], Any], AsyncGenerator[V, Any], V],
         ],
     ) -> "Chain[T, V]":
         """
@@ -485,11 +486,11 @@ class SingleOutputChain(Chain[T, U]):
 
         async def and_then(
             input: T,
-        ) -> AsyncGenerator[ChainOutput[V, Union[U, V]], Any]:
+        ) -> AsyncGenerator[ChainOutput[V], Any]:
             # First, reyield previous chain so we never block the stream, and collect the last result when it is done
             final_u: Optional[U] = None
             async for value, to_reyield in self._reyield(self(input), "and_then"):
-                yield cast(ChainOutput[V, Union[U, V]], to_reyield)
+                yield cast(ChainOutput[V], to_reyield)
                 final_u = value
 
             if final_u is None:
@@ -501,12 +502,12 @@ class SingleOutputChain(Chain[T, U]):
             # Then, call in the next chain
             iter_v = self._wrap(next(final_u), name=next_name)
             async for v in iter_v:
-                yield cast(ChainOutput[V, Union[U, V]], v)
+                yield cast(ChainOutput[V], v)
 
         return Chain[T, V](next_name, and_then)
 
     def gather(
-        self: "Union[SingleOutputChain[T, List[AsyncGenerator[ChainOutput[V, W], Any]]], SingleOutputChain[T, List[AsyncGenerator[V, Any]]]]",
+        self: "Union[SingleOutputChain[T, List[AsyncGenerator[ChainOutput[V], Any]]], SingleOutputChain[T, List[AsyncGenerator[V, Any]]]]",
     ) -> "SingleOutputChain[T, List[List[V]]]":
         """
         Similar to `Chain.gather`, this method waits for all the async generators in the list returned by the chain to finish and gathers their results in a list.
@@ -516,11 +517,11 @@ class SingleOutputChain(Chain[T, U]):
 
         async def gather(
             input: T,
-        ) -> AsyncGenerator[ChainOutput[List[List[V]], Union[U, List[List[V]]]], Any]:
+        ) -> AsyncGenerator[ChainOutput[List[List[V]]], Any]:
             # First, reyield previous chain so we never block the stream, and collect the last result when it is done
             final_u: Optional[
                 Union[
-                    List[AsyncGenerator[ChainOutput[V, W], Any]],
+                    List[AsyncGenerator[ChainOutput[V], Any]],
                     List[AsyncGenerator[V, Any]],
                 ]
             ] = None
@@ -530,7 +531,7 @@ class SingleOutputChain(Chain[T, U]):
                 cast(Any, self(input)), "gather"
             ):
                 yield cast(
-                    ChainOutput[List[List[V]], Union[U, List[List[V]]]], to_reyield
+                    ChainOutput[List[List[V]]], to_reyield
                 )
                 final_u = value
 
@@ -547,7 +548,7 @@ class SingleOutputChain(Chain[T, U]):
 
             # TODO: should we really wait for everything to arrive before calling asyncio gather? Can we call it during the previous reyield?
             vss: Union[
-                List[List[ChainOutput[V, W]]], List[List[V]]
+                List[List[ChainOutput[V]]], List[List[V]]
             ] = await asyncio.gather(*(consume_async_generator(gen) for gen in final_u))
 
             clean_vss = []
@@ -555,7 +556,7 @@ class SingleOutputChain(Chain[T, U]):
                 clean_vs = []
                 for v in vs:
                     v_rewrapped = cast(
-                        ChainOutput[List[List[V]], Union[U, List[List[V]]]],
+                        ChainOutput[List[List[V]]],
                         self._output_wrap(v, final=False),
                     )
                     if isinstance(v, ChainOutput):
@@ -566,14 +567,14 @@ class SingleOutputChain(Chain[T, U]):
                         clean_vs.append(v)
                 clean_vss.append(clean_vs)
 
-            yield cast(ChainOutput[List[List[V]], Union[U, List[List[V]]]], clean_vss)
+            yield cast(ChainOutput[List[List[V]]], clean_vss)
 
         return SingleOutputChain[T, List[List[V]]](f"{self.name}@gather", gather)
 
     def on_error(
         self,
         handler: Callable[
-            [Exception], Union[AsyncGenerator[ChainOutput[V, W], Any], V]
+            [Exception], Union[AsyncGenerator[ChainOutput[V], Any], V]
         ],
     ) -> "SingleOutputChain[T, Union[U, V]]":
         """
@@ -588,13 +589,13 @@ class SingleOutputChain(Chain[T, U]):
 
         async def on_error(
             input: T,
-        ) -> AsyncGenerator[ChainOutput[Union[U, V], Any], Any]:
+        ) -> AsyncGenerator[ChainOutput[Union[U, V]], Any]:
             try:
                 async for output in self(input):
-                    yield cast(ChainOutput[Union[U, V], Any], output)
+                    yield cast(ChainOutput[Union[U, V]], output)
             except Exception as e:
                 async for output in self._wrap(handler(e), name=next_name):
-                    yield cast(ChainOutput[Union[U, V], Any], output)
+                    yield cast(ChainOutput[Union[U, V]], output)
 
         return SingleOutputChain[T, Union[U, V]](
             next_name, lambda input: on_error(input)
