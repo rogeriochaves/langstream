@@ -163,10 +163,6 @@ def debug(
     &lt;BLANKLINE&gt;
     Hello, Alice!
     &lt;BLANKLINE&gt;
-    \x1b[32m&gt; GreetingChain@join\x1b[39m
-    &lt;BLANKLINE&gt;
-    Hello, Alice!
-    &lt;BLANKLINE&gt;
     \x1b[32m&gt; PoliteChain\x1b[39m
     &lt;BLANKLINE&gt;
     Hello, Alice! How are you?
@@ -191,19 +187,27 @@ def debug(
 
     async def debug(input: T) -&gt; AsyncGenerator[ChainOutput[U, Any], Any]:
         last_chain = &#34;&#34;
+        last_output = &#34;&#34;
         async for output in chain(input):
+            if output.chain != last_chain and last_output == output.data:
+                yield output
+                continue
+
             if output.chain != last_chain:
                 print(&#34;\n&#34;, end=&#34;&#34;, flush=True)
                 last_chain = output.chain
                 print(f&#34;\n{Fore.GREEN}&gt; {output.chain}{Fore.RESET}\n&#34;)
             if hasattr(output.data, &#34;__chain_debug__&#34;):
                 output.data.__chain_debug__()
+            elif isinstance(output.data, Exception):
+                print(f&#34;{Fore.RED}Exception:{Fore.RESET} {output.data}&#34;, end=&#34;&#34;)
             else:
                 print(
                     output.data,
                     end=(&#34;&#34; if isinstance(output.data, str) else &#34;, &#34;),
                     flush=True,
                 )
+            last_output = output.data
             yield output
 
     next_name = f&#34;@debug&#34;
@@ -401,10 +405,6 @@ with the <code><a title="litechain.utils.chain.debug" href="#litechain.utils.cha
 &lt;BLANKLINE&gt;
 Hello, Alice!
 &lt;BLANKLINE&gt;
-[32m&gt; GreetingChain@join[39m
-&lt;BLANKLINE&gt;
-Hello, Alice!
-&lt;BLANKLINE&gt;
 [32m&gt; PoliteChain[39m
 &lt;BLANKLINE&gt;
 Hello, Alice! How are you?
@@ -456,10 +456,6 @@ Hello, Alice!
     &lt;BLANKLINE&gt;
     Hello, Alice!
     &lt;BLANKLINE&gt;
-    \x1b[32m&gt; GreetingChain@join\x1b[39m
-    &lt;BLANKLINE&gt;
-    Hello, Alice!
-    &lt;BLANKLINE&gt;
     \x1b[32m&gt; PoliteChain\x1b[39m
     &lt;BLANKLINE&gt;
     Hello, Alice! How are you?
@@ -484,19 +480,27 @@ Hello, Alice!
 
     async def debug(input: T) -&gt; AsyncGenerator[ChainOutput[U, Any], Any]:
         last_chain = &#34;&#34;
+        last_output = &#34;&#34;
         async for output in chain(input):
+            if output.chain != last_chain and last_output == output.data:
+                yield output
+                continue
+
             if output.chain != last_chain:
                 print(&#34;\n&#34;, end=&#34;&#34;, flush=True)
                 last_chain = output.chain
                 print(f&#34;\n{Fore.GREEN}&gt; {output.chain}{Fore.RESET}\n&#34;)
             if hasattr(output.data, &#34;__chain_debug__&#34;):
                 output.data.__chain_debug__()
+            elif isinstance(output.data, Exception):
+                print(f&#34;{Fore.RED}Exception:{Fore.RESET} {output.data}&#34;, end=&#34;&#34;)
             else:
                 print(
                     output.data,
                     end=(&#34;&#34; if isinstance(output.data, str) else &#34;, &#34;),
                     flush=True,
                 )
+            last_output = output.data
             yield output
 
     next_name = f&#34;@debug&#34;

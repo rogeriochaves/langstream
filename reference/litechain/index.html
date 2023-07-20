@@ -513,10 +513,6 @@ with the <code><a title="litechain.debug" href="#litechain.debug">debug()</a></c
 &lt;BLANKLINE&gt;
 Hello, Alice!
 &lt;BLANKLINE&gt;
-[32m&gt; GreetingChain@join[39m
-&lt;BLANKLINE&gt;
-Hello, Alice!
-&lt;BLANKLINE&gt;
 [32m&gt; PoliteChain[39m
 &lt;BLANKLINE&gt;
 Hello, Alice! How are you?
@@ -568,10 +564,6 @@ Hello, Alice!
     &lt;BLANKLINE&gt;
     Hello, Alice!
     &lt;BLANKLINE&gt;
-    \x1b[32m&gt; GreetingChain@join\x1b[39m
-    &lt;BLANKLINE&gt;
-    Hello, Alice!
-    &lt;BLANKLINE&gt;
     \x1b[32m&gt; PoliteChain\x1b[39m
     &lt;BLANKLINE&gt;
     Hello, Alice! How are you?
@@ -596,19 +588,27 @@ Hello, Alice!
 
     async def debug(input: T) -&gt; AsyncGenerator[ChainOutput[U, Any], Any]:
         last_chain = &#34;&#34;
+        last_output = &#34;&#34;
         async for output in chain(input):
+            if output.chain != last_chain and last_output == output.data:
+                yield output
+                continue
+
             if output.chain != last_chain:
                 print(&#34;\n&#34;, end=&#34;&#34;, flush=True)
                 last_chain = output.chain
                 print(f&#34;\n{Fore.GREEN}&gt; {output.chain}{Fore.RESET}\n&#34;)
             if hasattr(output.data, &#34;__chain_debug__&#34;):
                 output.data.__chain_debug__()
+            elif isinstance(output.data, Exception):
+                print(f&#34;{Fore.RED}Exception:{Fore.RESET} {output.data}&#34;, end=&#34;&#34;)
             else:
                 print(
                     output.data,
                     end=(&#34;&#34; if isinstance(output.data, str) else &#34;, &#34;),
                     flush=True,
                 )
+            last_output = output.data
             yield output
 
     next_name = f&#34;@debug&#34;
@@ -1146,7 +1146,64 @@ Hello, Alice!
         &gt;&gt;&gt; asyncio.run(example()) # will take 0.1s to finish, not 0.3s, because it runs in parallel
         [&#39;Number: 0&#39;, &#39;Number: 1&#39;, &#39;Number: 2&#39;]
         &#34;&#34;&#34;
-        return self.collect().gather()</code></pre>
+        return self.collect().gather()
+
+    def on_error(
+        self,
+        handler: Callable[
+            [Exception], Union[AsyncGenerator[ChainOutput[V, W], Any], V]
+        ],
+    ) -&gt; &#34;Chain[T, Union[U, V]]&#34;:
+        &#34;&#34;&#34;
+        Handles any uncaught exceptions that might occur during the execution of the current chain.
+
+        The `handler` function takes an exception as its argument and returns a new value that
+        will be used as the output of the chain instead of the exception. The function can also re-raise
+        the exception or raise a new one, which will then be propagated further up the chain.
+
+        If an exception occurs in the `handler` function itself, it will be propagated without any
+        further handling.
+
+        Example:
+
+        &gt;&gt;&gt; from litechain import Chain, join_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; def failed_greeting(name: str):
+        ...     raise Exception(f&#34;Giving {name} a cold shoulder&#34;)
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     greet_chain = Chain[str, str](
+        ...         &#34;GreetingChain&#34;,
+        ...         failed_greeting
+        ...     ).on_error(lambda e: f&#34;Sorry, an error occurred: {str(e)}&#34;)
+        ...
+        ...     async for output in greet_chain(&#34;Alice&#34;):
+        ...         print(output)
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        ChainOutput(chain=&#39;GreetingChain&#39;, data=Exception(&#39;Giving Alice a cold shoulder&#39;), final=False)
+        ChainOutput(chain=&#39;GreetingChain@on_error&#39;, data=&#39;Sorry, an error occurred: ...&#39;, final=True)
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@on_error&#34;
+        if hasattr(next, &#34;name&#34;):
+            next_name = next.name
+
+        async def on_error(
+            input: T,
+        ) -&gt; AsyncGenerator[ChainOutput[Union[U, V], Any], Any]:
+            try:
+                async for output in self(input):
+                    yield cast(ChainOutput[Union[U, V], Any], output)
+            except Exception as e:
+                yield cast(
+                    ChainOutput[Union[U, V], Any], self._output_wrap(e, final=False)
+                )
+                async for output in self._wrap(handler(e), name=next_name):
+                    yield cast(ChainOutput[Union[U, V], Any], output)
+
+        return Chain[T, Union[U, V]](next_name, lambda input: on_error(input))</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1561,6 +1618,98 @@ will continue processing the chain in parallel.</p>
     return Chain[T, V](f&#34;{self.name}@map&#34;, lambda input: map(input))</code></pre>
 </details>
 </dd>
+<dt id="litechain.Chain.on_error"><code class="name flex">
+<span>def <span class="ident">on_error</span></span>(<span>self, handler: Callable[[Exception], Union[AsyncGenerator[<a title="litechain.core.chain.ChainOutput" href="core/chain.html#litechain.core.chain.ChainOutput">ChainOutput</a>[~V, ~W], Any], ~V]]) ‑> <a title="litechain.core.chain.Chain" href="core/chain.html#litechain.core.chain.Chain">Chain</a>[~T, typing.Union[~U, ~V]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Handles any uncaught exceptions that might occur during the execution of the current chain.</p>
+<p>The <code>handler</code> function takes an exception as its argument and returns a new value that
+will be used as the output of the chain instead of the exception. The function can also re-raise
+the exception or raise a new one, which will then be propagated further up the chain.</p>
+<p>If an exception occurs in the <code>handler</code> function itself, it will be propagated without any
+further handling.</p>
+<p>Example:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from litechain import Chain, join_final_output
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; def failed_greeting(name: str):
+...     raise Exception(f&quot;Giving {name} a cold shoulder&quot;)
+...
+&gt;&gt;&gt; async def example():
+...     greet_chain = Chain[str, str](
+...         &quot;GreetingChain&quot;,
+...         failed_greeting
+...     ).on_error(lambda e: f&quot;Sorry, an error occurred: {str(e)}&quot;)
+...
+...     async for output in greet_chain(&quot;Alice&quot;):
+...         print(output)
+...
+&gt;&gt;&gt; asyncio.run(example())
+ChainOutput(chain='GreetingChain', data=Exception('Giving Alice a cold shoulder'), final=False)
+ChainOutput(chain='GreetingChain@on_error', data='Sorry, an error occurred: ...', final=True)
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_error(
+    self,
+    handler: Callable[
+        [Exception], Union[AsyncGenerator[ChainOutput[V, W], Any], V]
+    ],
+) -&gt; &#34;Chain[T, Union[U, V]]&#34;:
+    &#34;&#34;&#34;
+    Handles any uncaught exceptions that might occur during the execution of the current chain.
+
+    The `handler` function takes an exception as its argument and returns a new value that
+    will be used as the output of the chain instead of the exception. The function can also re-raise
+    the exception or raise a new one, which will then be propagated further up the chain.
+
+    If an exception occurs in the `handler` function itself, it will be propagated without any
+    further handling.
+
+    Example:
+
+    &gt;&gt;&gt; from litechain import Chain, join_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; def failed_greeting(name: str):
+    ...     raise Exception(f&#34;Giving {name} a cold shoulder&#34;)
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     greet_chain = Chain[str, str](
+    ...         &#34;GreetingChain&#34;,
+    ...         failed_greeting
+    ...     ).on_error(lambda e: f&#34;Sorry, an error occurred: {str(e)}&#34;)
+    ...
+    ...     async for output in greet_chain(&#34;Alice&#34;):
+    ...         print(output)
+    ...
+    &gt;&gt;&gt; asyncio.run(example())
+    ChainOutput(chain=&#39;GreetingChain&#39;, data=Exception(&#39;Giving Alice a cold shoulder&#39;), final=False)
+    ChainOutput(chain=&#39;GreetingChain@on_error&#39;, data=&#39;Sorry, an error occurred: ...&#39;, final=True)
+    &#34;&#34;&#34;
+
+    next_name = f&#34;{self.name}@on_error&#34;
+    if hasattr(next, &#34;name&#34;):
+        next_name = next.name
+
+    async def on_error(
+        input: T,
+    ) -&gt; AsyncGenerator[ChainOutput[Union[U, V], Any], Any]:
+        try:
+            async for output in self(input):
+                yield cast(ChainOutput[Union[U, V], Any], output)
+        except Exception as e:
+            yield cast(
+                ChainOutput[Union[U, V], Any], self._output_wrap(e, final=False)
+            )
+            async for output in self._wrap(handler(e), name=next_name):
+                yield cast(ChainOutput[Union[U, V], Any], output)
+
+    return Chain[T, Union[U, V]](next_name, lambda input: on_error(input))</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 <dt id="litechain.ChainOutput"><code class="flex name class">
@@ -1819,7 +1968,37 @@ class ChainOutput(Generic[T, V]):
 
             yield cast(ChainOutput[List[List[V]], Union[U, List[List[V]]]], clean_vss)
 
-        return SingleOutputChain[T, List[List[V]]](f&#34;{self.name}@gather&#34;, gather)</code></pre>
+        return SingleOutputChain[T, List[List[V]]](f&#34;{self.name}@gather&#34;, gather)
+
+    def on_error(
+        self,
+        handler: Callable[
+            [Exception], Union[AsyncGenerator[ChainOutput[V, W], Any], V]
+        ],
+    ) -&gt; &#34;SingleOutputChain[T, Union[U, V]]&#34;:
+        &#34;&#34;&#34;
+        Similar to `Chain.on_error`, this method handles any uncaught exceptions that might occur during the execution of the current chain.
+
+        For detailed examples, refer to the documentation of `Chain.gather`.
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@on_error&#34;
+        if hasattr(next, &#34;name&#34;):
+            next_name = next.name
+
+        async def on_error(
+            input: T,
+        ) -&gt; AsyncGenerator[ChainOutput[Union[U, V], Any], Any]:
+            try:
+                async for output in self(input):
+                    yield cast(ChainOutput[Union[U, V], Any], output)
+            except Exception as e:
+                async for output in self._wrap(handler(e), name=next_name):
+                    yield cast(ChainOutput[Union[U, V], Any], output)
+
+        return SingleOutputChain[T, Union[U, V]](
+            next_name, lambda input: on_error(input)
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1990,6 +2169,47 @@ class ChainOutput(Generic[T, V]):
     return SingleOutputChain[T, V](f&#34;{self.name}@map&#34;, lambda input: map(input))</code></pre>
 </details>
 </dd>
+<dt id="litechain.SingleOutputChain.on_error"><code class="name flex">
+<span>def <span class="ident">on_error</span></span>(<span>self, handler: Callable[[Exception], Union[AsyncGenerator[<a title="litechain.core.chain.ChainOutput" href="core/chain.html#litechain.core.chain.ChainOutput">ChainOutput</a>[~V, ~W], Any], ~V]]) ‑> <a title="litechain.core.chain.SingleOutputChain" href="core/chain.html#litechain.core.chain.SingleOutputChain">SingleOutputChain</a>[~T, typing.Union[~U, ~V]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Similar to <code><a title="litechain.Chain.on_error" href="#litechain.Chain.on_error">Chain.on_error()</a></code>, this method handles any uncaught exceptions that might occur during the execution of the current chain.</p>
+<p>For detailed examples, refer to the documentation of <code><a title="litechain.Chain.gather" href="#litechain.Chain.gather">Chain.gather()</a></code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_error(
+    self,
+    handler: Callable[
+        [Exception], Union[AsyncGenerator[ChainOutput[V, W], Any], V]
+    ],
+) -&gt; &#34;SingleOutputChain[T, Union[U, V]]&#34;:
+    &#34;&#34;&#34;
+    Similar to `Chain.on_error`, this method handles any uncaught exceptions that might occur during the execution of the current chain.
+
+    For detailed examples, refer to the documentation of `Chain.gather`.
+    &#34;&#34;&#34;
+
+    next_name = f&#34;{self.name}@on_error&#34;
+    if hasattr(next, &#34;name&#34;):
+        next_name = next.name
+
+    async def on_error(
+        input: T,
+    ) -&gt; AsyncGenerator[ChainOutput[Union[U, V], Any], Any]:
+        try:
+            async for output in self(input):
+                yield cast(ChainOutput[Union[U, V], Any], output)
+        except Exception as e:
+            async for output in self._wrap(handler(e), name=next_name):
+                yield cast(ChainOutput[Union[U, V], Any], output)
+
+    return SingleOutputChain[T, Union[U, V]](
+        next_name, lambda input: on_error(input)
+    )</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -2043,12 +2263,13 @@ class ChainOutput(Generic[T, V]):
 <ul>
 <li>
 <h4><code><a title="litechain.Chain" href="#litechain.Chain">Chain</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="litechain.Chain.and_then" href="#litechain.Chain.and_then">and_then</a></code></li>
 <li><code><a title="litechain.Chain.collect" href="#litechain.Chain.collect">collect</a></code></li>
 <li><code><a title="litechain.Chain.gather" href="#litechain.Chain.gather">gather</a></code></li>
 <li><code><a title="litechain.Chain.join" href="#litechain.Chain.join">join</a></code></li>
 <li><code><a title="litechain.Chain.map" href="#litechain.Chain.map">map</a></code></li>
+<li><code><a title="litechain.Chain.on_error" href="#litechain.Chain.on_error">on_error</a></code></li>
 </ul>
 </li>
 <li>
@@ -2065,6 +2286,7 @@ class ChainOutput(Generic[T, V]):
 <li><code><a title="litechain.SingleOutputChain.and_then" href="#litechain.SingleOutputChain.and_then">and_then</a></code></li>
 <li><code><a title="litechain.SingleOutputChain.gather" href="#litechain.SingleOutputChain.gather">gather</a></code></li>
 <li><code><a title="litechain.SingleOutputChain.map" href="#litechain.SingleOutputChain.map">map</a></code></li>
+<li><code><a title="litechain.SingleOutputChain.on_error" href="#litechain.SingleOutputChain.on_error">on_error</a></code></li>
 </ul>
 </li>
 </ul>
