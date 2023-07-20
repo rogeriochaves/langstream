@@ -393,7 +393,6 @@ class Chain(Generic[T, U]):
         ...     ).on_error(lambda e: f"Sorry, an error occurred: {str(e)}")
         ...
         ...     async for output in greet_chain("Alice"):
-        ...         # Output is of type ChainOutput
         ...         print(output)
         ...
         >>> asyncio.run(example())

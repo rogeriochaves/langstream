@@ -172,4 +172,4 @@ Because we used `gather()`, the chain will take `1s` to finish, because even tho
 
 Now that you know the basic composing functions, it's also interesting to note everything in LiteChain also follow the same patterns, for example, for the final output we have the utilities [`filter_final_output()`](pathname:///reference/litechain/index.html#litechain.filter_final_output), [`collect_final_output()`](pathname:///reference/litechain/index.html#litechain.collect_final_output) and [`join_final_output()`](pathname:///reference/litechain/index.html#litechain.join_final_output), you can see they are using the same `filter`, `collect` and `join` names, and they work as you would expect them to.
 
-Now, that you know how to transform and compose chains, keep on reading to understand why type signatures are important to LangChain.
+Now, that you know how to transform and compose chains, keep on reading to understand why type signatures are important to LiteChain.
