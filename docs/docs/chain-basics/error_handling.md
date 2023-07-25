@@ -36,6 +36,4 @@ You can then keep composing chains after the `on_error`, using methods like `map
 
 For a more complete example, check out the [Weather Bot with Error Handling](../examples/weather-bot-error-handling) example.
 
-## Next Steps
-
-This concludes the guides for Chain Basics, congratulations! On the next steps, we are going to build some real application with real LLMs, stay tuned!
+Now go to the next step to figure out how to build your own custom chains!
