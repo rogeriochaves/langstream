@@ -61,6 +61,8 @@ class RetriableChain(Chain[T, U]):
 This will work exactly the same as the function:
 
 ```python
+attempts = 0
+
 chain = RetriableChain(
   Chain[int, float]("BrokenChain", division_by_attempts)
 ).map(lambda x: x + 1)
