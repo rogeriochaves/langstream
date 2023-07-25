@@ -1,5 +1,5 @@
 import asyncio
-from typing import AsyncGenerator, Callable, Iterable, Optional, TypeVar
+from typing import AsyncGenerator, Callable, Iterable, Optional, TypeVar, cast
 
 from gpt4all import GPT4All
 
@@ -65,10 +65,9 @@ class GPT4AllChain(Chain[T, U]):
         n_batch=8,
         n_threads: Optional[int] = None,
     ) -> None:
-        self.name = name
         gpt4all = GPT4All(model, n_threads=n_threads)
 
-        async def generate(prompt: str) -> AsyncGenerator[str, None]:
+        async def generate(prompt: str) -> AsyncGenerator[U, None]:
             loop = asyncio.get_event_loop()
 
             def get_outputs() -> Iterable[str]:
@@ -87,6 +86,6 @@ class GPT4AllChain(Chain[T, U]):
             outputs = await loop.run_in_executor(None, get_outputs)
 
             for output in outputs:
-                yield output
+                yield cast(U, output)
 
-        self._call = lambda input: generate(call(input))
+        super().__init__(name, lambda input: generate(call(input)))

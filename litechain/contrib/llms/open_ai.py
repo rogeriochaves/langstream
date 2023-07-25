@@ -65,9 +65,7 @@ class OpenAICompletionChain(Chain[T, U]):
         temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
     ) -> None:
-        self.name = name
-
-        async def completion(prompt: str) -> AsyncGenerator[str, None]:
+        async def completion(prompt: str) -> AsyncGenerator[U, None]:
             loop = asyncio.get_event_loop()
 
             def get_completions():
@@ -88,7 +86,7 @@ class OpenAICompletionChain(Chain[T, U]):
                         if "text" in output["choices"][0]:
                             yield output["choices"][0]["text"]
 
-        self._call = lambda input: completion(call(input))
+        super().__init__(name, lambda input: completion(call(input)))
 
 
 @dataclass
@@ -263,7 +261,7 @@ class OpenAIChatChain(Chain[T, U]):
     """
 
     def __init__(
-        self: "OpenAIChatChain[T, Union[OpenAIChatDelta, V]]",
+        self: "OpenAIChatChain[T, OpenAIChatDelta]",
         name: str,
         call: Callable[
             [T],
@@ -275,11 +273,9 @@ class OpenAIChatChain(Chain[T, U]):
         temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
     ) -> None:
-        self.name = name
-
         async def chat_completion(
             messages: List[OpenAIChatMessage],
-        ) -> AsyncGenerator[ChainOutput[Union[OpenAIChatDelta, V]], Any]:
+        ) -> AsyncGenerator[ChainOutput[OpenAIChatDelta], None]:
             loop = asyncio.get_event_loop()
 
             def get_completions():
@@ -349,4 +345,7 @@ class OpenAIChatChain(Chain[T, U]):
                 yield self._output_wrap(pending_function_call)
                 pending_function_call = None
 
-        self._call = lambda input: chat_completion(call(input))
+        super().__init__(
+            name,
+            lambda input: cast(AsyncGenerator[U, None], chat_completion(call(input))),
+        )
