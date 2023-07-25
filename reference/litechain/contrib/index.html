@@ -313,7 +313,7 @@ Found model file at ...
 </dd>
 <dt id="litechain.contrib.OpenAIChatChain"><code class="flex name class">
 <span>class <span class="ident">OpenAIChatChain</span></span>
-<span>(</span><span>name: str, call: Callable[[~T], List[<a title="litechain.contrib.llms.open_ai.OpenAIChatMessage" href="llms/open_ai.html#litechain.contrib.llms.open_ai.OpenAIChatMessage">OpenAIChatMessage</a>]], model: str, functions: Optional[List[Dict[str, Any]]] = None, function_call: Union[Literal['none', 'auto'], str, ForwardRef(None)] = None, temperature: Optional[float] = 0, max_tokens: Optional[int] = None)</span>
+<span>(</span><span>name: str, call: Callable[[~T], List[<a title="litechain.contrib.llms.open_ai.OpenAIChatMessage" href="llms/open_ai.html#litechain.contrib.llms.open_ai.OpenAIChatMessage">OpenAIChatMessage</a>]], model: str, functions: Optional[List[Dict[str, Any]]] = None, function_call: Union[Literal['none', 'auto'], str, ForwardRef(None)] = None, temperature: Optional[float] = 0, max_tokens: Optional[int] = None, timeout: int = 5, retries: int = 3)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><code><a title="litechain.contrib.OpenAIChatChain" href="#litechain.contrib.OpenAIChatChain">OpenAIChatChain</a></code> gives you access to the more powerful LLMs from OpenAI, like <code>gpt-3.5-turbo</code> and <code>gpt-4</code>, they are structured in a chat format with roles.</p>
@@ -531,12 +531,15 @@ using your function, with the <code>content</code> field as a json which you can
         function_call: Optional[Union[Literal[&#34;none&#34;, &#34;auto&#34;], str]] = None,
         temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
+        timeout: int = 5,
+        retries: int = 3,
     ) -&gt; None:
         async def chat_completion(
             messages: List[OpenAIChatMessage],
         ) -&gt; AsyncGenerator[ChainOutput[OpenAIChatDelta], None]:
             loop = asyncio.get_event_loop()
 
+            @retry(tries=retries)
             def get_completions():
                 function_kwargs = {}
                 if functions is not None:
@@ -545,6 +548,8 @@ using your function, with the <code>content</code> field as a json which you can
                     function_kwargs[&#34;function_call&#34;] = function_call
 
                 return openai.ChatCompletion.create(
+                    timeout=timeout,
+                    request_timeout=timeout,
                     model=model,
                     messages=[m.to_dict() for m in messages],
                     temperature=temperature,
@@ -781,7 +786,7 @@ class OpenAIChatMessage:
 </dd>
 <dt id="litechain.contrib.OpenAICompletionChain"><code class="flex name class">
 <span>class <span class="ident">OpenAICompletionChain</span></span>
-<span>(</span><span>name: str, call: Callable[[~T], str], model: str, temperature: Optional[float] = 0, max_tokens: Optional[int] = None)</span>
+<span>(</span><span>name: str, call: Callable[[~T], str], model: str, temperature: Optional[float] = 0, max_tokens: Optional[int] = None, timeout: int = 5, retries: int = 3)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><code><a title="litechain.contrib.OpenAICompletionChain" href="#litechain.contrib.OpenAICompletionChain">OpenAICompletionChain</a></code> uses the most simple LLMs from OpenAI based on GPT-3 for text completion, if you are looking for ChatCompletion, take a look at <code><a title="litechain.contrib.OpenAIChatChain" href="#litechain.contrib.OpenAIChatChain">OpenAIChatChain</a></code>.</p>
@@ -850,10 +855,13 @@ class OpenAIChatMessage:
         model: str,
         temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
+        timeout: int = 5,
+        retries: int = 3,
     ) -&gt; None:
         async def completion(prompt: str) -&gt; AsyncGenerator[U, None]:
             loop = asyncio.get_event_loop()
 
+            @retry(tries=retries)
             def get_completions():
                 return openai.Completion.create(
                     model=model,
@@ -861,6 +869,8 @@ class OpenAIChatMessage:
                     temperature=temperature,
                     stream=True,
                     max_tokens=max_tokens,
+                    timeout=timeout,
+                    request_timeout=timeout,
                 )
 
             completions = await loop.run_in_executor(None, get_completions)
