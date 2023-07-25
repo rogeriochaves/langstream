@@ -123,7 +123,7 @@ d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import asyncio
-from typing import AsyncGenerator, Callable, Iterable, Optional, TypeVar
+from typing import AsyncGenerator, Callable, Iterable, Optional, TypeVar, cast
 
 from gpt4all import GPT4All
 
@@ -189,10 +189,9 @@ class GPT4AllChain(Chain[T, U]):
         n_batch=8,
         n_threads: Optional[int] = None,
     ) -&gt; None:
-        self.name = name
         gpt4all = GPT4All(model, n_threads=n_threads)
 
-        async def generate(prompt: str) -&gt; AsyncGenerator[str, None]:
+        async def generate(prompt: str) -&gt; AsyncGenerator[U, None]:
             loop = asyncio.get_event_loop()
 
             def get_outputs() -&gt; Iterable[str]:
@@ -211,9 +210,9 @@ class GPT4AllChain(Chain[T, U]):
             outputs = await loop.run_in_executor(None, get_outputs)
 
             for output in outputs:
-                yield output
+                yield cast(U, output)
 
-        self._call = lambda input: generate(call(input))</code></pre>
+        super().__init__(name, lambda input: generate(call(input)))</code></pre>
 </details>
 </section>
 <section>
@@ -319,10 +318,9 @@ Found model file at ...
         n_batch=8,
         n_threads: Optional[int] = None,
     ) -&gt; None:
-        self.name = name
         gpt4all = GPT4All(model, n_threads=n_threads)
 
-        async def generate(prompt: str) -&gt; AsyncGenerator[str, None]:
+        async def generate(prompt: str) -&gt; AsyncGenerator[U, None]:
             loop = asyncio.get_event_loop()
 
             def get_outputs() -&gt; Iterable[str]:
@@ -341,9 +339,9 @@ Found model file at ...
             outputs = await loop.run_in_executor(None, get_outputs)
 
             for output in outputs:
-                yield output
+                yield cast(U, output)
 
-        self._call = lambda input: generate(call(input))</code></pre>
+        super().__init__(name, lambda input: generate(call(input)))</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

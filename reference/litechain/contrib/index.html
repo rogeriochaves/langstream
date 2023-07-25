@@ -267,10 +267,9 @@ Found model file at ...
         n_batch=8,
         n_threads: Optional[int] = None,
     ) -&gt; None:
-        self.name = name
         gpt4all = GPT4All(model, n_threads=n_threads)
 
-        async def generate(prompt: str) -&gt; AsyncGenerator[str, None]:
+        async def generate(prompt: str) -&gt; AsyncGenerator[U, None]:
             loop = asyncio.get_event_loop()
 
             def get_outputs() -&gt; Iterable[str]:
@@ -289,9 +288,9 @@ Found model file at ...
             outputs = await loop.run_in_executor(None, get_outputs)
 
             for output in outputs:
-                yield output
+                yield cast(U, output)
 
-        self._call = lambda input: generate(call(input))</code></pre>
+        super().__init__(name, lambda input: generate(call(input)))</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -521,7 +520,7 @@ using your function, with the <code>content</code> field as a json which you can
     &#34;&#34;&#34;
 
     def __init__(
-        self: &#34;OpenAIChatChain[T, Union[OpenAIChatDelta, V]]&#34;,
+        self: &#34;OpenAIChatChain[T, OpenAIChatDelta]&#34;,
         name: str,
         call: Callable[
             [T],
@@ -533,11 +532,9 @@ using your function, with the <code>content</code> field as a json which you can
         temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
     ) -&gt; None:
-        self.name = name
-
         async def chat_completion(
             messages: List[OpenAIChatMessage],
-        ) -&gt; AsyncGenerator[ChainOutput[Union[OpenAIChatDelta, V]], Any]:
+        ) -&gt; AsyncGenerator[ChainOutput[OpenAIChatDelta], None]:
             loop = asyncio.get_event_loop()
 
             def get_completions():
@@ -607,7 +604,10 @@ using your function, with the <code>content</code> field as a json which you can
                 yield self._output_wrap(pending_function_call)
                 pending_function_call = None
 
-        self._call = lambda input: chat_completion(call(input))</code></pre>
+        super().__init__(
+            name,
+            lambda input: cast(AsyncGenerator[U, None], chat_completion(call(input))),
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -851,9 +851,7 @@ class OpenAIChatMessage:
         temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
     ) -&gt; None:
-        self.name = name
-
-        async def completion(prompt: str) -&gt; AsyncGenerator[str, None]:
+        async def completion(prompt: str) -&gt; AsyncGenerator[U, None]:
             loop = asyncio.get_event_loop()
 
             def get_completions():
@@ -874,7 +872,7 @@ class OpenAIChatMessage:
                         if &#34;text&#34; in output[&#34;choices&#34;][0]:
                             yield output[&#34;choices&#34;][0][&#34;text&#34;]
 
-        self._call = lambda input: completion(call(input))</code></pre>
+        super().__init__(name, lambda input: completion(call(input)))</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
