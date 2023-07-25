@@ -15,6 +15,7 @@ from typing import (
 
 import openai
 from colorama import Fore
+from retry import retry
 
 from litechain.core.chain import Chain, ChainOutput
 
@@ -64,10 +65,13 @@ class OpenAICompletionChain(Chain[T, U]):
         model: str,
         temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
+        timeout: int = 5,
+        retries: int = 3,
     ) -> None:
         async def completion(prompt: str) -> AsyncGenerator[U, None]:
             loop = asyncio.get_event_loop()
 
+            @retry(tries=retries)
             def get_completions():
                 return openai.Completion.create(
                     model=model,
@@ -75,6 +79,8 @@ class OpenAICompletionChain(Chain[T, U]):
                     temperature=temperature,
                     stream=True,
                     max_tokens=max_tokens,
+                    timeout=timeout,
+                    request_timeout=timeout,
                 )
 
             completions = await loop.run_in_executor(None, get_completions)
@@ -272,12 +278,15 @@ class OpenAIChatChain(Chain[T, U]):
         function_call: Optional[Union[Literal["none", "auto"], str]] = None,
         temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
+        timeout: int = 5,
+        retries: int = 3,
     ) -> None:
         async def chat_completion(
             messages: List[OpenAIChatMessage],
         ) -> AsyncGenerator[ChainOutput[OpenAIChatDelta], None]:
             loop = asyncio.get_event_loop()
 
+            @retry(tries=retries)
             def get_completions():
                 function_kwargs = {}
                 if functions is not None:
@@ -286,6 +295,8 @@ class OpenAIChatChain(Chain[T, U]):
                     function_kwargs["function_call"] = function_call
 
                 return openai.ChatCompletion.create(
+                    timeout=timeout,
+                    request_timeout=timeout,
                     model=model,
                     messages=[m.to_dict() for m in messages],
                     temperature=temperature,

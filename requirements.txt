@@ -4,6 +4,7 @@ colorama
 # Contrib
 openai
 gpt4all
+retry
 
 # Function parsing
 docstring_parser
