@@ -17,7 +17,9 @@ from typing import (
     cast,
 )
 
-from litechain.utils.async_generator import as_async_generator
+import asyncstdlib
+
+from litechain.utils.async_generator import as_async_generator, merge
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -94,13 +96,14 @@ class Chain(Generic[T, U]):
     def _wrap(
         self,
         value: Union[AsyncGenerator[ChainOutput[V], Any], AsyncGenerator[V, Any], V],
+        final: Optional[bool] = None,
         name: Optional[str] = None,
     ) -> AsyncGenerator[ChainOutput[V], Any]:
         async def _wrap(
             values: Union[AsyncGenerator[ChainOutput[V], Any], AsyncGenerator[V, Any]],
         ) -> AsyncGenerator[ChainOutput[V], Any]:
             async for value in values:
-                yield self._output_wrap(value, name=name)
+                yield self._output_wrap(value, final=final, name=name)
 
         if isinstance(value, AsyncGenerator):
             return _wrap(value)
@@ -243,6 +246,37 @@ class Chain(Generic[T, U]):
                 yield v
 
         return Chain[T, V](next_name, and_then)
+
+    def pipe(
+        self,
+        fn: Callable[
+            [AsyncGenerator[U, Any]], AsyncGenerator[Union[ChainOutput[V], V], Any]
+        ],
+    ) -> "Chain[T, V]":
+        """ """
+
+        next_name = f"{self.name}@pipe"
+
+        async def filter_final_output(
+            async_iterable: AsyncGenerator[ChainOutput[U], Any]
+        ) -> AsyncGenerator[U, Any]:
+            async for output in async_iterable:
+                if output.final:
+                    yield cast(U, output.data)
+
+        def pipe(input: T) -> AsyncGenerator[ChainOutput[V], Any]:
+            previous, final = asyncstdlib.tee(self(input), n=2, lock=asyncio.Lock())
+
+            previous = self._wrap(previous, name=next_name, final=False)
+
+            final = filter_final_output(
+                cast(AsyncGenerator[ChainOutput[U], Any], final)
+            )
+            final = self._wrap(fn(final), name=next_name)
+
+            return merge(previous, final)
+
+        return Chain[T, V](next_name, pipe)
 
     def collect(self: "Chain[T, U]") -> "SingleOutputChain[T, List[U]]":
         """

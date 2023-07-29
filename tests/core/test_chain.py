@@ -122,6 +122,132 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
         result = await join_final_output(chain("hello world"))
         self.assertEqual(result, "hello world, !")
 
+    async def test_it_is_pipeable(self):
+        exclamation_chain = Chain[str, str](
+            "ExclamationChain", lambda input: as_async_generator(f"{input}", "!")
+        )
+
+        async def upper_pipe(stream):
+            async for value in stream:
+                yield value.upper()
+
+        chain: Chain[str, str] = exclamation_chain.map(lambda x: x.lower()).pipe(
+            upper_pipe
+        )
+
+        result = await collect(chain("Hello World"))
+        self.assertEqual(
+            result,
+            [
+                ChainOutput(chain="ExclamationChain", data="Hello World", final=False),
+                ChainOutput(
+                    chain="ExclamationChain@map", data="hello world", final=False
+                ),
+                ChainOutput(
+                    chain="ExclamationChain@map@pipe", data="HELLO WORLD", final=True
+                ),
+                ChainOutput(chain="ExclamationChain", data="!", final=False),
+                ChainOutput(chain="ExclamationChain@map@pipe", data="!", final=True),
+                ChainOutput(chain="ExclamationChain@map", data="!", final=False),
+            ],
+        )
+
+    async def test_it_is_pipeable_with_a_delay_on_producer(self):
+        async def exclamation_output(input) -> AsyncGenerator[str, Any]:
+            yield input
+            await asyncio.sleep(0.1)
+            yield "!"
+
+        exclamation_chain = Chain[str, str]("ExclamationChain", exclamation_output)
+
+        async def upper_pipe(stream):
+            async for value in stream:
+                yield value.upper()
+
+        chain: Chain[str, str] = exclamation_chain.map(lambda x: x.lower()).pipe(
+            upper_pipe
+        )
+
+        result = await collect(chain("Hello World"))
+        self.assertEqual(
+            result,
+            [
+                ChainOutput(chain="ExclamationChain", data="Hello World", final=False),
+                ChainOutput(
+                    chain="ExclamationChain@map", data="hello world", final=False
+                ),
+                ChainOutput(
+                    chain="ExclamationChain@map@pipe", data="HELLO WORLD", final=True
+                ),
+                ChainOutput(chain="ExclamationChain", data="!", final=False),
+                ChainOutput(chain="ExclamationChain@map", data="!", final=False),
+                ChainOutput(chain="ExclamationChain@map@pipe", data="!", final=True),
+            ],
+        )
+
+    async def test_it_keep_piping_previous_values_even_if_there_is_a_delay_in_pipe(
+        self,
+    ):
+        exclamation_chain = Chain[str, str](
+            "ExclamationChain", lambda input: as_async_generator(f"{input}", "!")
+        )
+
+        async def upper_pipe(stream):
+            async for value in stream:
+                await asyncio.sleep(0.1)
+                yield value.upper()
+
+        chain: Chain[str, str] = exclamation_chain.map(lambda x: x.lower()).pipe(
+            upper_pipe
+        )
+
+        result = await collect(chain("Hello World"))
+        self.assertEqual(
+            result,
+            [
+                ChainOutput(chain="ExclamationChain", data="Hello World", final=False),
+                ChainOutput(
+                    chain="ExclamationChain@map", data="hello world", final=False
+                ),
+                ChainOutput(chain="ExclamationChain", data="!", final=False),
+                ChainOutput(chain="ExclamationChain@map", data="!", final=False),
+                ChainOutput(
+                    chain="ExclamationChain@map@pipe", data="HELLO WORLD", final=True
+                ),
+                ChainOutput(chain="ExclamationChain@map@pipe", data="!", final=True),
+            ],
+        )
+
+    async def test_it_can_pipe_another_chain(self):
+        exclamation_chain = Chain[str, str](
+            "ExclamationChain", lambda input: as_async_generator(f"{input}", "!")
+        )
+        uppercase_chain = Chain[str, str]("UppercaseChain", lambda input: input.upper())
+
+        async def upper_pipe(stream):
+            async for value in stream:
+                async for output in uppercase_chain(value):
+                    yield output
+
+        chain: Chain[str, str] = exclamation_chain.map(lambda x: x.lower()).pipe(
+            upper_pipe
+        )
+
+        result = await collect(chain("Hello World"))
+        self.assertEqual(
+            result,
+            [
+                ChainOutput(chain="ExclamationChain", data="Hello World", final=False),
+                ChainOutput(
+                    chain="ExclamationChain@map", data="hello world", final=False
+                ),
+                ChainOutput(chain="UppercaseChain", data="HELLO WORLD", final=True),
+                ChainOutput(chain="ExclamationChain", data="!", final=False),
+                ChainOutput(chain="UppercaseChain", data="!", final=True),
+                ChainOutput(chain="ExclamationChain@map", data="!", final=False),
+            ],
+        )
+
     async def test_it_gets_the_results_as_they_come(self):
         blocked = True
 
