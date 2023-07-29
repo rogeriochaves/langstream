@@ -180,6 +180,41 @@ class Chain(Generic[T, U]):
 
         return Chain[T, V](next_name, lambda input: map(input))
 
+    def filter(self, fn: Callable[[U], bool]) -> "Chain[T, U]":
+        """
+        Filters the output of the current chain, keeping only the values that return True.
+
+        This method is non-blocking and expects a function that returns True for keeping the value,
+        or False for dropping it, as they arrive.
+
+        Example:
+
+        >>> from litechain import Chain, as_async_generator, collect_final_output
+        >>> import asyncio
+        ...
+        >>> async def example():
+        ...     numbers_chain = Chain[int, int]("NumbersChain", lambda input: as_async_generator(*range(0, input)))
+        ...     even_chain = numbers_chain.filter(lambda input: input % 2 == 0)
+        ...     return await collect_final_output(even_chain(9))
+        ...
+        >>> asyncio.run(example())
+        [0, 2, 4, 6, 8]
+        """
+
+        next_name = f"{self.name}@filter"
+
+        async def filter(input: T) -> AsyncGenerator[ChainOutput[U], Any]:
+            # Reyield previous chain so we never block the stream, and at the same time yield mapped values
+            prev_len_values = 0
+            async for values, to_reyield in self._reyield(self(input)):
+                yield to_reyield
+                if len(values) > prev_len_values:  # as soon as there is a new value
+                    prev_len_values = len(values)
+                    if fn(values[-1]):
+                        yield self._output_wrap(values[-1], name=next_name)
+
+        return Chain[T, U](next_name, lambda input: filter(input))
+
     def and_then(
         self,
         next: Callable[

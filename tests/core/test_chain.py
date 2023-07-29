@@ -96,6 +96,49 @@ class ChainTestCase(unittest.IsolatedAsyncioTestCase):
         result = await join_final_output(chain("hello world"))
         self.assertEqual(result, "hello planet~!~")
 
+    async def test_it_is_filterable(self):
+        numbers_chain = Chain[int, int](
+            "NumbersChain", lambda input: as_async_generator(*range(0, input))
+        )
+        chain = numbers_chain.filter(lambda input: input % 2 == 0)
+
+        result = await collect(chain(4))
+        self.assertEqual(
+            result,
+            [
+                ChainOutput(
+                    chain="NumbersChain",
+                    data=0,
+                    final=False,
+                ),
+                ChainOutput(
+                    chain="NumbersChain@filter",
+                    data=0,
+                    final=True,
+                ),
+                ChainOutput(
+                    chain="NumbersChain",
+                    data=1,
+                    final=False,
+                ),
+                ChainOutput(
+                    chain="NumbersChain",
+                    data=2,
+                    final=False,
+                ),
+                ChainOutput(
+                    chain="NumbersChain@filter",
+                    data=2,
+                    final=True,
+                ),
+                ChainOutput(
+                    chain="NumbersChain",
+                    data=3,
+                    final=False,
+                ),
+            ],
+        )
+
     async def test_it_is_thenable(self):
         exclamation_chain = Chain[str, str](
             "ExclamationChain", lambda input: as_async_generator(f"{input}", "!")
