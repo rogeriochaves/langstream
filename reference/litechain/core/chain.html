@@ -142,7 +142,9 @@ from typing import (
     cast,
 )
 
-from litechain.utils.async_generator import as_async_generator
+import asyncstdlib
+
+from litechain.utils.async_generator import as_async_generator, merge
 
 T = TypeVar(&#34;T&#34;)
 U = TypeVar(&#34;U&#34;)
@@ -219,13 +221,14 @@ class Chain(Generic[T, U]):
     def _wrap(
         self,
         value: Union[AsyncGenerator[ChainOutput[V], Any], AsyncGenerator[V, Any], V],
+        final: Optional[bool] = None,
         name: Optional[str] = None,
     ) -&gt; AsyncGenerator[ChainOutput[V], Any]:
         async def _wrap(
             values: Union[AsyncGenerator[ChainOutput[V], Any], AsyncGenerator[V, Any]],
         ) -&gt; AsyncGenerator[ChainOutput[V], Any]:
             async for value in values:
-                yield self._output_wrap(value, name=name)
+                yield self._output_wrap(value, final=final, name=name)
 
         if isinstance(value, AsyncGenerator):
             return _wrap(value)
@@ -368,6 +371,81 @@ class Chain(Generic[T, U]):
                 yield v
 
         return Chain[T, V](next_name, and_then)
+
+    def pipe(
+        self,
+        fn: Callable[
+            [AsyncGenerator[U, Any]], AsyncGenerator[Union[ChainOutput[V], V], Any]
+        ],
+    ) -&gt; &#34;Chain[T, V]&#34;:
+        &#34;&#34;&#34;
+        Lower level constructor to pipe a chain into another one, giving you the underlying AsyncGenerator.
+        Pipe takes a callback function which should always produce an AsyncGenerator in return, which means you
+        need to declare an async function and your function needs to use `yield` for generating values, the advantage
+        of that is that you have fine control on whether it will be blocking the stream or not.
+
+        In fact, with pipe you can reconstruct `map` and `and_then`, for example:
+
+        &gt;&gt;&gt; from litechain import Chain, as_async_generator, collect_final_output
+        &gt;&gt;&gt; from typing import List, AsyncGenerator
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example(items):
+        ...     async def mario_pipe(stream: AsyncGenerator[str, None]) -&gt; AsyncGenerator[str, None]:
+        ...        waiting_for_mushroom = False
+        ...        async for item in stream:
+        ...            if item == &#34;Mario&#34;:
+        ...                waiting_for_mushroom = True
+        ...            elif item == &#34;Mushroom&#34; and waiting_for_mushroom:
+        ...                yield &#34;Super Mario!&#34;
+        ...            else:
+        ...                yield item + &#34;?&#34;
+        ...
+        ...     piped_chain = Chain[List[str], str](
+        ...         &#34;PipedChain&#34;, lambda items: as_async_generator(*items)
+        ...     ).pipe(mario_pipe)
+        ...
+        ...     return await collect_final_output(piped_chain(items))
+        ...
+        &gt;&gt;&gt; asyncio.run(example([&#34;Mario&#34;, &#34;Mushroom&#34;]))
+        [&#39;Super Mario!&#39;]
+        &gt;&gt;&gt; asyncio.run(example([&#34;Luigi&#34;]))
+        [&#39;Luigi?&#39;]
+        &gt;&gt;&gt; asyncio.run(example([&#34;Mario&#34;, &#34;Luigi&#34;, &#34;Mushroom&#34;]))
+        [&#39;Luigi?&#39;, &#39;Super Mario!&#39;]
+
+        As you can see this pipe blocks kinda like `and_then` when it sees &#34;Mario&#34;, until a mushroom arrives, but for other random items
+        such as &#34;Luigi&#34; it just re-yields it immediately, adding a question mark, non-blocking, like `map`.
+
+        You can also call another chain from `pipe` directly, just be sure to re-yield its outputs
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@pipe&#34;
+
+        async def filter_final_output(
+            async_iterable: AsyncGenerator[ChainOutput[U], Any]
+        ) -&gt; AsyncGenerator[U, Any]:
+            async for output in async_iterable:
+                if output.final:
+                    yield cast(U, output.data)
+
+        def pipe(input: T) -&gt; AsyncGenerator[ChainOutput[V], Any]:
+            previous, final = asyncstdlib.tee(self(input), n=2, lock=asyncio.Lock())
+
+            previous = self._wrap(previous, name=next_name, final=False)
+            previous = cast(AsyncGenerator[ChainOutput[V], Any], previous)
+
+            final = filter_final_output(
+                cast(AsyncGenerator[ChainOutput[U], Any], final)
+            )
+            final = cast(
+                AsyncGenerator[ChainOutput[V], Any],
+                self._wrap(fn(final), name=next_name),
+            )
+
+            return merge(previous, final)
+
+        return Chain[T, V](next_name, pipe)
 
     def collect(self: &#34;Chain[T, U]&#34;) -&gt; &#34;SingleOutputChain[T, List[U]]&#34;:
         &#34;&#34;&#34;
@@ -769,13 +847,14 @@ class SingleOutputChain(Chain[T, U]):
     def _wrap(
         self,
         value: Union[AsyncGenerator[ChainOutput[V], Any], AsyncGenerator[V, Any], V],
+        final: Optional[bool] = None,
         name: Optional[str] = None,
     ) -&gt; AsyncGenerator[ChainOutput[V], Any]:
         async def _wrap(
             values: Union[AsyncGenerator[ChainOutput[V], Any], AsyncGenerator[V, Any]],
         ) -&gt; AsyncGenerator[ChainOutput[V], Any]:
             async for value in values:
-                yield self._output_wrap(value, name=name)
+                yield self._output_wrap(value, final=final, name=name)
 
         if isinstance(value, AsyncGenerator):
             return _wrap(value)
@@ -918,6 +997,81 @@ class SingleOutputChain(Chain[T, U]):
                 yield v
 
         return Chain[T, V](next_name, and_then)
+
+    def pipe(
+        self,
+        fn: Callable[
+            [AsyncGenerator[U, Any]], AsyncGenerator[Union[ChainOutput[V], V], Any]
+        ],
+    ) -&gt; &#34;Chain[T, V]&#34;:
+        &#34;&#34;&#34;
+        Lower level constructor to pipe a chain into another one, giving you the underlying AsyncGenerator.
+        Pipe takes a callback function which should always produce an AsyncGenerator in return, which means you
+        need to declare an async function and your function needs to use `yield` for generating values, the advantage
+        of that is that you have fine control on whether it will be blocking the stream or not.
+
+        In fact, with pipe you can reconstruct `map` and `and_then`, for example:
+
+        &gt;&gt;&gt; from litechain import Chain, as_async_generator, collect_final_output
+        &gt;&gt;&gt; from typing import List, AsyncGenerator
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example(items):
+        ...     async def mario_pipe(stream: AsyncGenerator[str, None]) -&gt; AsyncGenerator[str, None]:
+        ...        waiting_for_mushroom = False
+        ...        async for item in stream:
+        ...            if item == &#34;Mario&#34;:
+        ...                waiting_for_mushroom = True
+        ...            elif item == &#34;Mushroom&#34; and waiting_for_mushroom:
+        ...                yield &#34;Super Mario!&#34;
+        ...            else:
+        ...                yield item + &#34;?&#34;
+        ...
+        ...     piped_chain = Chain[List[str], str](
+        ...         &#34;PipedChain&#34;, lambda items: as_async_generator(*items)
+        ...     ).pipe(mario_pipe)
+        ...
+        ...     return await collect_final_output(piped_chain(items))
+        ...
+        &gt;&gt;&gt; asyncio.run(example([&#34;Mario&#34;, &#34;Mushroom&#34;]))
+        [&#39;Super Mario!&#39;]
+        &gt;&gt;&gt; asyncio.run(example([&#34;Luigi&#34;]))
+        [&#39;Luigi?&#39;]
+        &gt;&gt;&gt; asyncio.run(example([&#34;Mario&#34;, &#34;Luigi&#34;, &#34;Mushroom&#34;]))
+        [&#39;Luigi?&#39;, &#39;Super Mario!&#39;]
+
+        As you can see this pipe blocks kinda like `and_then` when it sees &#34;Mario&#34;, until a mushroom arrives, but for other random items
+        such as &#34;Luigi&#34; it just re-yields it immediately, adding a question mark, non-blocking, like `map`.
+
+        You can also call another chain from `pipe` directly, just be sure to re-yield its outputs
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@pipe&#34;
+
+        async def filter_final_output(
+            async_iterable: AsyncGenerator[ChainOutput[U], Any]
+        ) -&gt; AsyncGenerator[U, Any]:
+            async for output in async_iterable:
+                if output.final:
+                    yield cast(U, output.data)
+
+        def pipe(input: T) -&gt; AsyncGenerator[ChainOutput[V], Any]:
+            previous, final = asyncstdlib.tee(self(input), n=2, lock=asyncio.Lock())
+
+            previous = self._wrap(previous, name=next_name, final=False)
+            previous = cast(AsyncGenerator[ChainOutput[V], Any], previous)
+
+            final = filter_final_output(
+                cast(AsyncGenerator[ChainOutput[U], Any], final)
+            )
+            final = cast(
+                AsyncGenerator[ChainOutput[V], Any],
+                self._wrap(fn(final), name=next_name),
+            )
+
+            return merge(previous, final)
+
+        return Chain[T, V](next_name, pipe)
 
     def collect(self: &#34;Chain[T, U]&#34;) -&gt; &#34;SingleOutputChain[T, List[U]]&#34;:
         &#34;&#34;&#34;
@@ -1600,6 +1754,126 @@ ChainOutput(chain='GreetingChain@on_error', data='Sorry, an error occurred: ...'
     return Chain[T, Union[U, V]](next_name, lambda input: on_error(input))</code></pre>
 </details>
 </dd>
+<dt id="litechain.core.chain.Chain.pipe"><code class="name flex">
+<span>def <span class="ident">pipe</span></span>(<span>self, fn: Callable[[AsyncGenerator[~U, Any]], AsyncGenerator[Union[<a title="litechain.core.chain.ChainOutput" href="#litechain.core.chain.ChainOutput">ChainOutput</a>[~V], ~V], Any]]) ‑> <a title="litechain.core.chain.Chain" href="#litechain.core.chain.Chain">Chain</a>[~T, ~V]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Lower level constructor to pipe a chain into another one, giving you the underlying AsyncGenerator.
+Pipe takes a callback function which should always produce an AsyncGenerator in return, which means you
+need to declare an async function and your function needs to use <code>yield</code> for generating values, the advantage
+of that is that you have fine control on whether it will be blocking the stream or not.</p>
+<p>In fact, with pipe you can reconstruct <code>map</code> and <code>and_then</code>, for example:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from litechain import Chain, as_async_generator, collect_final_output
+&gt;&gt;&gt; from typing import List, AsyncGenerator
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example(items):
+...     async def mario_pipe(stream: AsyncGenerator[str, None]) -&gt; AsyncGenerator[str, None]:
+...        waiting_for_mushroom = False
+...        async for item in stream:
+...            if item == &quot;Mario&quot;:
+...                waiting_for_mushroom = True
+...            elif item == &quot;Mushroom&quot; and waiting_for_mushroom:
+...                yield &quot;Super Mario!&quot;
+...            else:
+...                yield item + &quot;?&quot;
+...
+...     piped_chain = Chain[List[str], str](
+...         &quot;PipedChain&quot;, lambda items: as_async_generator(*items)
+...     ).pipe(mario_pipe)
+...
+...     return await collect_final_output(piped_chain(items))
+...
+&gt;&gt;&gt; asyncio.run(example([&quot;Mario&quot;, &quot;Mushroom&quot;]))
+['Super Mario!']
+&gt;&gt;&gt; asyncio.run(example([&quot;Luigi&quot;]))
+['Luigi?']
+&gt;&gt;&gt; asyncio.run(example([&quot;Mario&quot;, &quot;Luigi&quot;, &quot;Mushroom&quot;]))
+['Luigi?', 'Super Mario!']
+</code></pre>
+<p>As you can see this pipe blocks kinda like <code>and_then</code> when it sees "Mario", until a mushroom arrives, but for other random items
+such as "Luigi" it just re-yields it immediately, adding a question mark, non-blocking, like <code>map</code>.</p>
+<p>You can also call another chain from <code>pipe</code> directly, just be sure to re-yield its outputs</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pipe(
+    self,
+    fn: Callable[
+        [AsyncGenerator[U, Any]], AsyncGenerator[Union[ChainOutput[V], V], Any]
+    ],
+) -&gt; &#34;Chain[T, V]&#34;:
+    &#34;&#34;&#34;
+    Lower level constructor to pipe a chain into another one, giving you the underlying AsyncGenerator.
+    Pipe takes a callback function which should always produce an AsyncGenerator in return, which means you
+    need to declare an async function and your function needs to use `yield` for generating values, the advantage
+    of that is that you have fine control on whether it will be blocking the stream or not.
+
+    In fact, with pipe you can reconstruct `map` and `and_then`, for example:
+
+    &gt;&gt;&gt; from litechain import Chain, as_async_generator, collect_final_output
+    &gt;&gt;&gt; from typing import List, AsyncGenerator
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example(items):
+    ...     async def mario_pipe(stream: AsyncGenerator[str, None]) -&gt; AsyncGenerator[str, None]:
+    ...        waiting_for_mushroom = False
+    ...        async for item in stream:
+    ...            if item == &#34;Mario&#34;:
+    ...                waiting_for_mushroom = True
+    ...            elif item == &#34;Mushroom&#34; and waiting_for_mushroom:
+    ...                yield &#34;Super Mario!&#34;
+    ...            else:
+    ...                yield item + &#34;?&#34;
+    ...
+    ...     piped_chain = Chain[List[str], str](
+    ...         &#34;PipedChain&#34;, lambda items: as_async_generator(*items)
+    ...     ).pipe(mario_pipe)
+    ...
+    ...     return await collect_final_output(piped_chain(items))
+    ...
+    &gt;&gt;&gt; asyncio.run(example([&#34;Mario&#34;, &#34;Mushroom&#34;]))
+    [&#39;Super Mario!&#39;]
+    &gt;&gt;&gt; asyncio.run(example([&#34;Luigi&#34;]))
+    [&#39;Luigi?&#39;]
+    &gt;&gt;&gt; asyncio.run(example([&#34;Mario&#34;, &#34;Luigi&#34;, &#34;Mushroom&#34;]))
+    [&#39;Luigi?&#39;, &#39;Super Mario!&#39;]
+
+    As you can see this pipe blocks kinda like `and_then` when it sees &#34;Mario&#34;, until a mushroom arrives, but for other random items
+    such as &#34;Luigi&#34; it just re-yields it immediately, adding a question mark, non-blocking, like `map`.
+
+    You can also call another chain from `pipe` directly, just be sure to re-yield its outputs
+    &#34;&#34;&#34;
+
+    next_name = f&#34;{self.name}@pipe&#34;
+
+    async def filter_final_output(
+        async_iterable: AsyncGenerator[ChainOutput[U], Any]
+    ) -&gt; AsyncGenerator[U, Any]:
+        async for output in async_iterable:
+            if output.final:
+                yield cast(U, output.data)
+
+    def pipe(input: T) -&gt; AsyncGenerator[ChainOutput[V], Any]:
+        previous, final = asyncstdlib.tee(self(input), n=2, lock=asyncio.Lock())
+
+        previous = self._wrap(previous, name=next_name, final=False)
+        previous = cast(AsyncGenerator[ChainOutput[V], Any], previous)
+
+        final = filter_final_output(
+            cast(AsyncGenerator[ChainOutput[U], Any], final)
+        )
+        final = cast(
+            AsyncGenerator[ChainOutput[V], Any],
+            self._wrap(fn(final), name=next_name),
+        )
+
+        return merge(previous, final)
+
+    return Chain[T, V](next_name, pipe)</code></pre>
+</details>
+</dd>
 </dl>
 </dd>
 <dt id="litechain.core.chain.ChainOutput"><code class="flex name class">
@@ -2109,6 +2383,7 @@ class ChainOutput(Generic[T]):
 <ul class="hlist">
 <li><code><a title="litechain.core.chain.Chain.collect" href="#litechain.core.chain.Chain.collect">collect</a></code></li>
 <li><code><a title="litechain.core.chain.Chain.join" href="#litechain.core.chain.Chain.join">join</a></code></li>
+<li><code><a title="litechain.core.chain.Chain.pipe" href="#litechain.core.chain.Chain.pipe">pipe</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2139,6 +2414,7 @@ class ChainOutput(Generic[T]):
 <li><code><a title="litechain.core.chain.Chain.join" href="#litechain.core.chain.Chain.join">join</a></code></li>
 <li><code><a title="litechain.core.chain.Chain.map" href="#litechain.core.chain.Chain.map">map</a></code></li>
 <li><code><a title="litechain.core.chain.Chain.on_error" href="#litechain.core.chain.Chain.on_error">on_error</a></code></li>
+<li><code><a title="litechain.core.chain.Chain.pipe" href="#litechain.core.chain.Chain.pipe">pipe</a></code></li>
 </ul>
 </li>
 <li>
