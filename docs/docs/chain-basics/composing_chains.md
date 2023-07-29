@@ -6,7 +6,7 @@ sidebar_position: 4
 
 If you are familiar with Functional Programming, the Chain follows the [Monad Laws](https://wiki.haskell.org/Monad_laws), this ensures they are composable to build complex application following the Category Theory definitions. Our goal on building LiteChain was always to make it truly composable, and this is the best abstraction we know for the job, so we adopted it.
 
-But you don't need to understand any Functional Programming or fancy terms, just to understand the five basic composition functions below:
+But you don't need to understand any Functional Programming or fancy terms, just to understand the six basic composition functions below:
 
 ## `map()`
 
@@ -167,6 +167,49 @@ asyncio.run(example()) # will take 1s to finish, not 3s, because it runs in para
 In this simple example, we generate a range of numbers `[0, 1, 2]`, then for each of those, we simulate a heavy process that would take 1s to finish the `delayed_output`, we `map()` each number to this `delayed_output` function, which is a function that produces an `AsyncGenerator`, then we `gather()`, and then we take the first item of each.
 
 Because we used `gather()`, the chain will take `1s` to finish, because even though each one of the three numbers alone take `1s`, they are ran in parallel, so they finish all together.
+
+## `pipe()`
+
+The [`pipe()`](pathname:///reference/litechain/index.html#litechain.Chain.pipe) gives you a more lower-level composition, it actually gives you the underlying `AsyncGenerator` stream and expects that you
+return another `AsyncGenerator` from there, the advantage of that is that you have really fine control, you can for example have something that is blocking and non-blocking at the same time:
+
+```python
+from litechain import Chain, as_async_generator, collect_final_output
+from typing import List, AsyncGenerator
+import asyncio
+
+async def example(items):
+    async def mario_pipe(stream: AsyncGenerator[str, None]) -> AsyncGenerator[str, None]:
+       waiting_for_mushroom = False
+       async for item in stream:
+           if item == "Mario":
+               waiting_for_mushroom = True
+           elif item == "Mushroom" and waiting_for_mushroom:
+               yield "Super Mario!"
+           else:
+               yield item + "?"
+
+    piped_chain = Chain[List[str], str](
+        "PipedChain", lambda items: as_async_generator(*items)
+    ).pipe(mario_pipe)
+
+    return await collect_final_output(piped_chain(items))
+
+asyncio.run(example(["Mario", "Mushroom"]))
+#=> ['Super Mario!']
+
+asyncio.run(example(["Luigi"]))
+#=> ['Luigi?']
+
+asyncio.run(example(["Mario", "Luigi", "Mushroom"]))
+#=> ['Luigi?', 'Super Mario!']
+```
+
+As you can see this pipe blocks kinda like `and_then` when it sees "Mario", until a mushroom arrives, but for other random items
+such as "Luigi" it just re-yields it immediately, adding a question mark, non-blocking, like `map`. In fact, you can use just
+`pipe` to reconstruct both `map` and `and_then`!
+
+You can also call another chain from `pipe` directly, just be sure to re-yield its outputs
 
 ## Standard nomenclature
 

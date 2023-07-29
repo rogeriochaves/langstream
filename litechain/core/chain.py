@@ -253,7 +253,47 @@ class Chain(Generic[T, U]):
             [AsyncGenerator[U, Any]], AsyncGenerator[Union[ChainOutput[V], V], Any]
         ],
     ) -> "Chain[T, V]":
-        """ """
+        """
+        Lower level constructor to pipe a chain into another one, giving you the underlying AsyncGenerator.
+        Pipe takes a callback function which should always produce an AsyncGenerator in return, which means you
+        need to declare an async function and your function needs to use `yield` for generating values, the advantage
+        of that is that you have fine control on whether it will be blocking the stream or not.
+
+        In fact, with pipe you can reconstruct `map` and `and_then`, for example:
+
+        >>> from litechain import Chain, as_async_generator, collect_final_output
+        >>> from typing import List, AsyncGenerator
+        >>> import asyncio
+        ...
+        >>> async def example(items):
+        ...     async def mario_pipe(stream: AsyncGenerator[str, None]) -> AsyncGenerator[str, None]:
+        ...        waiting_for_mushroom = False
+        ...        async for item in stream:
+        ...            if item == "Mario":
+        ...                waiting_for_mushroom = True
+        ...            elif item == "Mushroom" and waiting_for_mushroom:
+        ...                yield "Super Mario!"
+        ...            else:
+        ...                yield item + "?"
+        ...
+        ...     piped_chain = Chain[List[str], str](
+        ...         "PipedChain", lambda items: as_async_generator(*items)
+        ...     ).pipe(mario_pipe)
+        ...
+        ...     return await collect_final_output(piped_chain(items))
+        ...
+        >>> asyncio.run(example(["Mario", "Mushroom"]))
+        ['Super Mario!']
+        >>> asyncio.run(example(["Luigi"]))
+        ['Luigi?']
+        >>> asyncio.run(example(["Mario", "Luigi", "Mushroom"]))
+        ['Luigi?', 'Super Mario!']
+
+        As you can see this pipe blocks kinda like `and_then` when it sees "Mario", until a mushroom arrives, but for other random items
+        such as "Luigi" it just re-yields it immediately, adding a question mark, non-blocking, like `map`.
+
+        You can also call another chain from `pipe` directly, just be sure to re-yield its outputs
+        """
 
         next_name = f"{self.name}@pipe"
 
