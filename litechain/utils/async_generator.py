@@ -88,8 +88,18 @@ async def gather(async_generators: List[AsyncGenerator[T, Any]]) -> List[List[T]
     return await asyncio.gather(*(collect(generator) for generator in async_generators))
 
 
-# TODO: doctests
 async def next_item(async_generator: AsyncGenerator[T, Any]) -> T:
+    """
+    Takes the next item of an AsyncGenerator, can result in exception if there is no items left to be taken
+
+    >>> import asyncio
+    >>> async def async_gen():
+    ...     yield "hello"
+    ...     yield "how"
+    ...     yield "are"
+    >>> asyncio.run(next_item(async_gen()))
+    'hello'
+    """
     return await async_generator.__aiter__().__anext__()
 
 
