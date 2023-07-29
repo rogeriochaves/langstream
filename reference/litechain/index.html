@@ -982,6 +982,41 @@ Hello, Alice!
 
         return Chain[T, V](next_name, lambda input: map(input))
 
+    def filter(self, fn: Callable[[U], bool]) -&gt; &#34;Chain[T, U]&#34;:
+        &#34;&#34;&#34;
+        Filters the output of the current chain, keeping only the values that return True.
+
+        This method is non-blocking and expects a function that returns True for keeping the value,
+        or False for dropping it, as they arrive.
+
+        Example:
+
+        &gt;&gt;&gt; from litechain import Chain, as_async_generator, collect_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     numbers_chain = Chain[int, int](&#34;NumbersChain&#34;, lambda input: as_async_generator(*range(0, input)))
+        ...     even_chain = numbers_chain.filter(lambda input: input % 2 == 0)
+        ...     return await collect_final_output(even_chain(9))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        [0, 2, 4, 6, 8]
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@filter&#34;
+
+        async def filter(input: T) -&gt; AsyncGenerator[ChainOutput[U], Any]:
+            # Reyield previous chain so we never block the stream, and at the same time yield mapped values
+            prev_len_values = 0
+            async for values, to_reyield in self._reyield(self(input)):
+                yield to_reyield
+                if len(values) &gt; prev_len_values:  # as soon as there is a new value
+                    prev_len_values = len(values)
+                    if fn(values[-1]):
+                        yield self._output_wrap(values[-1], name=next_name)
+
+        return Chain[T, U](next_name, lambda input: filter(input))
+
     def and_then(
         self,
         next: Callable[
@@ -1480,6 +1515,65 @@ entire output all at once, rather than processing elements as they arrive.</p>
         yield self._output_wrap(iter_u, name=next_name)
 
     return SingleOutputChain[T, List[U]](next_name, _collect)</code></pre>
+</details>
+</dd>
+<dt id="litechain.Chain.filter"><code class="name flex">
+<span>def <span class="ident">filter</span></span>(<span>self, fn: Callable[[~U], bool]) ‑> <a title="litechain.core.chain.Chain" href="core/chain.html#litechain.core.chain.Chain">Chain</a>[~T, ~U]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Filters the output of the current chain, keeping only the values that return True.</p>
+<p>This method is non-blocking and expects a function that returns True for keeping the value,
+or False for dropping it, as they arrive.</p>
+<p>Example:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from litechain import Chain, as_async_generator, collect_final_output
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example():
+...     numbers_chain = Chain[int, int](&quot;NumbersChain&quot;, lambda input: as_async_generator(*range(0, input)))
+...     even_chain = numbers_chain.filter(lambda input: input % 2 == 0)
+...     return await collect_final_output(even_chain(9))
+...
+&gt;&gt;&gt; asyncio.run(example())
+[0, 2, 4, 6, 8]
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filter(self, fn: Callable[[U], bool]) -&gt; &#34;Chain[T, U]&#34;:
+    &#34;&#34;&#34;
+    Filters the output of the current chain, keeping only the values that return True.
+
+    This method is non-blocking and expects a function that returns True for keeping the value,
+    or False for dropping it, as they arrive.
+
+    Example:
+
+    &gt;&gt;&gt; from litechain import Chain, as_async_generator, collect_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     numbers_chain = Chain[int, int](&#34;NumbersChain&#34;, lambda input: as_async_generator(*range(0, input)))
+    ...     even_chain = numbers_chain.filter(lambda input: input % 2 == 0)
+    ...     return await collect_final_output(even_chain(9))
+    ...
+    &gt;&gt;&gt; asyncio.run(example())
+    [0, 2, 4, 6, 8]
+    &#34;&#34;&#34;
+
+    next_name = f&#34;{self.name}@filter&#34;
+
+    async def filter(input: T) -&gt; AsyncGenerator[ChainOutput[U], Any]:
+        # Reyield previous chain so we never block the stream, and at the same time yield mapped values
+        prev_len_values = 0
+        async for values, to_reyield in self._reyield(self(input)):
+            yield to_reyield
+            if len(values) &gt; prev_len_values:  # as soon as there is a new value
+                prev_len_values = len(values)
+                if fn(values[-1]):
+                    yield self._output_wrap(values[-1], name=next_name)
+
+    return Chain[T, U](next_name, lambda input: filter(input))</code></pre>
 </details>
 </dd>
 <dt id="litechain.Chain.gather"><code class="name flex">
@@ -2520,6 +2614,7 @@ class ChainOutput(Generic[T]):
 <li><code><b><a title="litechain.core.chain.Chain" href="core/chain.html#litechain.core.chain.Chain">Chain</a></b></code>:
 <ul class="hlist">
 <li><code><a title="litechain.core.chain.Chain.collect" href="core/chain.html#litechain.core.chain.Chain.collect">collect</a></code></li>
+<li><code><a title="litechain.core.chain.Chain.filter" href="core/chain.html#litechain.core.chain.Chain.filter">filter</a></code></li>
 <li><code><a title="litechain.core.chain.Chain.join" href="core/chain.html#litechain.core.chain.Chain.join">join</a></code></li>
 </ul>
 </li>
@@ -2570,6 +2665,7 @@ class ChainOutput(Generic[T]):
 <ul class="two-column">
 <li><code><a title="litechain.Chain.and_then" href="#litechain.Chain.and_then">and_then</a></code></li>
 <li><code><a title="litechain.Chain.collect" href="#litechain.Chain.collect">collect</a></code></li>
+<li><code><a title="litechain.Chain.filter" href="#litechain.Chain.filter">filter</a></code></li>
 <li><code><a title="litechain.Chain.gather" href="#litechain.Chain.gather">gather</a></code></li>
 <li><code><a title="litechain.Chain.join" href="#litechain.Chain.join">join</a></code></li>
 <li><code><a title="litechain.Chain.map" href="#litechain.Chain.map">map</a></code></li>
