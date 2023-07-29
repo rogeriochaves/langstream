@@ -308,11 +308,15 @@ class Chain(Generic[T, U]):
             previous, final = asyncstdlib.tee(self(input), n=2, lock=asyncio.Lock())
 
             previous = self._wrap(previous, name=next_name, final=False)
+            previous = cast(AsyncGenerator[ChainOutput[V], Any], previous)
 
             final = filter_final_output(
                 cast(AsyncGenerator[ChainOutput[U], Any], final)
             )
-            final = self._wrap(fn(final), name=next_name)
+            final = cast(
+                AsyncGenerator[ChainOutput[V], Any],
+                self._wrap(fn(final), name=next_name),
+            )
 
             return merge(previous, final)
 

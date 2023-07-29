@@ -2,9 +2,10 @@
 Utils for working with Python's AsyncGenerator with the same primitives as chains
 """
 import asyncio
-from typing import Any, AsyncGenerator, List, TypeVar
+from typing import Any, AsyncGenerator, List, TypeVar, Union
 
 T = TypeVar("T")
+U = TypeVar("U")
 
 
 async def as_async_generator(*values: T) -> AsyncGenerator[T, Any]:
@@ -93,8 +94,30 @@ async def next_item(async_generator: AsyncGenerator[T, Any]) -> T:
 
 
 # From: https://stackoverflow.com/a/55317623
-# TODO: doctests
-def merge(*aiters):
+def merge(
+    async_generator_a: AsyncGenerator[T, Any], async_generator_b: AsyncGenerator[U, Any]
+) -> AsyncGenerator[Union[T, U], Any]:
+    """
+    Merges two AsyncGenerators into one, taking values from both generators as soon as they arrive.
+
+    >>> import asyncio
+    >>> async def async_gen1():
+    ...     yield "hello"
+    ...     yield "how"
+    ...     yield "can"
+    >>> async def async_gen2():
+    ...     yield "I"
+    ...     yield "assist"
+    ...     yield "you"
+    ...     yield "today"
+    >>> async def example():
+    ...     return await collect(merge(async_gen1(), async_gen2()))
+    >>> asyncio.run(example())
+    ['hello', 'how', 'I', 'can', 'assist', 'you', 'today']
+    """
+
+    aiters = [async_generator_a, async_generator_b]
+
     queue = asyncio.Queue(1)
     run_count = len(aiters)
     cancelling = False
