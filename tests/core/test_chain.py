@@ -807,6 +807,42 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
             ),
         )
 
+    async def test_it_is_pipeable_working_like_and_then(self):
+        exclamation_list_chain = SingleOutputChain[str, List[str]](
+            "ExclamationListChain", lambda input: [f"{input}", "!"]
+        )
+
+        async def comma_pipe(stream):
+            async for input in stream:
+                for s in input:
+                    yield s + ", "
+
+        chain: Chain[str, str] = exclamation_list_chain.pipe(comma_pipe)
+
+        outputs = chain("hello world")
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="ExclamationListChain", data=["hello world", "!"], final=False
+            ),
+        )
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="ExclamationListChain@pipe",
+                data="hello world, ",
+                final=True,
+            ),
+        )
+        self.assertEqual(
+            await next_item(outputs),
+            ChainOutput(
+                chain="ExclamationListChain@pipe",
+                data="!, ",
+                final=True,
+            ),
+        )
+
     async def test_it_handles_errors(
         self,
     ):

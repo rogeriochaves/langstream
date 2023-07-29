@@ -584,6 +584,44 @@ class SingleOutputChain(Chain[T, U]):
 
         return Chain[T, V](next_name, and_then)
 
+    def pipe(
+        self,
+        fn: Callable[
+            [AsyncGenerator[U, Any]], AsyncGenerator[Union[ChainOutput[V], V], Any]
+        ],
+    ) -> "Chain[T, V]":
+        """
+        Similar to `Chain.pipe`, except that it takes a stream that will only even produce a single value, so it effectively works basically the same as `and_then`, only with a different interface.
+
+        For detailed examples, refer to the documentation of `Chain.pipe`.
+        """
+        next_name = f"{self.name}@pipe"
+        if hasattr(next, "name"):
+            next_name = next.name
+
+        async def pipe(
+            input: T,
+        ) -> AsyncGenerator[ChainOutput[V], Any]:
+            # First, reyield previous chain so we never block the stream, and collect the last result when it is done
+            final_u: Optional[U] = None
+            async for value, to_reyield in self._reyield(self(input), "pipe"):
+                yield cast(ChainOutput[V], to_reyield)
+                final_u = value
+
+            if final_u is None:
+                # TODO: try to make this happen with a bad use case, is it even breakable?
+                raise Exception(
+                    f"Expected item at the end of the chain, found None for {self.name}@pipe"
+                )
+
+            # Then, call in the piping function
+            single_item_stream = as_async_generator(final_u)
+            iter_v = self._wrap(fn(single_item_stream), name=next_name)
+            async for v in iter_v:
+                yield cast(ChainOutput[V], v)
+
+        return Chain[T, V](next_name, pipe)
+
     def gather(
         self: "Union[SingleOutputChain[T, List[AsyncGenerator[ChainOutput[V], Any]]], SingleOutputChain[T, List[AsyncGenerator[V, Any]]]]",
     ) -> "SingleOutputChain[T, List[List[V]]]":
