@@ -830,12 +830,31 @@ Hello, Alice!
 <span>async def <span class="ident">next_item</span></span>(<span>async_generator: AsyncGenerator[~T, Any]) ‑> ~T</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Takes the next item of an AsyncGenerator, can result in exception if there is no items left to be taken</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; import asyncio
+&gt;&gt;&gt; async def async_gen():
+...     yield &quot;hello&quot;
+...     yield &quot;how&quot;
+...     yield &quot;are&quot;
+&gt;&gt;&gt; asyncio.run(next_item(async_gen()))
+'hello'
+</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">async def next_item(async_generator: AsyncGenerator[T, Any]) -&gt; T:
+    &#34;&#34;&#34;
+    Takes the next item of an AsyncGenerator, can result in exception if there is no items left to be taken
+
+    &gt;&gt;&gt; import asyncio
+    &gt;&gt;&gt; async def async_gen():
+    ...     yield &#34;hello&#34;
+    ...     yield &#34;how&#34;
+    ...     yield &#34;are&#34;
+    &gt;&gt;&gt; asyncio.run(next_item(async_gen()))
+    &#39;hello&#39;
+    &#34;&#34;&#34;
     return await async_generator.__aiter__().__anext__()</code></pre>
 </details>
 </dd>
