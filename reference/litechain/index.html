@@ -2124,6 +2124,44 @@ class ChainOutput(Generic[T]):
 
         return Chain[T, V](next_name, and_then)
 
+    def pipe(
+        self,
+        fn: Callable[
+            [AsyncGenerator[U, Any]], AsyncGenerator[Union[ChainOutput[V], V], Any]
+        ],
+    ) -&gt; &#34;Chain[T, V]&#34;:
+        &#34;&#34;&#34;
+        Similar to `Chain.pipe`, except that it takes a stream that will only even produce a single value, so it effectively works basically the same as `and_then`, only with a different interface.
+
+        For detailed examples, refer to the documentation of `Chain.pipe`.
+        &#34;&#34;&#34;
+        next_name = f&#34;{self.name}@pipe&#34;
+        if hasattr(next, &#34;name&#34;):
+            next_name = next.name
+
+        async def pipe(
+            input: T,
+        ) -&gt; AsyncGenerator[ChainOutput[V], Any]:
+            # First, reyield previous chain so we never block the stream, and collect the last result when it is done
+            final_u: Optional[U] = None
+            async for value, to_reyield in self._reyield(self(input), &#34;pipe&#34;):
+                yield cast(ChainOutput[V], to_reyield)
+                final_u = value
+
+            if final_u is None:
+                # TODO: try to make this happen with a bad use case, is it even breakable?
+                raise Exception(
+                    f&#34;Expected item at the end of the chain, found None for {self.name}@pipe&#34;
+                )
+
+            # Then, call in the piping function
+            single_item_stream = as_async_generator(final_u)
+            iter_v = self._wrap(fn(single_item_stream), name=next_name)
+            async for v in iter_v:
+                yield cast(ChainOutput[V], v)
+
+        return Chain[T, V](next_name, pipe)
+
     def gather(
         self: &#34;Union[SingleOutputChain[T, List[AsyncGenerator[ChainOutput[V], Any]]], SingleOutputChain[T, List[AsyncGenerator[V, Any]]]]&#34;,
     ) -&gt; &#34;SingleOutputChain[T, List[List[V]]]&#34;:
@@ -2427,6 +2465,55 @@ class ChainOutput(Generic[T]):
     )</code></pre>
 </details>
 </dd>
+<dt id="litechain.SingleOutputChain.pipe"><code class="name flex">
+<span>def <span class="ident">pipe</span></span>(<span>self, fn: Callable[[AsyncGenerator[~U, Any]], AsyncGenerator[Union[<a title="litechain.core.chain.ChainOutput" href="core/chain.html#litechain.core.chain.ChainOutput">ChainOutput</a>[~V], ~V], Any]]) ‑> <a title="litechain.core.chain.Chain" href="core/chain.html#litechain.core.chain.Chain">Chain</a>[~T, ~V]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Similar to <code><a title="litechain.Chain.pipe" href="#litechain.Chain.pipe">Chain.pipe()</a></code>, except that it takes a stream that will only even produce a single value, so it effectively works basically the same as <code>and_then</code>, only with a different interface.</p>
+<p>For detailed examples, refer to the documentation of <code><a title="litechain.Chain.pipe" href="#litechain.Chain.pipe">Chain.pipe()</a></code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pipe(
+    self,
+    fn: Callable[
+        [AsyncGenerator[U, Any]], AsyncGenerator[Union[ChainOutput[V], V], Any]
+    ],
+) -&gt; &#34;Chain[T, V]&#34;:
+    &#34;&#34;&#34;
+    Similar to `Chain.pipe`, except that it takes a stream that will only even produce a single value, so it effectively works basically the same as `and_then`, only with a different interface.
+
+    For detailed examples, refer to the documentation of `Chain.pipe`.
+    &#34;&#34;&#34;
+    next_name = f&#34;{self.name}@pipe&#34;
+    if hasattr(next, &#34;name&#34;):
+        next_name = next.name
+
+    async def pipe(
+        input: T,
+    ) -&gt; AsyncGenerator[ChainOutput[V], Any]:
+        # First, reyield previous chain so we never block the stream, and collect the last result when it is done
+        final_u: Optional[U] = None
+        async for value, to_reyield in self._reyield(self(input), &#34;pipe&#34;):
+            yield cast(ChainOutput[V], to_reyield)
+            final_u = value
+
+        if final_u is None:
+            # TODO: try to make this happen with a bad use case, is it even breakable?
+            raise Exception(
+                f&#34;Expected item at the end of the chain, found None for {self.name}@pipe&#34;
+            )
+
+        # Then, call in the piping function
+        single_item_stream = as_async_generator(final_u)
+        iter_v = self._wrap(fn(single_item_stream), name=next_name)
+        async for v in iter_v:
+            yield cast(ChainOutput[V], v)
+
+    return Chain[T, V](next_name, pipe)</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -2434,7 +2521,6 @@ class ChainOutput(Generic[T]):
 <ul class="hlist">
 <li><code><a title="litechain.core.chain.Chain.collect" href="core/chain.html#litechain.core.chain.Chain.collect">collect</a></code></li>
 <li><code><a title="litechain.core.chain.Chain.join" href="core/chain.html#litechain.core.chain.Chain.join">join</a></code></li>
-<li><code><a title="litechain.core.chain.Chain.pipe" href="core/chain.html#litechain.core.chain.Chain.pipe">pipe</a></code></li>
 </ul>
 </li>
 </ul>
@@ -2506,6 +2592,7 @@ class ChainOutput(Generic[T]):
 <li><code><a title="litechain.SingleOutputChain.gather" href="#litechain.SingleOutputChain.gather">gather</a></code></li>
 <li><code><a title="litechain.SingleOutputChain.map" href="#litechain.SingleOutputChain.map">map</a></code></li>
 <li><code><a title="litechain.SingleOutputChain.on_error" href="#litechain.SingleOutputChain.on_error">on_error</a></code></li>
+<li><code><a title="litechain.SingleOutputChain.pipe" href="#litechain.SingleOutputChain.pipe">pipe</a></code></li>
 </ul>
 </li>
 </ul>
