@@ -7,6 +7,7 @@ from typing import (
     AsyncGenerator,
     Iterable,
     List,
+    Optional,
     TypeVar,
     TypedDict,
     cast,
@@ -14,7 +15,7 @@ from typing import (
 
 from litechain.core.chain import Chain, ChainOutput, SingleOutputChain
 from litechain.utils.async_generator import as_async_generator, collect, next_item
-from litechain.utils.chain import join_final_output
+from litechain.utils.chain import join_final_output, collect_final_output
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -766,6 +767,74 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
             ChainOutput(chain="ExclamationChain@map", data="hello planet!", final=True),
         )
 
+    async def test_it_is_filterable_by_returning_none_when_filtered_out(self):
+        chain: Chain[int, Optional[List[int]]] = (
+            Chain[int, int](
+                "NumbersChain", lambda input: as_async_generator(*range(0, input))
+            )
+            .collect()
+            .filter(lambda numbers: all([n % 2 == 0 for n in numbers]))
+        )
+
+        result = await collect(chain(4))
+        self.assertEqual(
+            result,
+            [
+                ChainOutput(
+                    chain="NumbersChain",
+                    data=0,
+                    final=False,
+                ),
+                ChainOutput(
+                    chain="NumbersChain",
+                    data=1,
+                    final=False,
+                ),
+                ChainOutput(
+                    chain="NumbersChain",
+                    data=2,
+                    final=False,
+                ),
+                ChainOutput(
+                    chain="NumbersChain",
+                    data=3,
+                    final=False,
+                ),
+                ChainOutput(
+                    chain="NumbersChain@collect",
+                    data=[0, 1, 2, 3],
+                    final=False,
+                ),
+                ChainOutput(
+                    chain="NumbersChain@collect@filter",
+                    data=None,
+                    final=True,
+                ),
+            ],
+        )
+
+        result = await collect(chain(1))
+        self.assertEqual(
+            result,
+            [
+                ChainOutput(
+                    chain="NumbersChain",
+                    data=0,
+                    final=False,
+                ),
+                ChainOutput(
+                    chain="NumbersChain@collect",
+                    data=[0],
+                    final=False,
+                ),
+                ChainOutput(
+                    chain="NumbersChain@collect@filter",
+                    data=[0],
+                    final=True,
+                ),
+            ],
+        )
+
     async def test_it_is_thenable_keeping_the_proper_chain_names(self):
         exclamation_list_chain = SingleOutputChain[str, List[str]](
             "ExclamationListChain", lambda input: [f"{input}", "!"]
@@ -921,4 +990,19 @@ class SingleOutputChainTestCase(unittest.IsolatedAsyncioTestCase):
                 data="I'm Sorry Dave, I'm Afraid I Can't Do That: 418 I'm a teapot :)",
                 final=True,
             ),
+        )
+
+    async def test_it_is_redundantly_collectable(self):
+        chain: Chain[int, List[List[int]]] = (
+            Chain[int, int](
+                "NumbersChain", lambda input: as_async_generator(*range(0, input))
+            )
+            .collect()
+            .collect()
+        )
+
+        result = await collect_final_output(chain(4))
+        self.assertEqual(
+            result,
+            [[0, 1, 2, 3]],
         )

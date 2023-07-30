@@ -540,7 +540,7 @@ class SingleOutputChain(Chain[T, U]):
     ]
 
     async def _reyield(
-        self, async_iterable: AsyncGenerator[ChainOutput[U], Any], at: str
+        self, async_iterable: AsyncGenerator[ChainOutput[U], Any], at: Optional[str] = None
     ) -> AsyncGenerator[Tuple[Optional[U], ChainOutput[U]], Any]:
         final_value: Optional[U] = None
         async for u in async_iterable:
@@ -580,6 +580,46 @@ class SingleOutputChain(Chain[T, U]):
             yield self._output_wrap(fn(final_u), name=next_name)
 
         return SingleOutputChain[T, V](next_name, lambda input: map(input))
+
+    def filter(self, fn: Callable[[U], bool]) -> "SingleOutputChain[T, Union[U, None]]":
+        """
+        Similar to `Chain.filter`, however, singe SingleOutputChain must always produce a value, this method simply replaces
+        the value with a None if the filter function returns False
+
+        The `fn` parameter is a function that takes a value of type U and returns a bool.
+
+        Example:
+
+        >>> from litechain import Chain, as_async_generator, collect_final_output
+        >>> import asyncio
+        ...
+        >>> async def example():
+        ...     numbers_chain = Chain[int, int]("NumbersChain", lambda input: as_async_generator(*range(0, input)))
+        ...     even_chain = numbers_chain.collect().filter(lambda numbers: all([n % 2 == 0 for n in numbers]))
+        ...     return await collect_final_output(even_chain(9))
+        ...
+        >>> asyncio.run(example())
+        [None]
+        """
+        next_name = f"{self.name}@filter"
+
+        async def filter(input: T) -> AsyncGenerator[ChainOutput[Union[U, None]], Any]:
+            # Reyield previous chain so we never block the stream, and at the same time yield filtered values
+            final_u: Optional[U] = None
+            async for value, to_reyield in self._reyield(self(input), "filter"):
+                yield cast(ChainOutput[Union[U, None]], to_reyield)
+                final_u = value
+
+            if final_u is None:
+                # TODO: try to make this happen with a bad use case, is it even breakable?
+                raise Exception(
+                    f"Expected item at the end of the chain, found None for {self.name}@filter"
+                )
+            yield self._output_wrap(final_u if fn(final_u) else None, name=next_name)
+
+        return SingleOutputChain[T, Union[U, None]](
+            next_name, lambda input: filter(input)
+        )
 
     def and_then(
         self,
