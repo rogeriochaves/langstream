@@ -20,6 +20,7 @@ from typing import (
 import asyncstdlib
 
 from litechain.utils.async_generator import as_async_generator, merge
+from litechain.utils._typing import unwrap
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -434,7 +435,7 @@ class Chain(Generic[T, U]):
             # First, reyield previous chain so we never block the stream, and collect the results until they are done
             iter_u: Iterable[str] = []
             async for values, to_reyield in self._reyield(self(input)):
-                yield cast(ChainOutput[str], to_reyield)
+                yield to_reyield
                 iter_u = values
 
             # Then, return the joined result
@@ -540,17 +541,12 @@ class SingleOutputChain(Chain[T, U]):
     ]
 
     async def _reyield(
-        self, async_iterable: AsyncGenerator[ChainOutput[U], Any], at: Optional[str] = None
+        self, async_iterable: AsyncGenerator[ChainOutput[U], Any]
     ) -> AsyncGenerator[Tuple[Optional[U], ChainOutput[U]], Any]:
         final_value: Optional[U] = None
         async for u in async_iterable:
             u_rewrapped = self._output_wrap(u, final=False)
             if u.final:
-                if final_value is not None:
-                    # TODO: try to make this happen with a bad use case, is it even breakable?
-                    raise Exception(
-                        f"Expected a single item at the end of SingleOutputChain, found multiple for {self.name}@{at}"
-                    )
                 final_value = u.data
             yield (final_value, u_rewrapped)
 
@@ -568,16 +564,11 @@ class SingleOutputChain(Chain[T, U]):
         async def map(input: T) -> AsyncGenerator[ChainOutput[V], Any]:
             # Reyield previous chain so we never block the stream, and at the same time yield mapped values
             final_u: Optional[U] = None
-            async for value, to_reyield in self._reyield(self(input), "map"):
+            async for value, to_reyield in self._reyield(self(input)):
                 yield cast(ChainOutput[V], to_reyield)
                 final_u = value
 
-            if final_u is None:
-                # TODO: try to make this happen with a bad use case, is it even breakable?
-                raise Exception(
-                    f"Expected item at the end of the chain, found None for {self.name}@map"
-                )
-            yield self._output_wrap(fn(final_u), name=next_name)
+            yield self._output_wrap(fn(unwrap(final_u)), name=next_name)
 
         return SingleOutputChain[T, V](next_name, lambda input: map(input))
 
@@ -606,16 +597,13 @@ class SingleOutputChain(Chain[T, U]):
         async def filter(input: T) -> AsyncGenerator[ChainOutput[Union[U, None]], Any]:
             # Reyield previous chain so we never block the stream, and at the same time yield filtered values
             final_u: Optional[U] = None
-            async for value, to_reyield in self._reyield(self(input), "filter"):
+            async for value, to_reyield in self._reyield(self(input)):
                 yield cast(ChainOutput[Union[U, None]], to_reyield)
                 final_u = value
 
-            if final_u is None:
-                # TODO: try to make this happen with a bad use case, is it even breakable?
-                raise Exception(
-                    f"Expected item at the end of the chain, found None for {self.name}@filter"
-                )
-            yield self._output_wrap(final_u if fn(final_u) else None, name=next_name)
+            yield self._output_wrap(
+                final_u if fn(unwrap(final_u)) else None, name=next_name
+            )
 
         return SingleOutputChain[T, Union[U, None]](
             next_name, lambda input: filter(input)
@@ -642,18 +630,12 @@ class SingleOutputChain(Chain[T, U]):
         ) -> AsyncGenerator[ChainOutput[V], Any]:
             # First, reyield previous chain so we never block the stream, and collect the last result when it is done
             final_u: Optional[U] = None
-            async for value, to_reyield in self._reyield(self(input), "and_then"):
+            async for value, to_reyield in self._reyield(self(input)):
                 yield cast(ChainOutput[V], to_reyield)
                 final_u = value
 
-            if final_u is None:
-                # TODO: try to make this happen with a bad use case, is it even breakable?
-                raise Exception(
-                    f"Expected item at the end of the chain, found None for {self.name}@and_then"
-                )
-
             # Then, call in the next chain
-            iter_v = self._wrap(next(final_u), name=next_name)
+            iter_v = self._wrap(next(unwrap(final_u)), name=next_name)
             async for v in iter_v:
                 yield v
 
@@ -679,18 +661,12 @@ class SingleOutputChain(Chain[T, U]):
         ) -> AsyncGenerator[ChainOutput[V], Any]:
             # First, reyield previous chain so we never block the stream, and collect the last result when it is done
             final_u: Optional[U] = None
-            async for value, to_reyield in self._reyield(self(input), "pipe"):
+            async for value, to_reyield in self._reyield(self(input)):
                 yield cast(ChainOutput[V], to_reyield)
                 final_u = value
 
-            if final_u is None:
-                # TODO: try to make this happen with a bad use case, is it even breakable?
-                raise Exception(
-                    f"Expected item at the end of the chain, found None for {self.name}@pipe"
-                )
-
             # Then, call in the piping function
-            single_item_stream = as_async_generator(final_u)
+            single_item_stream = as_async_generator(unwrap(final_u))
             iter_v = self._wrap(fn(single_item_stream), name=next_name)
             async for v in iter_v:
                 yield cast(ChainOutput[V], v)
@@ -720,17 +696,12 @@ class SingleOutputChain(Chain[T, U]):
             ] = None
 
             # TODO: try to work out why the type signature of self(input) is not fitting in there, it should
-            async for value, to_reyield in self._reyield(
-                cast(Any, self(input)), "gather"
-            ):
+            async for value, to_reyield in self._reyield(cast(Any, self(input))):
                 yield cast(ChainOutput[List[List[V]]], to_reyield)
                 final_u = value
 
             if final_u is None:
-                # TODO: try to make this happen with a bad use case, is it even breakable?
-                raise Exception(
-                    f"Expected item at the end of the chain, found None for {self.name}@gather"
-                )
+                final_u = []
 
             async def consume_async_generator(
                 generator: AsyncGenerator[X, Any],
