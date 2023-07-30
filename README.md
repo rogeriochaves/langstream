@@ -120,7 +120,6 @@ To continue developing with LiteChain, take a look at our [documentation](https:
 # 🚙 Roadmap
 
 - [ ] Add an example for document retrieval using vector search
-- [ ] Add a `filter` function
 - [ ] Add docs for debugging
 - [ ] Add a simple default memory mechanism
 
