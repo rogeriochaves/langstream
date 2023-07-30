@@ -10,6 +10,7 @@ chainlit.md
 test*.py
 build/
 litechain.egg-info/
+.chroma
 
 # Generated markdown files from jupyter notebooks
 docs/docs/examples/*.md
