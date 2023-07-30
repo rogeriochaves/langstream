@@ -6,7 +6,7 @@ sidebar_position: 4
 
 If you are familiar with Functional Programming, the Chain follows the [Monad Laws](https://wiki.haskell.org/Monad_laws), this ensures they are composable to build complex application following the Category Theory definitions. Our goal on building LiteChain was always to make it truly composable, and this is the best abstraction we know for the job, so we adopted it.
 
-But you don't need to understand any Functional Programming or fancy terms, just to understand the six basic composition functions below:
+But you don't need to understand any Functional Programming or fancy terms, just to understand the seven basic composition functions below:
 
 ## `map()`
 
@@ -76,6 +76,23 @@ composed_chain = words_chain.and_then(lambda words: list(words)[-1])
 ```
 
 Then again, it could also be an LLM producing tokens in place of those chains, try it out with an [`OpenAICompletionChain`](pathname:///reference/litechain/contrib/index.html#litechain.contrib.OpenAICompletionChain).
+
+## `filter()`
+
+This is also a very simple one, the [`filter()`](pathname:///reference/litechain/index.html#litechain.Chain.map) function keeps the output values that return `True` for your test function. It it also non-blocking, dropping values from the strem as they arrive. For example:
+
+```python
+from litechain import Chain, as_async_generator, collect_final_output
+import asyncio
+
+async def example():
+    numbers_chain = Chain[int, int]("NumbersChain", lambda input: as_async_generator(*range(0, input)))
+    even_chain = numbers_chain.filter(lambda input: input % 2 == 0)
+    return await collect_final_output(even_chain(9))
+
+asyncio.run(example())
+#=> [0, 2, 4, 6, 8]
+```
 
 ## `collect()`
 
@@ -207,7 +224,7 @@ asyncio.run(example(["Mario", "Luigi", "Mushroom"]))
 
 As you can see this pipe blocks kinda like `and_then` when it sees "Mario", until a mushroom arrives, but for other random items
 such as "Luigi" it just re-yields it immediately, adding a question mark, non-blocking, like `map`. In fact, you can use just
-`pipe` to reconstruct both `map` and `and_then`!
+`pipe` to reconstruct `map`, `filter` and `and_then`!
 
 You can also call another chain from `pipe` directly, just be sure to re-yield its outputs
 
