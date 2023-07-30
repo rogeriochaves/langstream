@@ -275,7 +275,7 @@ class OpenAIChatChain(Chain[T, U]):
         ],
         model: str,
         functions: Optional[List[Dict[str, Any]]] = None,
-        function_call: Optional[Union[Literal["none", "auto"], str]] = None,
+        function_call: Optional[Union[Literal["none", "auto"], Dict[str, Any]]] = None,
         temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
         timeout: int = 5,
