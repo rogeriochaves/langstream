@@ -399,7 +399,7 @@ class OpenAIChatChain(Chain[T, U]):
         ],
         model: str,
         functions: Optional[List[Dict[str, Any]]] = None,
-        function_call: Optional[Union[Literal[&#34;none&#34;, &#34;auto&#34;], str]] = None,
+        function_call: Optional[Union[Literal[&#34;none&#34;, &#34;auto&#34;], Dict[str, Any]]] = None,
         temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
         timeout: int = 5,
@@ -497,7 +497,7 @@ class OpenAIChatChain(Chain[T, U]):
 <dl>
 <dt id="litechain.contrib.llms.open_ai.OpenAIChatChain"><code class="flex name class">
 <span>class <span class="ident">OpenAIChatChain</span></span>
-<span>(</span><span>name: str, call: Callable[[~T], List[<a title="litechain.contrib.llms.open_ai.OpenAIChatMessage" href="#litechain.contrib.llms.open_ai.OpenAIChatMessage">OpenAIChatMessage</a>]], model: str, functions: Optional[List[Dict[str, Any]]] = None, function_call: Union[Literal['none', 'auto'], str, ForwardRef(None)] = None, temperature: Optional[float] = 0, max_tokens: Optional[int] = None, timeout: int = 5, retries: int = 3)</span>
+<span>(</span><span>name: str, call: Callable[[~T], List[<a title="litechain.contrib.llms.open_ai.OpenAIChatMessage" href="#litechain.contrib.llms.open_ai.OpenAIChatMessage">OpenAIChatMessage</a>]], model: str, functions: Optional[List[Dict[str, Any]]] = None, function_call: Union[Literal['none', 'auto'], Dict[str, Any], ForwardRef(None)] = None, temperature: Optional[float] = 0, max_tokens: Optional[int] = None, timeout: int = 5, retries: int = 3)</span>
 </code></dt>
 <dd>
 <div class="desc"><p><code><a title="litechain.contrib.llms.open_ai.OpenAIChatChain" href="#litechain.contrib.llms.open_ai.OpenAIChatChain">OpenAIChatChain</a></code> gives you access to the more powerful LLMs from OpenAI, like <code>gpt-3.5-turbo</code> and <code>gpt-4</code>, they are structured in a chat format with roles.</p>
@@ -712,7 +712,7 @@ using your function, with the <code>content</code> field as a json which you can
         ],
         model: str,
         functions: Optional[List[Dict[str, Any]]] = None,
-        function_call: Optional[Union[Literal[&#34;none&#34;, &#34;auto&#34;], str]] = None,
+        function_call: Optional[Union[Literal[&#34;none&#34;, &#34;auto&#34;], Dict[str, Any]]] = None,
         temperature: Optional[float] = 0,
         max_tokens: Optional[int] = None,
         timeout: int = 5,
