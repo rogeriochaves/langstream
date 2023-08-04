@@ -1,4 +1,5 @@
 FastAPI
+uvicorn
 openai_function_call
 unstructured
 chromadb==0.4.3

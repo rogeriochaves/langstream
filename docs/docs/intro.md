@@ -5,19 +5,19 @@ title: Getting Started
 
 # Introduction
 
-LiteChain is a lighter alternative to LangChain for building LLMs application, instead of having a massive amount of features and classes, LiteChain focuses on having a single small core, that is easy to learn, easy to adapt, well documented, fully typed and truly composable.
+LangStream is a lighter alternative to LangChain for building LLMs application, instead of having a massive amount of features and classes, LangStream focuses on having a single small core, that is easy to learn, easy to adapt, well documented, fully typed and truly composable, with Streams instead of chains as the building block.
 
-LiteChain also puts emphasis on "explicit is better than implicit", which means less magic and a bit more legwork, but on the other hand, you will be able to understand everything that is going on in between, making your application easy to maintain and customize.
+LangStream also puts emphasis on "explicit is better than implicit", which means less magic and a bit more legwork, but on the other hand, you will be able to understand everything that is going on in between, making your application easy to maintain and customize.
 
 ## Getting Started
 
 You can install it with pip:
 
 ```
-pip install litechain
+pip install langstream
 ```
 
-## Your First Chain
+## Your First Stream
 
 To run this example, first you will need to get an [API key from OpenAI](https://platform.openai.com), then export it with:
 
@@ -25,17 +25,17 @@ To run this example, first you will need to get an [API key from OpenAI](https:/
 export OPENAI_API_KEY=<your key here>
 ```
 
-(if you really cannot get access to the API, you can try [GPT4All](pathname:///reference/litechain/contrib/index.html#litechain.contrib.GPT4AllChain) instead, it's completely free and runs locally)
+(if you really cannot get access to the API, you can try [GPT4All](pathname:///reference/langstream/contrib/index.html#langstream.contrib.GPT4AllStream) instead, it's completely free and runs locally)
 
 Now create a new file `main.py` and paste this example:
 
 ```python
-from litechain.contrib import OpenAIChatChain, OpenAIChatMessage, OpenAIChatDelta
+from langstream.contrib import OpenAIChatStream, OpenAIChatMessage, OpenAIChatDelta
 import asyncio
 
-# Creating a GPT-3.5 EmojiChain
-emoji_chain = OpenAIChatChain[str, OpenAIChatDelta](
-    "EmojiChain",
+# Creating a GPT-3.5 EmojiStream
+emoji_stream = OpenAIChatStream[str, OpenAIChatDelta](
+    "EmojiStream",
     lambda user_message: [
         OpenAIChatMessage(
             role="user", content=f"{user_message}. Reply in emojis"
@@ -48,7 +48,7 @@ emoji_chain = OpenAIChatChain[str, OpenAIChatDelta](
 async def main():
     while True:
         print("> ", end="")
-        async for output in emoji_chain(input()):
+        async for output in emoji_stream(input()):
             print(output.data.content, end="")
         print("")
 
@@ -65,4 +65,4 @@ This will create a basic chat on the terminal, and for any questions you ask the
 
 ## Next Steps
 
-Continue on reading to learn the Chain basics, we will then build up on more complex examples, can't wait!
+Continue on reading to learn the Stream basics, we will then build up on more complex examples, can't wait!

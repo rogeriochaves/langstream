@@ -9,7 +9,7 @@ chainlit.md
 !docs/**/chainlit.md
 test*.py
 build/
-litechain.egg-info/
+langstream.egg-info/
 .chroma
 
 # Generated markdown files from jupyter notebooks

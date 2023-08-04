@@ -17,38 +17,38 @@ import openai
 from colorama import Fore
 from retry import retry
 
-from litechain.core.chain import Chain, ChainOutput
+from langstream.core.stream import Stream, StreamOutput
 
 T = TypeVar("T")
 U = TypeVar("U")
 V = TypeVar("V")
 
 
-class OpenAICompletionChain(Chain[T, U]):
+class OpenAICompletionStream(Stream[T, U]):
     """
-    `OpenAICompletionChain` uses the most simple LLMs from OpenAI based on GPT-3 for text completion, if you are looking for ChatCompletion, take a look at `OpenAIChatChain`.
+    `OpenAICompletionStream` uses the most simple LLMs from OpenAI based on GPT-3 for text completion, if you are looking for ChatCompletion, take a look at `OpenAIChatStream`.
 
-    The `OpenAICompletionChain` takes a lambda function that should return a string with the prompt for completion.
+    The `OpenAICompletionStream` takes a lambda function that should return a string with the prompt for completion.
 
-    To use this chain you will need an `OPENAI_API_KEY` environment variable to be available, and then you can generate completions out of it.
+    To use this stream you will need an `OPENAI_API_KEY` environment variable to be available, and then you can generate completions out of it.
 
     You can read more about the completion API on [OpenAI API reference](https://platform.openai.com/docs/api-reference/completions)
 
     Example
     -------
 
-    >>> from litechain import join_final_output
-    >>> from litechain.contrib import OpenAICompletionChain
+    >>> from langstream import join_final_output
+    >>> from langstream.contrib import OpenAICompletionStream
     >>> import asyncio
     ...
     >>> async def example():
-    ...     recipe_chain = OpenAICompletionChain[str, str](
-    ...         "RecipeChain",
+    ...     recipe_stream = OpenAICompletionStream[str, str](
+    ...         "RecipeStream",
     ...         lambda recipe_name: f"Here is my {recipe_name} recipe: ",
     ...         model="ada",
     ...     )
     ...
-    ...     return await join_final_output(recipe_chain("instant noodles"))
+    ...     return await join_final_output(recipe_stream("instant noodles"))
     ...
     >>> asyncio.run(example()) # doctest:+SKIP
     '【Instant Noodles】\\n\\nIngredients:\\n\\n1 cup of water'
@@ -56,7 +56,7 @@ class OpenAICompletionChain(Chain[T, U]):
     """
 
     def __init__(
-        self: "OpenAICompletionChain[T, str]",
+        self: "OpenAICompletionStream[T, str]",
         name: str,
         call: Callable[
             [T],
@@ -98,7 +98,7 @@ class OpenAICompletionChain(Chain[T, U]):
 @dataclass
 class OpenAIChatMessage:
     """
-    OpenAIChatMessage is a data class that represents a chat message for building `OpenAIChatChain` prompt.
+    OpenAIChatMessage is a data class that represents a chat message for building `OpenAIChatStream` prompt.
 
     Attributes
     ----------
@@ -124,7 +124,7 @@ class OpenAIChatMessage:
 @dataclass
 class OpenAIChatDelta:
     """
-    OpenAIChatDelta is a data class that represents the output of an `OpenAIChatChain`.
+    OpenAIChatDelta is a data class that represents the output of an `OpenAIChatStream`.
 
     Attributes
     ----------
@@ -146,7 +146,7 @@ class OpenAIChatDelta:
     content: str
     name: Optional[str] = None
 
-    def __chain_debug__(self):
+    def __stream_debug__(self):
         name = ""
         if self.name:
             name = f" {self.name}"
@@ -159,30 +159,30 @@ class OpenAIChatDelta:
         )
 
 
-class OpenAIChatChain(Chain[T, U]):
+class OpenAIChatStream(Stream[T, U]):
     """
-    `OpenAIChatChain` gives you access to the more powerful LLMs from OpenAI, like `gpt-3.5-turbo` and `gpt-4`, they are structured in a chat format with roles.
+    `OpenAIChatStream` gives you access to the more powerful LLMs from OpenAI, like `gpt-3.5-turbo` and `gpt-4`, they are structured in a chat format with roles.
 
-    The `OpenAIChatChain` takes a lambda function that should return a list of `OpenAIChatMessage` for the assistant to reply, it is stateless, so it doesn't keep
-    memory of the past chat messages, you will have to handle the memory yourself, you can [follow this guide to get started on memory](https://rogeriochaves.github.io/litechain/docs/llms/memory).
+    The `OpenAIChatStream` takes a lambda function that should return a list of `OpenAIChatMessage` for the assistant to reply, it is stateless, so it doesn't keep
+    memory of the past chat messages, you will have to handle the memory yourself, you can [follow this guide to get started on memory](https://rogeriochaves.github.io/langstream/docs/llms/memory).
 
-    The `OpenAIChatChain` also produces `OpenAIChatDelta` as output, one per token, it contains the `role` that started the output, and then subsequent `content` updates.
+    The `OpenAIChatStream` also produces `OpenAIChatDelta` as output, one per token, it contains the `role` that started the output, and then subsequent `content` updates.
     If you want the final content as a string, you will need to use the `.content` property from the delta and accumulate it for the final result.
 
-    To use this chain you will need an `OPENAI_API_KEY` environment variable to be available, and then you can generate chat completions out of it.
+    To use this stream you will need an `OPENAI_API_KEY` environment variable to be available, and then you can generate chat completions out of it.
 
     You can read more about the chat completion API on [OpenAI API reference](https://platform.openai.com/docs/api-reference/chat)
 
     Example
     -------
 
-    >>> from litechain import Chain, join_final_output
-    >>> from litechain.contrib import OpenAIChatChain, OpenAIChatMessage, OpenAIChatDelta
+    >>> from langstream import Stream, join_final_output
+    >>> from langstream.contrib import OpenAIChatStream, OpenAIChatMessage, OpenAIChatDelta
     >>> import asyncio
     ...
     >>> async def example():
-    ...     recipe_chain: Chain[str, str] = OpenAIChatChain[str, OpenAIChatDelta](
-    ...         "RecipeChain",
+    ...     recipe_stream: Stream[str, str] = OpenAIChatStream[str, OpenAIChatDelta](
+    ...         "RecipeStream",
     ...         lambda recipe_name: [
     ...             OpenAIChatMessage(
     ...                 role="system",
@@ -197,7 +197,7 @@ class OpenAIChatChain(Chain[T, U]):
     ...         max_tokens=10,
     ...     ).map(lambda delta: delta.content)
     ...
-    ...     return await join_final_output(recipe_chain("instant noodles"))
+    ...     return await join_final_output(recipe_stream("instant noodles"))
     ...
     >>> asyncio.run(example()) # doctest:+SKIP
     "Of course! Here's a simple and delicious recipe"
@@ -205,13 +205,13 @@ class OpenAIChatChain(Chain[T, U]):
     You can also pass OpenAI function schemas in the `function` argument with all parameter definitions, the model may then produce a `function` role `OpenAIChatDelta`,
     using your function, with the `content` field as a json which you can parse to call an actual function.
 
-    Take a look [at our guide](https://rogeriochaves.github.io/litechain/docs/llms/open_ai_functions) to learn more about OpenAI function calls in LiteChain.
+    Take a look [at our guide](https://rogeriochaves.github.io/langstream/docs/llms/open_ai_functions) to learn more about OpenAI function calls in LangStream.
 
     Function Call Example
     ---------------------
 
-    >>> from litechain import Chain, collect_final_output
-    >>> from litechain.contrib import OpenAIChatChain, OpenAIChatMessage, OpenAIChatDelta
+    >>> from langstream import Stream, collect_final_output
+    >>> from langstream.contrib import OpenAIChatStream, OpenAIChatMessage, OpenAIChatDelta
     >>> from typing import Literal, Union, Dict
     >>> import asyncio
     ...
@@ -225,8 +225,8 @@ class OpenAIChatChain(Chain[T, U]):
     ...             "temperature": "25 C" if format == "celsius" else "77 F",
     ...         }
     ...
-    ...     chain : Chain[str, Union[OpenAIChatDelta, Dict[str, str]]] = OpenAIChatChain[str, Union[OpenAIChatDelta, Dict[str, str]]](
-    ...         "WeatherChain",
+    ...     stream : Stream[str, Union[OpenAIChatDelta, Dict[str, str]]] = OpenAIChatStream[str, Union[OpenAIChatDelta, Dict[str, str]]](
+    ...         "WeatherStream",
     ...         lambda user_input: [
     ...             OpenAIChatMessage(role="user", content=user_input),
     ...         ],
@@ -259,7 +259,7 @@ class OpenAIChatChain(Chain[T, U]):
     ...         else delta
     ...     )
     ...
-    ...     return await collect_final_output(chain("how is the weather today in Rio de Janeiro?"))
+    ...     return await collect_final_output(stream("how is the weather today in Rio de Janeiro?"))
     ...
     >>> asyncio.run(example()) # doctest:+SKIP
     [{'location': 'Rio de Janeiro', 'forecast': 'sunny', 'temperature': '25 C'}]
@@ -267,7 +267,7 @@ class OpenAIChatChain(Chain[T, U]):
     """
 
     def __init__(
-        self: "OpenAIChatChain[T, OpenAIChatDelta]",
+        self: "OpenAIChatStream[T, OpenAIChatDelta]",
         name: str,
         call: Callable[
             [T],
@@ -283,7 +283,7 @@ class OpenAIChatChain(Chain[T, U]):
     ) -> None:
         async def chat_completion(
             messages: List[OpenAIChatMessage],
-        ) -> AsyncGenerator[ChainOutput[OpenAIChatDelta], None]:
+        ) -> AsyncGenerator[StreamOutput[OpenAIChatDelta], None]:
             loop = asyncio.get_event_loop()
 
             @retry(tries=retries)

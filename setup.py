@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="litechain",
+    name="langstream",
     version="0.1.6",
     packages=find_packages(),
     install_requires=requirements,
@@ -17,8 +17,8 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     license="MIT",
-    keywords="chain llm ai stream functional programming",
-    url="https://github.com/rogeriochaves/litechain",
+    keywords="stream llm ai stream functional programming",
+    url="https://github.com/rogeriochaves/langstream",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
@@ -36,9 +36,9 @@ setup(
     ],
     python_requires=">=3.6",
     project_urls={
-        "Documentation": "https://rogeriochaves.github.io/litechain/",
-        "Source Code": "https://github.com/rogeriochaves/litechain",
-        "Issue Tracker": "https://github.com/rogeriochaves/litechain/issues",
+        "Documentation": "https://rogeriochaves.github.io/langstream/",
+        "Source Code": "https://github.com/rogeriochaves/langstream",
+        "Issue Tracker": "https://github.com/rogeriochaves/langstream/issues",
     },
     include_package_data=True,
 )
