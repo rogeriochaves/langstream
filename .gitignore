@@ -7,7 +7,6 @@ docs/static/reference
 .chainlit
 chainlit.md
 !docs/**/chainlit.md
-test*.py
 build/
 langstream.egg-info/
 .chroma
