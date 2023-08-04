@@ -121,9 +121,10 @@ To continue developing with LangStream, take a look at our [documentation](https
 
 # 🚙 Roadmap
 
-- [ ] Add an example for document retrieval using vector search
 - [ ] Add docs for debugging
 - [ ] Add a simple default memory mechanism
+- [ ] Consider RxPY as the underlying stream handler
+- [ ] Add a compat adapter to reuse LangChain tools with LangStream
 
 # 🙋 Contributing
 
