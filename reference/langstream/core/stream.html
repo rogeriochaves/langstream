@@ -1,0 +1,2762 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>langstream.core.stream API documentation</title>
+<meta name="description" content="Core Stream module" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪽</text></svg>" data-rh="true">
+</head>
+<body>
+<style>
+.navbar.navbar--fixed-top{
+background-color: #fff;
+box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+display: flex;
+height: 3.75rem;
+padding: 0.5rem 1rem;
+}
+.navbar__inner {
+display: flex;
+flex-wrap: wrap;
+justify-content: space-between;
+width: 100%;
+}
+.navbar__items {
+align-items: center;
+display: flex;
+flex: 1;
+min-width: 0;
+}
+.navbar__items--right {
+flex: 0 0 auto;
+justify-content: flex-end;
+}
+.navbar__link {
+color: #1c1e21;
+font-weight: 500;
+}
+.navbar__link:hover, .navbar__link--active {
+color: #2e8555;
+text-decoration: none;
+}
+.navbar__item {
+display: inline-block;
+padding: 0.25em 0.75em;
+}
+.navbar a {
+text-decoration: none;
+transition: color 200ms cubic-bezier(0.08, 0.52, 0.52, 1);
+}
+.navbar__brand {
+align-items: center;
+color: #1c1e21;
+display: flex;
+margin-right: 1rem;
+min-width: 0;
+}
+.iconExternalLink_node_modules-\@docusaurus-theme-classic-lib-theme-Icon-ExternalLink-styles-module {
+margin-left: 0.3rem;
+}
+</style>
+<nav aria-label="Main" class="navbar navbar--fixed-top">
+<div class="navbar__inner" style="display: flex;
+flex-wrap: wrap;
+justify-content: space-between;
+width: 100%;">
+<div class="navbar__items">
+<a class="navbar__brand" href="/langstream/"
+><b class="navbar__title text--truncate">🪽🔗 LangStream</b></a
+><a
+aria-current="page"
+class="navbar__item navbar__link"
+href="/langstream/docs/intro"
+>Docs</a
+>
+<a
+aria-current="page"
+class="navbar__item navbar__link navbar__link--active"
+href="/langstream/reference/langstream/index.html"
+>Reference</a
+>
+</div>
+<div class="navbar__items navbar__items--right">
+<a
+href="https://github.com/rogeriochaves/langstream"
+target="_blank"
+rel="noopener noreferrer"
+class="navbar__item navbar__link"
+style="display: flex; align-items: center"
+>GitHub<svg
+width="13.5"
+height="13.5"
+aria-hidden="true"
+viewBox="0 0 24 24"
+class="iconExternalLink_node_modules-@docusaurus-theme-classic-lib-theme-Icon-ExternalLink-styles-module"
+>
+<path
+fill="currentColor"
+d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"
+></path></svg
+></a>
+</div>
+</div>
+<div role="presentation" class="navbar-sidebar__backdrop"></div>
+</nav>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>langstream.core.stream</code></h1>
+</header>
+<section id="section-intro">
+<p>Core Stream module</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+Core Stream module
+&#34;&#34;&#34;
+import asyncio
+from dataclasses import dataclass
+from typing import (
+    Any,
+    AsyncGenerator,
+    Callable,
+    Generic,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
+
+import asyncstdlib
+
+from langstream.utils.async_generator import as_async_generator, merge
+from langstream.utils._typing import unwrap
+
+T = TypeVar(&#34;T&#34;)
+U = TypeVar(&#34;U&#34;)
+V = TypeVar(&#34;V&#34;)
+W = TypeVar(&#34;W&#34;)
+X = TypeVar(&#34;X&#34;)
+
+
+@dataclass
+class StreamOutput(Generic[T]):
+    &#34;&#34;&#34;
+    StreamOutput is a data class that represents the output of a Stream at each step.
+
+    Attributes
+    ----------
+    stream : str
+        The name of the stream that produced this output. This helps in identifying
+        which part of the processing pipeline the output is coming from.
+
+    output : Union[T, Any]
+        The actual output data produced by the stream. This will be type T for final stream output,
+        but can be also be of any type produced by any step of the whole stream.
+
+    final : bool
+        A boolean flag indicating whether this output is the final output of the stream.
+        Only the outputs at the end of the stream are marked as &#34;final&#34;.
+
+    Example
+    -------
+
+    &gt;&gt;&gt; from langstream import Stream
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     greet_stream = Stream[str, str](&#34;GreetingStream&#34;, lambda name: f&#34;Hello, {name}!&#34;)
+    ...     polite_stream = greet_stream.map(lambda greeting: f&#34;{greeting} How are you?&#34;)
+    ...
+    ...     async for output in polite_stream(&#34;Alice&#34;):
+    ...         # Output is of type StreamOutput
+    ...         print(output)
+    ...
+    &gt;&gt;&gt; asyncio.run(example())
+    StreamOutput(stream=&#39;GreetingStream&#39;, data=&#39;Hello, Alice!&#39;, final=False)
+    StreamOutput(stream=&#39;GreetingStream@map&#39;, data=&#39;Hello, Alice! How are you?&#39;, final=True)
+    &#34;&#34;&#34;
+
+    stream: str
+    data: Union[T, Any]
+    final: bool
+
+
+class Stream(Generic[T, U]):
+    &#34;&#34;&#34;&#34;&#34;&#34;
+
+    _call: Callable[
+        [T], Union[AsyncGenerator[StreamOutput[U], Any], AsyncGenerator[U, Any], U]
+    ]
+
+    def __init__(
+        self,
+        name: str,
+        call: Callable[
+            [T],
+            Union[AsyncGenerator[StreamOutput[U], Any], AsyncGenerator[U, Any], U],
+        ],
+    ) -&gt; None:
+        self.name = name
+        self._call = call
+
+    def __call__(self, input: T) -&gt; AsyncGenerator[StreamOutput[U], Any]:
+        result = self._call(input)
+        return self._wrap(result)
+
+    def _wrap(
+        self,
+        value: Union[AsyncGenerator[StreamOutput[V], Any], AsyncGenerator[V, Any], V],
+        final: Optional[bool] = None,
+        name: Optional[str] = None,
+    ) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+        async def _wrap(
+            values: Union[AsyncGenerator[StreamOutput[V], Any], AsyncGenerator[V, Any]],
+        ) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+            async for value in values:
+                yield self._output_wrap(value, final=final, name=name)
+
+        if isinstance(value, AsyncGenerator):
+            return _wrap(value)
+        return _wrap(as_async_generator(value))
+
+    def _output_wrap(
+        self, value: Union[StreamOutput[V], V], final=None, name=None
+    ) -&gt; StreamOutput[V]:
+        if isinstance(value, StreamOutput):
+            final = final if final is not None else value.final
+            return StreamOutput[V](stream=value.stream, data=value.data, final=final)
+
+        final = final if final is not None else True
+        return StreamOutput[V](
+            stream=self.name if name is None else name, data=value, final=final
+        )
+
+    async def _reyield(
+        self, async_iterable: AsyncGenerator[StreamOutput[U], Any]
+    ) -&gt; AsyncGenerator[Tuple[List[U], StreamOutput[U]], Any]:
+        values: List[U] = []
+        async for u in async_iterable:
+            u_rewrapped = self._output_wrap(u, final=False)
+            if u.final:
+                values.append(u.data)
+            yield (values, u_rewrapped)
+
+    def map(self, fn: Callable[[U], V]) -&gt; &#34;Stream[T, V]&#34;:
+        &#34;&#34;&#34;
+        Maps the output of the current stream through a function as they arrive.
+
+        The transform function will receive the current output of the stream and
+        should return a modified version of it. This method is non-blocking and
+        will continue processing the stream in parallel.
+
+        Example:
+
+        &gt;&gt;&gt; from langstream import Stream, join_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     greet_stream = Stream[str, str](&#34;GreetingStream&#34;, lambda name: f&#34;Hello, {name}!&#34;)
+        ...     polite_stream = greet_stream.map(lambda greeting: f&#34;{greeting} How are you?&#34;)
+        ...     return await join_final_output(polite_stream(&#34;Alice&#34;))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        &#39;Hello, Alice! How are you?&#39;
+
+
+        Example of processing one token at a time:
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, join_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     words_stream = Stream[str, str](&#34;WordsStream&#34;, lambda sentence: as_async_generator(*sentence.split(&#34; &#34;))) # produces one word at a time
+        ...     accronym_stream = words_stream.map(lambda word: word.upper()[0]) # uppercases each word and take the first letter
+        ...     return await join_final_output(accronym_stream(&#34;as soon as possible&#34;))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        &#39;ASAP&#39;
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@map&#34;
+
+        async def map(input: T) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+            # Reyield previous stream so we never block the stream, and at the same time yield mapped values
+            prev_len_values = 0
+            async for values, to_reyield in self._reyield(self(input)):
+                yield cast(StreamOutput[V], to_reyield)
+                if len(values) &gt; prev_len_values:  # as soon as there is a new value
+                    prev_len_values = len(values)
+                    yield self._output_wrap(fn(values[-1]), name=next_name)
+
+        return Stream[T, V](next_name, lambda input: map(input))
+
+    def filter(self, fn: Callable[[U], bool]) -&gt; &#34;Stream[T, U]&#34;:
+        &#34;&#34;&#34;
+        Filters the output of the current stream, keeping only the values that return True.
+
+        This method is non-blocking and expects a function that returns True for keeping the value,
+        or False for dropping it, as they arrive.
+
+        Example:
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     numbers_stream = Stream[int, int](&#34;NumbersStream&#34;, lambda input: as_async_generator(*range(0, input)))
+        ...     even_stream = numbers_stream.filter(lambda input: input % 2 == 0)
+        ...     return await collect_final_output(even_stream(9))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        [0, 2, 4, 6, 8]
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@filter&#34;
+
+        async def filter(input: T) -&gt; AsyncGenerator[StreamOutput[U], Any]:
+            # Reyield previous stream so we never block the stream, and at the same time yield mapped values
+            prev_len_values = 0
+            async for values, to_reyield in self._reyield(self(input)):
+                yield to_reyield
+                if len(values) &gt; prev_len_values:  # as soon as there is a new value
+                    prev_len_values = len(values)
+                    if fn(values[-1]):
+                        yield self._output_wrap(values[-1], name=next_name)
+
+        return Stream[T, U](next_name, lambda input: filter(input))
+
+    def and_then(
+        self,
+        next: Callable[
+            [Iterable[U]],
+            Union[AsyncGenerator[StreamOutput[V], Any], AsyncGenerator[V, Any], V],
+        ],
+    ) -&gt; &#34;Stream[T, V]&#34;:
+        &#34;&#34;&#34;
+        Processes the output of the current stream through a transformation function or another stream.
+
+        Unlike the map method, which applies transformations to outputs as they arrive,
+        the and_then method first collects all the outputs and then passes them to the transformation function or the next stream.
+        This method is blocking and will wait for the entire stream to be processed before applying the transformation.
+
+        If `transform` is a function, it should accept the list of collected outputs and return a modified version of it.
+        If `transform` is another stream, it is used to process the list of collected outputs.
+
+        Example using a function:
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     word_stream = Stream[str, str](&#34;WordStream&#34;, lambda word: as_async_generator(word, &#34;!&#34;))
+        ...     count_stream : Stream[str, int] = word_stream.and_then(lambda outputs: len(list(outputs)))
+        ...     return await collect_final_output(count_stream(&#34;Hi&#34;))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        [2]
+
+
+        Example using another stream:
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, join_final_output
+        &gt;&gt;&gt; from typing import Iterable
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     words_stream = Stream[str, str](&#34;WordsStream&#34;, lambda sentence: as_async_generator(*sentence.split(&#34; &#34;))) # produces one word at a time
+        ...     acronym_stream = Stream[Iterable[str], str](&#34;AcronymStream&#34;, lambda words: &#34;&#34;.join(word.upper()[0] for word in words)) # produces acronym
+        ...     composed_stream = words_stream.and_then(acronym_stream)
+        ...     return await join_final_output(composed_stream(&#34;as soon as possible&#34;))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        &#39;ASAP&#39;
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@and_then&#34;
+        if hasattr(next, &#34;name&#34;):
+            next_name = next.name
+
+        async def and_then(
+            input: T,
+        ) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+            # First, reyield previous stream so we never block the stream, and collect the results until they are done
+            iter_u: Iterable[U] = []
+            async for values, to_reyield in self._reyield(self(input)):
+                yield cast(StreamOutput[V], to_reyield)
+                iter_u = values
+
+            # Then, call in the next stream
+            iter_v = self._wrap(next(iter_u), name=next_name)
+            async for v in iter_v:
+                yield v
+
+        return Stream[T, V](next_name, and_then)
+
+    def pipe(
+        self,
+        fn: Callable[
+            [AsyncGenerator[U, Any]], AsyncGenerator[Union[StreamOutput[V], V], Any]
+        ],
+    ) -&gt; &#34;Stream[T, V]&#34;:
+        &#34;&#34;&#34;
+        Lower level constructor to pipe a stream into another one, giving you the underlying AsyncGenerator.
+        Pipe takes a callback function which should always produce an AsyncGenerator in return, which means you
+        need to declare an async function and your function needs to use `yield` for generating values, the advantage
+        of that is that you have fine control on whether it will be blocking the stream or not.
+
+        In fact, with pipe you can reconstruct `map` and `and_then`, for example:
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+        &gt;&gt;&gt; from typing import List, AsyncGenerator
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example(items):
+        ...     async def mario_pipe(stream: AsyncGenerator[str, None]) -&gt; AsyncGenerator[str, None]:
+        ...        waiting_for_mushroom = False
+        ...        async for item in stream:
+        ...            if item == &#34;Mario&#34;:
+        ...                waiting_for_mushroom = True
+        ...            elif item == &#34;Mushroom&#34; and waiting_for_mushroom:
+        ...                yield &#34;Super Mario!&#34;
+        ...            else:
+        ...                yield item + &#34;?&#34;
+        ...
+        ...     piped_stream = Stream[List[str], str](
+        ...         &#34;PipedStream&#34;, lambda items: as_async_generator(*items)
+        ...     ).pipe(mario_pipe)
+        ...
+        ...     return await collect_final_output(piped_stream(items))
+        ...
+        &gt;&gt;&gt; asyncio.run(example([&#34;Mario&#34;, &#34;Mushroom&#34;]))
+        [&#39;Super Mario!&#39;]
+        &gt;&gt;&gt; asyncio.run(example([&#34;Luigi&#34;]))
+        [&#39;Luigi?&#39;]
+        &gt;&gt;&gt; asyncio.run(example([&#34;Mario&#34;, &#34;Luigi&#34;, &#34;Mushroom&#34;]))
+        [&#39;Luigi?&#39;, &#39;Super Mario!&#39;]
+
+        As you can see this pipe blocks kinda like `and_then` when it sees &#34;Mario&#34;, until a mushroom arrives, but for other random items
+        such as &#34;Luigi&#34; it just re-yields it immediately, adding a question mark, non-blocking, like `map`.
+
+        You can also call another stream from `pipe` directly, just be sure to re-yield its outputs
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@pipe&#34;
+
+        async def filter_final_output(
+            async_iterable: AsyncGenerator[StreamOutput[U], Any]
+        ) -&gt; AsyncGenerator[U, Any]:
+            async for output in async_iterable:
+                if output.final:
+                    yield cast(U, output.data)
+
+        def pipe(input: T) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+            previous, final = asyncstdlib.tee(self(input), n=2, lock=asyncio.Lock())
+
+            previous = self._wrap(previous, name=next_name, final=False)
+            previous = cast(AsyncGenerator[StreamOutput[V], Any], previous)
+
+            final = filter_final_output(
+                cast(AsyncGenerator[StreamOutput[U], Any], final)
+            )
+            final = cast(
+                AsyncGenerator[StreamOutput[V], Any],
+                self._wrap(fn(final), name=next_name),
+            )
+
+            return merge(previous, final)
+
+        return Stream[T, V](next_name, pipe)
+
+    def collect(self: &#34;Stream[T, U]&#34;) -&gt; &#34;SingleOutputStream[T, List[U]]&#34;:
+        &#34;&#34;&#34;
+        Collects all the outputs produced by the stream and returns them as a list.
+
+        This method is blocking useful when the next stream or processing step needs to have access to the
+        entire output all at once, rather than processing elements as they arrive.
+
+        Example:
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     word_stream: Stream[str, List[str]] = Stream[str, str](
+        ...         &#34;WordStream&#34;, lambda word: as_async_generator(word, &#34;!&#34;)
+        ...     ).collect()
+        ...     return await collect_final_output(word_stream(&#34;Hi&#34;))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        [[&#39;Hi&#39;, &#39;!&#39;]]
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@collect&#34;
+
+        async def _collect(
+            input: T,
+        ) -&gt; AsyncGenerator[StreamOutput[List[U]], Any]:
+            # First, reyield previous stream so we never block the stream, and collect the results until they are done
+            iter_u: Iterable[U] = []
+            async for values, to_reyield in self._reyield(self(input)):
+                yield cast(StreamOutput[List[U]], to_reyield)
+                iter_u = values
+
+            # Then, yield the collected results
+            yield self._output_wrap(iter_u, name=next_name)
+
+        return SingleOutputStream[T, List[U]](next_name, _collect)
+
+    def join(self: &#34;Stream[T, str]&#34;, separator=&#34;&#34;) -&gt; &#34;SingleOutputStream[T, str]&#34;:
+        &#34;&#34;&#34;
+        Joins the output of a string-producing stream into a single string.
+
+        The `join` method concatenates each item in the output of the stream, using the
+        provided separator between each element. This is particularly useful when working
+        with text, and you want to merge all the generated tokens.
+
+        Note that this method blocks until all outputs of the stream are available, as it
+        needs to wait for the complete output to perform the join operation.
+
+        Params
+        ----------
+        separator : str
+            A string that will be used as a separator between the elements. Default is an empty string.
+
+        Example:
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, join_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     words_stream = Stream[str, str](&#34;WordsStream&#34;, lambda sentence: as_async_generator(*sentence.split(&#34; &#34;)))
+        ...     capitalized_stream = words_stream.map(lambda word: word.capitalize())
+        ...     joined_stream = capitalized_stream.join(&#34; &#34;)
+        ...     return await join_final_output(joined_stream(&#34;this is an example&#34;))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        &#39;This Is An Example&#39;
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@join&#34;
+
+        async def _join(
+            input: T,
+        ) -&gt; AsyncGenerator[StreamOutput[str], Any]:
+            # First, reyield previous stream so we never block the stream, and collect the results until they are done
+            iter_u: Iterable[str] = []
+            async for values, to_reyield in self._reyield(self(input)):
+                yield to_reyield
+                iter_u = values
+
+            # Then, return the joined result
+            output: str = separator.join(iter_u)
+            yield self._output_wrap(output, name=next_name)
+
+        return SingleOutputStream[T, str](next_name, _join)
+
+    def gather(
+        self: &#34;Union[Stream[T, AsyncGenerator[StreamOutput[V], Any]], Stream[T, AsyncGenerator[V, Any]]]&#34;,
+    ) -&gt; &#34;SingleOutputStream[T, List[List[V]]]&#34;:
+        &#34;&#34;&#34;
+        Gathers results from multiple streams and processes them in parallel.
+
+        The `gather` method is used to process several streams concurrently, and it waits until all of
+        them are complete before continuing. This is similar to `asyncio.gather`, and is useful when you
+        want to run multiple asynchronous tasks in parallel and wait for all of them to complete.
+
+        Note that the order of results corresponds to the order of streams passed to the `gather` method.
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def delayed_output(x):
+        ...     await asyncio.sleep(0.1)
+        ...     yield f&#34;Number: {x}&#34;
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     number_stream = Stream[int, int](
+        ...         &#34;NumberStream&#34;, lambda x: as_async_generator(*range(x))
+        ...     )
+        ...     gathered_stream : Stream[int, str] = (
+        ...         number_stream.map(delayed_output)
+        ...         .gather()
+        ...         .and_then(lambda results: as_async_generator(*(r[0] for r in results)))
+        ...     )
+        ...     return await collect_final_output(gathered_stream(3))
+        ...
+        &gt;&gt;&gt; asyncio.run(example()) # will take 0.1s to finish, not 0.3s, because it runs in parallel
+        [&#39;Number: 0&#39;, &#39;Number: 1&#39;, &#39;Number: 2&#39;]
+        &#34;&#34;&#34;
+        return self.collect().gather()
+
+    def on_error(
+        self,
+        handler: Callable[[Exception], Union[AsyncGenerator[StreamOutput[V], Any], V]],
+    ) -&gt; &#34;Stream[T, Union[U, V]]&#34;:
+        &#34;&#34;&#34;
+        Handles any uncaught exceptions that might occur during the execution of the current stream.
+
+        The `handler` function takes an exception as its argument and returns a new value that
+        will be used as the output of the stream instead of the exception. The function can also re-raise
+        the exception or raise a new one, which will then be propagated further up the stream.
+
+        If an exception occurs in the `handler` function itself, it will be propagated without any
+        further handling.
+
+        Example:
+
+        &gt;&gt;&gt; from langstream import Stream, join_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; def failed_greeting(name: str):
+        ...     raise Exception(f&#34;Giving {name} a cold shoulder&#34;)
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     greet_stream = Stream[str, str](
+        ...         &#34;GreetingStream&#34;,
+        ...         failed_greeting
+        ...     ).on_error(lambda e: f&#34;Sorry, an error occurred: {str(e)}&#34;)
+        ...
+        ...     async for output in greet_stream(&#34;Alice&#34;):
+        ...         print(output)
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        StreamOutput(stream=&#39;GreetingStream&#39;, data=Exception(&#39;Giving Alice a cold shoulder&#39;), final=False)
+        StreamOutput(stream=&#39;GreetingStream@on_error&#39;, data=&#39;Sorry, an error occurred: ...&#39;, final=True)
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@on_error&#34;
+        if hasattr(next, &#34;name&#34;):
+            next_name = next.name
+
+        async def on_error(
+            input: T,
+        ) -&gt; AsyncGenerator[StreamOutput[Union[U, V]], Any]:
+            try:
+                async for output in self(input):
+                    yield cast(StreamOutput[Union[U, V]], output)
+            except Exception as e:
+                yield cast(StreamOutput[Union[U, V]], self._output_wrap(e, final=False))
+                async for output in self._wrap(handler(e), name=next_name):
+                    yield cast(StreamOutput[Union[U, V]], output)
+
+        return Stream[T, Union[U, V]](next_name, lambda input: on_error(input))
+
+
+class SingleOutputStream(Stream[T, U]):
+    &#34;&#34;&#34;&#34;&#34;&#34;
+
+    _call: Callable[
+        [T], Union[AsyncGenerator[StreamOutput[U], Any], AsyncGenerator[U, Any], U]
+    ]
+
+    async def _reyield(
+        self, async_iterable: AsyncGenerator[StreamOutput[U], Any]
+    ) -&gt; AsyncGenerator[Tuple[Optional[U], StreamOutput[U]], Any]:
+        final_value: Optional[U] = None
+        async for u in async_iterable:
+            u_rewrapped = self._output_wrap(u, final=False)
+            if u.final:
+                final_value = u.data
+            yield (final_value, u_rewrapped)
+
+    def map(self, fn: Callable[[U], V]) -&gt; &#34;SingleOutputStream[T, V]&#34;:
+        &#34;&#34;&#34;
+        Similar to `Stream.map`, this method applies a function to the final output of the stream, but returns a SingleOutputStream.
+
+        The `fn` parameter is a function that takes a value of type U and returns a value of type V.
+
+        For detailed examples, refer to the documentation of `Stream.map`.
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@map&#34;
+
+        async def map(input: T) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+            # Reyield previous stream so we never block the stream, and at the same time yield mapped values
+            final_u: Optional[U] = None
+            async for value, to_reyield in self._reyield(self(input)):
+                yield cast(StreamOutput[V], to_reyield)
+                final_u = value
+
+            yield self._output_wrap(fn(unwrap(final_u)), name=next_name)
+
+        return SingleOutputStream[T, V](next_name, lambda input: map(input))
+
+    def filter(self, fn: Callable[[U], bool]) -&gt; &#34;SingleOutputStream[T, Union[U, None]]&#34;:
+        &#34;&#34;&#34;
+        Similar to `Stream.filter`, however, singe SingleOutputStream must always produce a value, this method simply replaces
+        the value with a None if the filter function returns False
+
+        The `fn` parameter is a function that takes a value of type U and returns a bool.
+
+        Example:
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     numbers_stream = Stream[int, int](&#34;NumbersStream&#34;, lambda input: as_async_generator(*range(0, input)))
+        ...     even_stream = numbers_stream.collect().filter(lambda numbers: all([n % 2 == 0 for n in numbers]))
+        ...     return await collect_final_output(even_stream(9))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        [None]
+        &#34;&#34;&#34;
+        next_name = f&#34;{self.name}@filter&#34;
+
+        async def filter(input: T) -&gt; AsyncGenerator[StreamOutput[Union[U, None]], Any]:
+            # Reyield previous stream so we never block the stream, and at the same time yield filtered values
+            final_u: Optional[U] = None
+            async for value, to_reyield in self._reyield(self(input)):
+                yield cast(StreamOutput[Union[U, None]], to_reyield)
+                final_u = value
+
+            yield self._output_wrap(
+                final_u if fn(unwrap(final_u)) else None, name=next_name
+            )
+
+        return SingleOutputStream[T, Union[U, None]](
+            next_name, lambda input: filter(input)
+        )
+
+    def and_then(
+        self,
+        next: Callable[
+            [U],
+            Union[AsyncGenerator[StreamOutput[V], Any], AsyncGenerator[V, Any], V],
+        ],
+    ) -&gt; &#34;Stream[T, V]&#34;:
+        &#34;&#34;&#34;
+        Similar to `Stream.and_then`, this method takes a function that receives the final output of this stream as its input and returns a new Stream.
+
+        For detailed examples, refer to the documentation of `Stream.and_then`.
+        &#34;&#34;&#34;
+        next_name = f&#34;{self.name}@and_then&#34;
+        if hasattr(next, &#34;name&#34;):
+            next_name = next.name
+
+        async def and_then(
+            input: T,
+        ) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+            # First, reyield previous stream so we never block the stream, and collect the last result when it is done
+            final_u: Optional[U] = None
+            async for value, to_reyield in self._reyield(self(input)):
+                yield cast(StreamOutput[V], to_reyield)
+                final_u = value
+
+            # Then, call in the next stream
+            iter_v = self._wrap(next(unwrap(final_u)), name=next_name)
+            async for v in iter_v:
+                yield v
+
+        return Stream[T, V](next_name, and_then)
+
+    def pipe(
+        self,
+        fn: Callable[
+            [AsyncGenerator[U, Any]], AsyncGenerator[Union[StreamOutput[V], V], Any]
+        ],
+    ) -&gt; &#34;Stream[T, V]&#34;:
+        &#34;&#34;&#34;
+        Similar to `Stream.pipe`, except that it takes a stream that will only even produce a single value, so it effectively works basically the same as `and_then`, only with a different interface.
+
+        For detailed examples, refer to the documentation of `Stream.pipe`.
+        &#34;&#34;&#34;
+        next_name = f&#34;{self.name}@pipe&#34;
+        if hasattr(next, &#34;name&#34;):
+            next_name = next.name
+
+        async def pipe(
+            input: T,
+        ) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+            # First, reyield previous stream so we never block the stream, and collect the last result when it is done
+            final_u: Optional[U] = None
+            async for value, to_reyield in self._reyield(self(input)):
+                yield cast(StreamOutput[V], to_reyield)
+                final_u = value
+
+            # Then, call in the piping function
+            single_item_stream = as_async_generator(unwrap(final_u))
+            iter_v = self._wrap(fn(single_item_stream), name=next_name)
+            async for v in iter_v:
+                yield cast(StreamOutput[V], v)
+
+        return Stream[T, V](next_name, pipe)
+
+    def gather(
+        self: &#34;Union[SingleOutputStream[T, List[AsyncGenerator[StreamOutput[V], Any]]], SingleOutputStream[T, List[AsyncGenerator[V, Any]]]]&#34;,
+    ) -&gt; &#34;SingleOutputStream[T, List[List[V]]]&#34;:
+        &#34;&#34;&#34;
+        Similar to `Stream.gather`, this method waits for all the async generators in the list returned by the stream to finish and gathers their results in a list.
+
+        For detailed examples, refer to the documentation of `Stream.gather`.
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@gather&#34;
+
+        async def gather(
+            input: T,
+        ) -&gt; AsyncGenerator[StreamOutput[List[List[V]]], Any]:
+            # First, reyield previous stream so we never block the stream, and collect the last result when it is done
+            final_u: Optional[
+                Union[
+                    List[AsyncGenerator[StreamOutput[V], Any]],
+                    List[AsyncGenerator[V, Any]],
+                ]
+            ] = None
+
+            # TODO: try to work out why the type signature of self(input) is not fitting in there, it should
+            async for value, to_reyield in self._reyield(cast(Any, self(input))):
+                yield cast(StreamOutput[List[List[V]]], to_reyield)
+                final_u = value
+
+            if final_u is None:
+                final_u = []
+
+            async def consume_async_generator(
+                generator: AsyncGenerator[X, Any],
+            ) -&gt; Iterable[X]:
+                return [item async for item in generator]
+
+            # TODO: should we really wait for everything to arrive before calling asyncio gather? Can we call it during the previous reyield?
+            vss: Union[
+                List[List[StreamOutput[V]]], List[List[V]]
+            ] = await asyncio.gather(*(consume_async_generator(gen) for gen in final_u))
+
+            clean_vss: List[List[V]] = []
+            for vs in vss:
+                clean_vs: List[V] = []
+                for v in vs:
+                    v_rewrapped = cast(
+                        StreamOutput[List[List[V]]],
+                        self._output_wrap(v, final=False),
+                    )
+                    if isinstance(v, StreamOutput):
+                        yield v_rewrapped
+                        if v.final:
+                            clean_vs.append(v.data)
+                    else:
+                        clean_vs.append(v)
+                clean_vss.append(clean_vs)
+
+            yield self._output_wrap(clean_vss, name=next_name)
+
+        return SingleOutputStream[T, List[List[V]]](next_name, gather)
+
+    def on_error(
+        self,
+        handler: Callable[[Exception], Union[AsyncGenerator[StreamOutput[V], Any], V]],
+    ) -&gt; &#34;SingleOutputStream[T, Union[U, V]]&#34;:
+        &#34;&#34;&#34;
+        Similar to `Stream.on_error`, this method handles any uncaught exceptions that might occur during the execution of the current stream.
+
+        For detailed examples, refer to the documentation of `Stream.gather`.
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@on_error&#34;
+        if hasattr(next, &#34;name&#34;):
+            next_name = next.name
+
+        async def on_error(
+            input: T,
+        ) -&gt; AsyncGenerator[StreamOutput[Union[U, V]], Any]:
+            try:
+                async for output in self(input):
+                    yield cast(StreamOutput[Union[U, V]], output)
+            except Exception as e:
+                async for output in self._wrap(handler(e), name=next_name):
+                    yield cast(StreamOutput[Union[U, V]], output)
+
+        return SingleOutputStream[T, Union[U, V]](
+            next_name, lambda input: on_error(input)
+        )</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="langstream.core.stream.SingleOutputStream"><code class="flex name class">
+<span>class <span class="ident">SingleOutputStream</span></span>
+<span>(</span><span>name: str, call: Callable[[~T], Union[AsyncGenerator[<a title="langstream.core.stream.StreamOutput" href="#langstream.core.stream.StreamOutput">StreamOutput</a>[~U], Any], AsyncGenerator[~U, Any], ~U]])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SingleOutputStream(Stream[T, U]):
+    &#34;&#34;&#34;&#34;&#34;&#34;
+
+    _call: Callable[
+        [T], Union[AsyncGenerator[StreamOutput[U], Any], AsyncGenerator[U, Any], U]
+    ]
+
+    async def _reyield(
+        self, async_iterable: AsyncGenerator[StreamOutput[U], Any]
+    ) -&gt; AsyncGenerator[Tuple[Optional[U], StreamOutput[U]], Any]:
+        final_value: Optional[U] = None
+        async for u in async_iterable:
+            u_rewrapped = self._output_wrap(u, final=False)
+            if u.final:
+                final_value = u.data
+            yield (final_value, u_rewrapped)
+
+    def map(self, fn: Callable[[U], V]) -&gt; &#34;SingleOutputStream[T, V]&#34;:
+        &#34;&#34;&#34;
+        Similar to `Stream.map`, this method applies a function to the final output of the stream, but returns a SingleOutputStream.
+
+        The `fn` parameter is a function that takes a value of type U and returns a value of type V.
+
+        For detailed examples, refer to the documentation of `Stream.map`.
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@map&#34;
+
+        async def map(input: T) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+            # Reyield previous stream so we never block the stream, and at the same time yield mapped values
+            final_u: Optional[U] = None
+            async for value, to_reyield in self._reyield(self(input)):
+                yield cast(StreamOutput[V], to_reyield)
+                final_u = value
+
+            yield self._output_wrap(fn(unwrap(final_u)), name=next_name)
+
+        return SingleOutputStream[T, V](next_name, lambda input: map(input))
+
+    def filter(self, fn: Callable[[U], bool]) -&gt; &#34;SingleOutputStream[T, Union[U, None]]&#34;:
+        &#34;&#34;&#34;
+        Similar to `Stream.filter`, however, singe SingleOutputStream must always produce a value, this method simply replaces
+        the value with a None if the filter function returns False
+
+        The `fn` parameter is a function that takes a value of type U and returns a bool.
+
+        Example:
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     numbers_stream = Stream[int, int](&#34;NumbersStream&#34;, lambda input: as_async_generator(*range(0, input)))
+        ...     even_stream = numbers_stream.collect().filter(lambda numbers: all([n % 2 == 0 for n in numbers]))
+        ...     return await collect_final_output(even_stream(9))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        [None]
+        &#34;&#34;&#34;
+        next_name = f&#34;{self.name}@filter&#34;
+
+        async def filter(input: T) -&gt; AsyncGenerator[StreamOutput[Union[U, None]], Any]:
+            # Reyield previous stream so we never block the stream, and at the same time yield filtered values
+            final_u: Optional[U] = None
+            async for value, to_reyield in self._reyield(self(input)):
+                yield cast(StreamOutput[Union[U, None]], to_reyield)
+                final_u = value
+
+            yield self._output_wrap(
+                final_u if fn(unwrap(final_u)) else None, name=next_name
+            )
+
+        return SingleOutputStream[T, Union[U, None]](
+            next_name, lambda input: filter(input)
+        )
+
+    def and_then(
+        self,
+        next: Callable[
+            [U],
+            Union[AsyncGenerator[StreamOutput[V], Any], AsyncGenerator[V, Any], V],
+        ],
+    ) -&gt; &#34;Stream[T, V]&#34;:
+        &#34;&#34;&#34;
+        Similar to `Stream.and_then`, this method takes a function that receives the final output of this stream as its input and returns a new Stream.
+
+        For detailed examples, refer to the documentation of `Stream.and_then`.
+        &#34;&#34;&#34;
+        next_name = f&#34;{self.name}@and_then&#34;
+        if hasattr(next, &#34;name&#34;):
+            next_name = next.name
+
+        async def and_then(
+            input: T,
+        ) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+            # First, reyield previous stream so we never block the stream, and collect the last result when it is done
+            final_u: Optional[U] = None
+            async for value, to_reyield in self._reyield(self(input)):
+                yield cast(StreamOutput[V], to_reyield)
+                final_u = value
+
+            # Then, call in the next stream
+            iter_v = self._wrap(next(unwrap(final_u)), name=next_name)
+            async for v in iter_v:
+                yield v
+
+        return Stream[T, V](next_name, and_then)
+
+    def pipe(
+        self,
+        fn: Callable[
+            [AsyncGenerator[U, Any]], AsyncGenerator[Union[StreamOutput[V], V], Any]
+        ],
+    ) -&gt; &#34;Stream[T, V]&#34;:
+        &#34;&#34;&#34;
+        Similar to `Stream.pipe`, except that it takes a stream that will only even produce a single value, so it effectively works basically the same as `and_then`, only with a different interface.
+
+        For detailed examples, refer to the documentation of `Stream.pipe`.
+        &#34;&#34;&#34;
+        next_name = f&#34;{self.name}@pipe&#34;
+        if hasattr(next, &#34;name&#34;):
+            next_name = next.name
+
+        async def pipe(
+            input: T,
+        ) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+            # First, reyield previous stream so we never block the stream, and collect the last result when it is done
+            final_u: Optional[U] = None
+            async for value, to_reyield in self._reyield(self(input)):
+                yield cast(StreamOutput[V], to_reyield)
+                final_u = value
+
+            # Then, call in the piping function
+            single_item_stream = as_async_generator(unwrap(final_u))
+            iter_v = self._wrap(fn(single_item_stream), name=next_name)
+            async for v in iter_v:
+                yield cast(StreamOutput[V], v)
+
+        return Stream[T, V](next_name, pipe)
+
+    def gather(
+        self: &#34;Union[SingleOutputStream[T, List[AsyncGenerator[StreamOutput[V], Any]]], SingleOutputStream[T, List[AsyncGenerator[V, Any]]]]&#34;,
+    ) -&gt; &#34;SingleOutputStream[T, List[List[V]]]&#34;:
+        &#34;&#34;&#34;
+        Similar to `Stream.gather`, this method waits for all the async generators in the list returned by the stream to finish and gathers their results in a list.
+
+        For detailed examples, refer to the documentation of `Stream.gather`.
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@gather&#34;
+
+        async def gather(
+            input: T,
+        ) -&gt; AsyncGenerator[StreamOutput[List[List[V]]], Any]:
+            # First, reyield previous stream so we never block the stream, and collect the last result when it is done
+            final_u: Optional[
+                Union[
+                    List[AsyncGenerator[StreamOutput[V], Any]],
+                    List[AsyncGenerator[V, Any]],
+                ]
+            ] = None
+
+            # TODO: try to work out why the type signature of self(input) is not fitting in there, it should
+            async for value, to_reyield in self._reyield(cast(Any, self(input))):
+                yield cast(StreamOutput[List[List[V]]], to_reyield)
+                final_u = value
+
+            if final_u is None:
+                final_u = []
+
+            async def consume_async_generator(
+                generator: AsyncGenerator[X, Any],
+            ) -&gt; Iterable[X]:
+                return [item async for item in generator]
+
+            # TODO: should we really wait for everything to arrive before calling asyncio gather? Can we call it during the previous reyield?
+            vss: Union[
+                List[List[StreamOutput[V]]], List[List[V]]
+            ] = await asyncio.gather(*(consume_async_generator(gen) for gen in final_u))
+
+            clean_vss: List[List[V]] = []
+            for vs in vss:
+                clean_vs: List[V] = []
+                for v in vs:
+                    v_rewrapped = cast(
+                        StreamOutput[List[List[V]]],
+                        self._output_wrap(v, final=False),
+                    )
+                    if isinstance(v, StreamOutput):
+                        yield v_rewrapped
+                        if v.final:
+                            clean_vs.append(v.data)
+                    else:
+                        clean_vs.append(v)
+                clean_vss.append(clean_vs)
+
+            yield self._output_wrap(clean_vss, name=next_name)
+
+        return SingleOutputStream[T, List[List[V]]](next_name, gather)
+
+    def on_error(
+        self,
+        handler: Callable[[Exception], Union[AsyncGenerator[StreamOutput[V], Any], V]],
+    ) -&gt; &#34;SingleOutputStream[T, Union[U, V]]&#34;:
+        &#34;&#34;&#34;
+        Similar to `Stream.on_error`, this method handles any uncaught exceptions that might occur during the execution of the current stream.
+
+        For detailed examples, refer to the documentation of `Stream.gather`.
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@on_error&#34;
+        if hasattr(next, &#34;name&#34;):
+            next_name = next.name
+
+        async def on_error(
+            input: T,
+        ) -&gt; AsyncGenerator[StreamOutput[Union[U, V]], Any]:
+            try:
+                async for output in self(input):
+                    yield cast(StreamOutput[Union[U, V]], output)
+            except Exception as e:
+                async for output in self._wrap(handler(e), name=next_name):
+                    yield cast(StreamOutput[Union[U, V]], output)
+
+        return SingleOutputStream[T, Union[U, V]](
+            next_name, lambda input: on_error(input)
+        )</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="langstream.core.stream.Stream" href="#langstream.core.stream.Stream">Stream</a></li>
+<li>typing.Generic</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="langstream.core.stream.SingleOutputStream.and_then"><code class="name flex">
+<span>def <span class="ident">and_then</span></span>(<span>self, next: Callable[[~U], Union[AsyncGenerator[<a title="langstream.core.stream.StreamOutput" href="#langstream.core.stream.StreamOutput">StreamOutput</a>[~V], Any], AsyncGenerator[~V, Any], ~V]]) ‑> <a title="langstream.core.stream.Stream" href="#langstream.core.stream.Stream">Stream</a>[~T, ~V]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Similar to <code><a title="langstream.core.stream.Stream.and_then" href="#langstream.core.stream.Stream.and_then">Stream.and_then()</a></code>, this method takes a function that receives the final output of this stream as its input and returns a new Stream.</p>
+<p>For detailed examples, refer to the documentation of <code><a title="langstream.core.stream.Stream.and_then" href="#langstream.core.stream.Stream.and_then">Stream.and_then()</a></code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def and_then(
+    self,
+    next: Callable[
+        [U],
+        Union[AsyncGenerator[StreamOutput[V], Any], AsyncGenerator[V, Any], V],
+    ],
+) -&gt; &#34;Stream[T, V]&#34;:
+    &#34;&#34;&#34;
+    Similar to `Stream.and_then`, this method takes a function that receives the final output of this stream as its input and returns a new Stream.
+
+    For detailed examples, refer to the documentation of `Stream.and_then`.
+    &#34;&#34;&#34;
+    next_name = f&#34;{self.name}@and_then&#34;
+    if hasattr(next, &#34;name&#34;):
+        next_name = next.name
+
+    async def and_then(
+        input: T,
+    ) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+        # First, reyield previous stream so we never block the stream, and collect the last result when it is done
+        final_u: Optional[U] = None
+        async for value, to_reyield in self._reyield(self(input)):
+            yield cast(StreamOutput[V], to_reyield)
+            final_u = value
+
+        # Then, call in the next stream
+        iter_v = self._wrap(next(unwrap(final_u)), name=next_name)
+        async for v in iter_v:
+            yield v
+
+    return Stream[T, V](next_name, and_then)</code></pre>
+</details>
+</dd>
+<dt id="langstream.core.stream.SingleOutputStream.filter"><code class="name flex">
+<span>def <span class="ident">filter</span></span>(<span>self, fn: Callable[[~U], bool]) ‑> <a title="langstream.core.stream.SingleOutputStream" href="#langstream.core.stream.SingleOutputStream">SingleOutputStream</a>[~T, Optional[~U]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Similar to <code><a title="langstream.core.stream.Stream.filter" href="#langstream.core.stream.Stream.filter">Stream.filter()</a></code>, however, singe SingleOutputStream must always produce a value, this method simply replaces
+the value with a None if the filter function returns False</p>
+<p>The <code>fn</code> parameter is a function that takes a value of type U and returns a bool.</p>
+<p>Example:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example():
+...     numbers_stream = Stream[int, int](&quot;NumbersStream&quot;, lambda input: as_async_generator(*range(0, input)))
+...     even_stream = numbers_stream.collect().filter(lambda numbers: all([n % 2 == 0 for n in numbers]))
+...     return await collect_final_output(even_stream(9))
+...
+&gt;&gt;&gt; asyncio.run(example())
+[None]
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filter(self, fn: Callable[[U], bool]) -&gt; &#34;SingleOutputStream[T, Union[U, None]]&#34;:
+    &#34;&#34;&#34;
+    Similar to `Stream.filter`, however, singe SingleOutputStream must always produce a value, this method simply replaces
+    the value with a None if the filter function returns False
+
+    The `fn` parameter is a function that takes a value of type U and returns a bool.
+
+    Example:
+
+    &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     numbers_stream = Stream[int, int](&#34;NumbersStream&#34;, lambda input: as_async_generator(*range(0, input)))
+    ...     even_stream = numbers_stream.collect().filter(lambda numbers: all([n % 2 == 0 for n in numbers]))
+    ...     return await collect_final_output(even_stream(9))
+    ...
+    &gt;&gt;&gt; asyncio.run(example())
+    [None]
+    &#34;&#34;&#34;
+    next_name = f&#34;{self.name}@filter&#34;
+
+    async def filter(input: T) -&gt; AsyncGenerator[StreamOutput[Union[U, None]], Any]:
+        # Reyield previous stream so we never block the stream, and at the same time yield filtered values
+        final_u: Optional[U] = None
+        async for value, to_reyield in self._reyield(self(input)):
+            yield cast(StreamOutput[Union[U, None]], to_reyield)
+            final_u = value
+
+        yield self._output_wrap(
+            final_u if fn(unwrap(final_u)) else None, name=next_name
+        )
+
+    return SingleOutputStream[T, Union[U, None]](
+        next_name, lambda input: filter(input)
+    )</code></pre>
+</details>
+</dd>
+<dt id="langstream.core.stream.SingleOutputStream.gather"><code class="name flex">
+<span>def <span class="ident">gather</span></span>(<span>self: Union[<a title="langstream.core.stream.SingleOutputStream" href="#langstream.core.stream.SingleOutputStream">SingleOutputStream</a>[T, List[AsyncGenerator[<a title="langstream.core.stream.StreamOutput" href="#langstream.core.stream.StreamOutput">StreamOutput</a>[V], Any]]], <a title="langstream.core.stream.SingleOutputStream" href="#langstream.core.stream.SingleOutputStream">SingleOutputStream</a>[T, List[AsyncGenerator[V, Any]]]]) ‑> <a title="langstream.core.stream.SingleOutputStream" href="#langstream.core.stream.SingleOutputStream">SingleOutputStream</a>[~T, typing.List[typing.List[~V]]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Similar to <code><a title="langstream.core.stream.Stream.gather" href="#langstream.core.stream.Stream.gather">Stream.gather()</a></code>, this method waits for all the async generators in the list returned by the stream to finish and gathers their results in a list.</p>
+<p>For detailed examples, refer to the documentation of <code><a title="langstream.core.stream.Stream.gather" href="#langstream.core.stream.Stream.gather">Stream.gather()</a></code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def gather(
+    self: &#34;Union[SingleOutputStream[T, List[AsyncGenerator[StreamOutput[V], Any]]], SingleOutputStream[T, List[AsyncGenerator[V, Any]]]]&#34;,
+) -&gt; &#34;SingleOutputStream[T, List[List[V]]]&#34;:
+    &#34;&#34;&#34;
+    Similar to `Stream.gather`, this method waits for all the async generators in the list returned by the stream to finish and gathers their results in a list.
+
+    For detailed examples, refer to the documentation of `Stream.gather`.
+    &#34;&#34;&#34;
+
+    next_name = f&#34;{self.name}@gather&#34;
+
+    async def gather(
+        input: T,
+    ) -&gt; AsyncGenerator[StreamOutput[List[List[V]]], Any]:
+        # First, reyield previous stream so we never block the stream, and collect the last result when it is done
+        final_u: Optional[
+            Union[
+                List[AsyncGenerator[StreamOutput[V], Any]],
+                List[AsyncGenerator[V, Any]],
+            ]
+        ] = None
+
+        # TODO: try to work out why the type signature of self(input) is not fitting in there, it should
+        async for value, to_reyield in self._reyield(cast(Any, self(input))):
+            yield cast(StreamOutput[List[List[V]]], to_reyield)
+            final_u = value
+
+        if final_u is None:
+            final_u = []
+
+        async def consume_async_generator(
+            generator: AsyncGenerator[X, Any],
+        ) -&gt; Iterable[X]:
+            return [item async for item in generator]
+
+        # TODO: should we really wait for everything to arrive before calling asyncio gather? Can we call it during the previous reyield?
+        vss: Union[
+            List[List[StreamOutput[V]]], List[List[V]]
+        ] = await asyncio.gather(*(consume_async_generator(gen) for gen in final_u))
+
+        clean_vss: List[List[V]] = []
+        for vs in vss:
+            clean_vs: List[V] = []
+            for v in vs:
+                v_rewrapped = cast(
+                    StreamOutput[List[List[V]]],
+                    self._output_wrap(v, final=False),
+                )
+                if isinstance(v, StreamOutput):
+                    yield v_rewrapped
+                    if v.final:
+                        clean_vs.append(v.data)
+                else:
+                    clean_vs.append(v)
+            clean_vss.append(clean_vs)
+
+        yield self._output_wrap(clean_vss, name=next_name)
+
+    return SingleOutputStream[T, List[List[V]]](next_name, gather)</code></pre>
+</details>
+</dd>
+<dt id="langstream.core.stream.SingleOutputStream.map"><code class="name flex">
+<span>def <span class="ident">map</span></span>(<span>self, fn: Callable[[~U], ~V]) ‑> <a title="langstream.core.stream.SingleOutputStream" href="#langstream.core.stream.SingleOutputStream">SingleOutputStream</a>[~T, ~V]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Similar to <code><a title="langstream.core.stream.Stream.map" href="#langstream.core.stream.Stream.map">Stream.map()</a></code>, this method applies a function to the final output of the stream, but returns a SingleOutputStream.</p>
+<p>The <code>fn</code> parameter is a function that takes a value of type U and returns a value of type V.</p>
+<p>For detailed examples, refer to the documentation of <code><a title="langstream.core.stream.Stream.map" href="#langstream.core.stream.Stream.map">Stream.map()</a></code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def map(self, fn: Callable[[U], V]) -&gt; &#34;SingleOutputStream[T, V]&#34;:
+    &#34;&#34;&#34;
+    Similar to `Stream.map`, this method applies a function to the final output of the stream, but returns a SingleOutputStream.
+
+    The `fn` parameter is a function that takes a value of type U and returns a value of type V.
+
+    For detailed examples, refer to the documentation of `Stream.map`.
+    &#34;&#34;&#34;
+
+    next_name = f&#34;{self.name}@map&#34;
+
+    async def map(input: T) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+        # Reyield previous stream so we never block the stream, and at the same time yield mapped values
+        final_u: Optional[U] = None
+        async for value, to_reyield in self._reyield(self(input)):
+            yield cast(StreamOutput[V], to_reyield)
+            final_u = value
+
+        yield self._output_wrap(fn(unwrap(final_u)), name=next_name)
+
+    return SingleOutputStream[T, V](next_name, lambda input: map(input))</code></pre>
+</details>
+</dd>
+<dt id="langstream.core.stream.SingleOutputStream.on_error"><code class="name flex">
+<span>def <span class="ident">on_error</span></span>(<span>self, handler: Callable[[Exception], Union[AsyncGenerator[<a title="langstream.core.stream.StreamOutput" href="#langstream.core.stream.StreamOutput">StreamOutput</a>[~V], Any], ~V]]) ‑> <a title="langstream.core.stream.SingleOutputStream" href="#langstream.core.stream.SingleOutputStream">SingleOutputStream</a>[~T, typing.Union[~U, ~V]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Similar to <code><a title="langstream.core.stream.Stream.on_error" href="#langstream.core.stream.Stream.on_error">Stream.on_error()</a></code>, this method handles any uncaught exceptions that might occur during the execution of the current stream.</p>
+<p>For detailed examples, refer to the documentation of <code><a title="langstream.core.stream.Stream.gather" href="#langstream.core.stream.Stream.gather">Stream.gather()</a></code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_error(
+    self,
+    handler: Callable[[Exception], Union[AsyncGenerator[StreamOutput[V], Any], V]],
+) -&gt; &#34;SingleOutputStream[T, Union[U, V]]&#34;:
+    &#34;&#34;&#34;
+    Similar to `Stream.on_error`, this method handles any uncaught exceptions that might occur during the execution of the current stream.
+
+    For detailed examples, refer to the documentation of `Stream.gather`.
+    &#34;&#34;&#34;
+
+    next_name = f&#34;{self.name}@on_error&#34;
+    if hasattr(next, &#34;name&#34;):
+        next_name = next.name
+
+    async def on_error(
+        input: T,
+    ) -&gt; AsyncGenerator[StreamOutput[Union[U, V]], Any]:
+        try:
+            async for output in self(input):
+                yield cast(StreamOutput[Union[U, V]], output)
+        except Exception as e:
+            async for output in self._wrap(handler(e), name=next_name):
+                yield cast(StreamOutput[Union[U, V]], output)
+
+    return SingleOutputStream[T, Union[U, V]](
+        next_name, lambda input: on_error(input)
+    )</code></pre>
+</details>
+</dd>
+<dt id="langstream.core.stream.SingleOutputStream.pipe"><code class="name flex">
+<span>def <span class="ident">pipe</span></span>(<span>self, fn: Callable[[AsyncGenerator[~U, Any]], AsyncGenerator[Union[<a title="langstream.core.stream.StreamOutput" href="#langstream.core.stream.StreamOutput">StreamOutput</a>[~V], ~V], Any]]) ‑> <a title="langstream.core.stream.Stream" href="#langstream.core.stream.Stream">Stream</a>[~T, ~V]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Similar to <code><a title="langstream.core.stream.Stream.pipe" href="#langstream.core.stream.Stream.pipe">Stream.pipe()</a></code>, except that it takes a stream that will only even produce a single value, so it effectively works basically the same as <code>and_then</code>, only with a different interface.</p>
+<p>For detailed examples, refer to the documentation of <code><a title="langstream.core.stream.Stream.pipe" href="#langstream.core.stream.Stream.pipe">Stream.pipe()</a></code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pipe(
+    self,
+    fn: Callable[
+        [AsyncGenerator[U, Any]], AsyncGenerator[Union[StreamOutput[V], V], Any]
+    ],
+) -&gt; &#34;Stream[T, V]&#34;:
+    &#34;&#34;&#34;
+    Similar to `Stream.pipe`, except that it takes a stream that will only even produce a single value, so it effectively works basically the same as `and_then`, only with a different interface.
+
+    For detailed examples, refer to the documentation of `Stream.pipe`.
+    &#34;&#34;&#34;
+    next_name = f&#34;{self.name}@pipe&#34;
+    if hasattr(next, &#34;name&#34;):
+        next_name = next.name
+
+    async def pipe(
+        input: T,
+    ) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+        # First, reyield previous stream so we never block the stream, and collect the last result when it is done
+        final_u: Optional[U] = None
+        async for value, to_reyield in self._reyield(self(input)):
+            yield cast(StreamOutput[V], to_reyield)
+            final_u = value
+
+        # Then, call in the piping function
+        single_item_stream = as_async_generator(unwrap(final_u))
+        iter_v = self._wrap(fn(single_item_stream), name=next_name)
+        async for v in iter_v:
+            yield cast(StreamOutput[V], v)
+
+    return Stream[T, V](next_name, pipe)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="langstream.core.stream.Stream" href="#langstream.core.stream.Stream">Stream</a></b></code>:
+<ul class="hlist">
+<li><code><a title="langstream.core.stream.Stream.collect" href="#langstream.core.stream.Stream.collect">collect</a></code></li>
+<li><code><a title="langstream.core.stream.Stream.join" href="#langstream.core.stream.Stream.join">join</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="langstream.core.stream.Stream"><code class="flex name class">
+<span>class <span class="ident">Stream</span></span>
+<span>(</span><span>name: str, call: Callable[[~T], Union[AsyncGenerator[<a title="langstream.core.stream.StreamOutput" href="#langstream.core.stream.StreamOutput">StreamOutput</a>[~U], Any], AsyncGenerator[~U, Any], ~U]])</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Stream(Generic[T, U]):
+    &#34;&#34;&#34;&#34;&#34;&#34;
+
+    _call: Callable[
+        [T], Union[AsyncGenerator[StreamOutput[U], Any], AsyncGenerator[U, Any], U]
+    ]
+
+    def __init__(
+        self,
+        name: str,
+        call: Callable[
+            [T],
+            Union[AsyncGenerator[StreamOutput[U], Any], AsyncGenerator[U, Any], U],
+        ],
+    ) -&gt; None:
+        self.name = name
+        self._call = call
+
+    def __call__(self, input: T) -&gt; AsyncGenerator[StreamOutput[U], Any]:
+        result = self._call(input)
+        return self._wrap(result)
+
+    def _wrap(
+        self,
+        value: Union[AsyncGenerator[StreamOutput[V], Any], AsyncGenerator[V, Any], V],
+        final: Optional[bool] = None,
+        name: Optional[str] = None,
+    ) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+        async def _wrap(
+            values: Union[AsyncGenerator[StreamOutput[V], Any], AsyncGenerator[V, Any]],
+        ) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+            async for value in values:
+                yield self._output_wrap(value, final=final, name=name)
+
+        if isinstance(value, AsyncGenerator):
+            return _wrap(value)
+        return _wrap(as_async_generator(value))
+
+    def _output_wrap(
+        self, value: Union[StreamOutput[V], V], final=None, name=None
+    ) -&gt; StreamOutput[V]:
+        if isinstance(value, StreamOutput):
+            final = final if final is not None else value.final
+            return StreamOutput[V](stream=value.stream, data=value.data, final=final)
+
+        final = final if final is not None else True
+        return StreamOutput[V](
+            stream=self.name if name is None else name, data=value, final=final
+        )
+
+    async def _reyield(
+        self, async_iterable: AsyncGenerator[StreamOutput[U], Any]
+    ) -&gt; AsyncGenerator[Tuple[List[U], StreamOutput[U]], Any]:
+        values: List[U] = []
+        async for u in async_iterable:
+            u_rewrapped = self._output_wrap(u, final=False)
+            if u.final:
+                values.append(u.data)
+            yield (values, u_rewrapped)
+
+    def map(self, fn: Callable[[U], V]) -&gt; &#34;Stream[T, V]&#34;:
+        &#34;&#34;&#34;
+        Maps the output of the current stream through a function as they arrive.
+
+        The transform function will receive the current output of the stream and
+        should return a modified version of it. This method is non-blocking and
+        will continue processing the stream in parallel.
+
+        Example:
+
+        &gt;&gt;&gt; from langstream import Stream, join_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     greet_stream = Stream[str, str](&#34;GreetingStream&#34;, lambda name: f&#34;Hello, {name}!&#34;)
+        ...     polite_stream = greet_stream.map(lambda greeting: f&#34;{greeting} How are you?&#34;)
+        ...     return await join_final_output(polite_stream(&#34;Alice&#34;))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        &#39;Hello, Alice! How are you?&#39;
+
+
+        Example of processing one token at a time:
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, join_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     words_stream = Stream[str, str](&#34;WordsStream&#34;, lambda sentence: as_async_generator(*sentence.split(&#34; &#34;))) # produces one word at a time
+        ...     accronym_stream = words_stream.map(lambda word: word.upper()[0]) # uppercases each word and take the first letter
+        ...     return await join_final_output(accronym_stream(&#34;as soon as possible&#34;))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        &#39;ASAP&#39;
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@map&#34;
+
+        async def map(input: T) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+            # Reyield previous stream so we never block the stream, and at the same time yield mapped values
+            prev_len_values = 0
+            async for values, to_reyield in self._reyield(self(input)):
+                yield cast(StreamOutput[V], to_reyield)
+                if len(values) &gt; prev_len_values:  # as soon as there is a new value
+                    prev_len_values = len(values)
+                    yield self._output_wrap(fn(values[-1]), name=next_name)
+
+        return Stream[T, V](next_name, lambda input: map(input))
+
+    def filter(self, fn: Callable[[U], bool]) -&gt; &#34;Stream[T, U]&#34;:
+        &#34;&#34;&#34;
+        Filters the output of the current stream, keeping only the values that return True.
+
+        This method is non-blocking and expects a function that returns True for keeping the value,
+        or False for dropping it, as they arrive.
+
+        Example:
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     numbers_stream = Stream[int, int](&#34;NumbersStream&#34;, lambda input: as_async_generator(*range(0, input)))
+        ...     even_stream = numbers_stream.filter(lambda input: input % 2 == 0)
+        ...     return await collect_final_output(even_stream(9))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        [0, 2, 4, 6, 8]
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@filter&#34;
+
+        async def filter(input: T) -&gt; AsyncGenerator[StreamOutput[U], Any]:
+            # Reyield previous stream so we never block the stream, and at the same time yield mapped values
+            prev_len_values = 0
+            async for values, to_reyield in self._reyield(self(input)):
+                yield to_reyield
+                if len(values) &gt; prev_len_values:  # as soon as there is a new value
+                    prev_len_values = len(values)
+                    if fn(values[-1]):
+                        yield self._output_wrap(values[-1], name=next_name)
+
+        return Stream[T, U](next_name, lambda input: filter(input))
+
+    def and_then(
+        self,
+        next: Callable[
+            [Iterable[U]],
+            Union[AsyncGenerator[StreamOutput[V], Any], AsyncGenerator[V, Any], V],
+        ],
+    ) -&gt; &#34;Stream[T, V]&#34;:
+        &#34;&#34;&#34;
+        Processes the output of the current stream through a transformation function or another stream.
+
+        Unlike the map method, which applies transformations to outputs as they arrive,
+        the and_then method first collects all the outputs and then passes them to the transformation function or the next stream.
+        This method is blocking and will wait for the entire stream to be processed before applying the transformation.
+
+        If `transform` is a function, it should accept the list of collected outputs and return a modified version of it.
+        If `transform` is another stream, it is used to process the list of collected outputs.
+
+        Example using a function:
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     word_stream = Stream[str, str](&#34;WordStream&#34;, lambda word: as_async_generator(word, &#34;!&#34;))
+        ...     count_stream : Stream[str, int] = word_stream.and_then(lambda outputs: len(list(outputs)))
+        ...     return await collect_final_output(count_stream(&#34;Hi&#34;))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        [2]
+
+
+        Example using another stream:
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, join_final_output
+        &gt;&gt;&gt; from typing import Iterable
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     words_stream = Stream[str, str](&#34;WordsStream&#34;, lambda sentence: as_async_generator(*sentence.split(&#34; &#34;))) # produces one word at a time
+        ...     acronym_stream = Stream[Iterable[str], str](&#34;AcronymStream&#34;, lambda words: &#34;&#34;.join(word.upper()[0] for word in words)) # produces acronym
+        ...     composed_stream = words_stream.and_then(acronym_stream)
+        ...     return await join_final_output(composed_stream(&#34;as soon as possible&#34;))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        &#39;ASAP&#39;
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@and_then&#34;
+        if hasattr(next, &#34;name&#34;):
+            next_name = next.name
+
+        async def and_then(
+            input: T,
+        ) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+            # First, reyield previous stream so we never block the stream, and collect the results until they are done
+            iter_u: Iterable[U] = []
+            async for values, to_reyield in self._reyield(self(input)):
+                yield cast(StreamOutput[V], to_reyield)
+                iter_u = values
+
+            # Then, call in the next stream
+            iter_v = self._wrap(next(iter_u), name=next_name)
+            async for v in iter_v:
+                yield v
+
+        return Stream[T, V](next_name, and_then)
+
+    def pipe(
+        self,
+        fn: Callable[
+            [AsyncGenerator[U, Any]], AsyncGenerator[Union[StreamOutput[V], V], Any]
+        ],
+    ) -&gt; &#34;Stream[T, V]&#34;:
+        &#34;&#34;&#34;
+        Lower level constructor to pipe a stream into another one, giving you the underlying AsyncGenerator.
+        Pipe takes a callback function which should always produce an AsyncGenerator in return, which means you
+        need to declare an async function and your function needs to use `yield` for generating values, the advantage
+        of that is that you have fine control on whether it will be blocking the stream or not.
+
+        In fact, with pipe you can reconstruct `map` and `and_then`, for example:
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+        &gt;&gt;&gt; from typing import List, AsyncGenerator
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example(items):
+        ...     async def mario_pipe(stream: AsyncGenerator[str, None]) -&gt; AsyncGenerator[str, None]:
+        ...        waiting_for_mushroom = False
+        ...        async for item in stream:
+        ...            if item == &#34;Mario&#34;:
+        ...                waiting_for_mushroom = True
+        ...            elif item == &#34;Mushroom&#34; and waiting_for_mushroom:
+        ...                yield &#34;Super Mario!&#34;
+        ...            else:
+        ...                yield item + &#34;?&#34;
+        ...
+        ...     piped_stream = Stream[List[str], str](
+        ...         &#34;PipedStream&#34;, lambda items: as_async_generator(*items)
+        ...     ).pipe(mario_pipe)
+        ...
+        ...     return await collect_final_output(piped_stream(items))
+        ...
+        &gt;&gt;&gt; asyncio.run(example([&#34;Mario&#34;, &#34;Mushroom&#34;]))
+        [&#39;Super Mario!&#39;]
+        &gt;&gt;&gt; asyncio.run(example([&#34;Luigi&#34;]))
+        [&#39;Luigi?&#39;]
+        &gt;&gt;&gt; asyncio.run(example([&#34;Mario&#34;, &#34;Luigi&#34;, &#34;Mushroom&#34;]))
+        [&#39;Luigi?&#39;, &#39;Super Mario!&#39;]
+
+        As you can see this pipe blocks kinda like `and_then` when it sees &#34;Mario&#34;, until a mushroom arrives, but for other random items
+        such as &#34;Luigi&#34; it just re-yields it immediately, adding a question mark, non-blocking, like `map`.
+
+        You can also call another stream from `pipe` directly, just be sure to re-yield its outputs
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@pipe&#34;
+
+        async def filter_final_output(
+            async_iterable: AsyncGenerator[StreamOutput[U], Any]
+        ) -&gt; AsyncGenerator[U, Any]:
+            async for output in async_iterable:
+                if output.final:
+                    yield cast(U, output.data)
+
+        def pipe(input: T) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+            previous, final = asyncstdlib.tee(self(input), n=2, lock=asyncio.Lock())
+
+            previous = self._wrap(previous, name=next_name, final=False)
+            previous = cast(AsyncGenerator[StreamOutput[V], Any], previous)
+
+            final = filter_final_output(
+                cast(AsyncGenerator[StreamOutput[U], Any], final)
+            )
+            final = cast(
+                AsyncGenerator[StreamOutput[V], Any],
+                self._wrap(fn(final), name=next_name),
+            )
+
+            return merge(previous, final)
+
+        return Stream[T, V](next_name, pipe)
+
+    def collect(self: &#34;Stream[T, U]&#34;) -&gt; &#34;SingleOutputStream[T, List[U]]&#34;:
+        &#34;&#34;&#34;
+        Collects all the outputs produced by the stream and returns them as a list.
+
+        This method is blocking useful when the next stream or processing step needs to have access to the
+        entire output all at once, rather than processing elements as they arrive.
+
+        Example:
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     word_stream: Stream[str, List[str]] = Stream[str, str](
+        ...         &#34;WordStream&#34;, lambda word: as_async_generator(word, &#34;!&#34;)
+        ...     ).collect()
+        ...     return await collect_final_output(word_stream(&#34;Hi&#34;))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        [[&#39;Hi&#39;, &#39;!&#39;]]
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@collect&#34;
+
+        async def _collect(
+            input: T,
+        ) -&gt; AsyncGenerator[StreamOutput[List[U]], Any]:
+            # First, reyield previous stream so we never block the stream, and collect the results until they are done
+            iter_u: Iterable[U] = []
+            async for values, to_reyield in self._reyield(self(input)):
+                yield cast(StreamOutput[List[U]], to_reyield)
+                iter_u = values
+
+            # Then, yield the collected results
+            yield self._output_wrap(iter_u, name=next_name)
+
+        return SingleOutputStream[T, List[U]](next_name, _collect)
+
+    def join(self: &#34;Stream[T, str]&#34;, separator=&#34;&#34;) -&gt; &#34;SingleOutputStream[T, str]&#34;:
+        &#34;&#34;&#34;
+        Joins the output of a string-producing stream into a single string.
+
+        The `join` method concatenates each item in the output of the stream, using the
+        provided separator between each element. This is particularly useful when working
+        with text, and you want to merge all the generated tokens.
+
+        Note that this method blocks until all outputs of the stream are available, as it
+        needs to wait for the complete output to perform the join operation.
+
+        Params
+        ----------
+        separator : str
+            A string that will be used as a separator between the elements. Default is an empty string.
+
+        Example:
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, join_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     words_stream = Stream[str, str](&#34;WordsStream&#34;, lambda sentence: as_async_generator(*sentence.split(&#34; &#34;)))
+        ...     capitalized_stream = words_stream.map(lambda word: word.capitalize())
+        ...     joined_stream = capitalized_stream.join(&#34; &#34;)
+        ...     return await join_final_output(joined_stream(&#34;this is an example&#34;))
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        &#39;This Is An Example&#39;
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@join&#34;
+
+        async def _join(
+            input: T,
+        ) -&gt; AsyncGenerator[StreamOutput[str], Any]:
+            # First, reyield previous stream so we never block the stream, and collect the results until they are done
+            iter_u: Iterable[str] = []
+            async for values, to_reyield in self._reyield(self(input)):
+                yield to_reyield
+                iter_u = values
+
+            # Then, return the joined result
+            output: str = separator.join(iter_u)
+            yield self._output_wrap(output, name=next_name)
+
+        return SingleOutputStream[T, str](next_name, _join)
+
+    def gather(
+        self: &#34;Union[Stream[T, AsyncGenerator[StreamOutput[V], Any]], Stream[T, AsyncGenerator[V, Any]]]&#34;,
+    ) -&gt; &#34;SingleOutputStream[T, List[List[V]]]&#34;:
+        &#34;&#34;&#34;
+        Gathers results from multiple streams and processes them in parallel.
+
+        The `gather` method is used to process several streams concurrently, and it waits until all of
+        them are complete before continuing. This is similar to `asyncio.gather`, and is useful when you
+        want to run multiple asynchronous tasks in parallel and wait for all of them to complete.
+
+        Note that the order of results corresponds to the order of streams passed to the `gather` method.
+
+        &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; async def delayed_output(x):
+        ...     await asyncio.sleep(0.1)
+        ...     yield f&#34;Number: {x}&#34;
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     number_stream = Stream[int, int](
+        ...         &#34;NumberStream&#34;, lambda x: as_async_generator(*range(x))
+        ...     )
+        ...     gathered_stream : Stream[int, str] = (
+        ...         number_stream.map(delayed_output)
+        ...         .gather()
+        ...         .and_then(lambda results: as_async_generator(*(r[0] for r in results)))
+        ...     )
+        ...     return await collect_final_output(gathered_stream(3))
+        ...
+        &gt;&gt;&gt; asyncio.run(example()) # will take 0.1s to finish, not 0.3s, because it runs in parallel
+        [&#39;Number: 0&#39;, &#39;Number: 1&#39;, &#39;Number: 2&#39;]
+        &#34;&#34;&#34;
+        return self.collect().gather()
+
+    def on_error(
+        self,
+        handler: Callable[[Exception], Union[AsyncGenerator[StreamOutput[V], Any], V]],
+    ) -&gt; &#34;Stream[T, Union[U, V]]&#34;:
+        &#34;&#34;&#34;
+        Handles any uncaught exceptions that might occur during the execution of the current stream.
+
+        The `handler` function takes an exception as its argument and returns a new value that
+        will be used as the output of the stream instead of the exception. The function can also re-raise
+        the exception or raise a new one, which will then be propagated further up the stream.
+
+        If an exception occurs in the `handler` function itself, it will be propagated without any
+        further handling.
+
+        Example:
+
+        &gt;&gt;&gt; from langstream import Stream, join_final_output
+        &gt;&gt;&gt; import asyncio
+        ...
+        &gt;&gt;&gt; def failed_greeting(name: str):
+        ...     raise Exception(f&#34;Giving {name} a cold shoulder&#34;)
+        ...
+        &gt;&gt;&gt; async def example():
+        ...     greet_stream = Stream[str, str](
+        ...         &#34;GreetingStream&#34;,
+        ...         failed_greeting
+        ...     ).on_error(lambda e: f&#34;Sorry, an error occurred: {str(e)}&#34;)
+        ...
+        ...     async for output in greet_stream(&#34;Alice&#34;):
+        ...         print(output)
+        ...
+        &gt;&gt;&gt; asyncio.run(example())
+        StreamOutput(stream=&#39;GreetingStream&#39;, data=Exception(&#39;Giving Alice a cold shoulder&#39;), final=False)
+        StreamOutput(stream=&#39;GreetingStream@on_error&#39;, data=&#39;Sorry, an error occurred: ...&#39;, final=True)
+        &#34;&#34;&#34;
+
+        next_name = f&#34;{self.name}@on_error&#34;
+        if hasattr(next, &#34;name&#34;):
+            next_name = next.name
+
+        async def on_error(
+            input: T,
+        ) -&gt; AsyncGenerator[StreamOutput[Union[U, V]], Any]:
+            try:
+                async for output in self(input):
+                    yield cast(StreamOutput[Union[U, V]], output)
+            except Exception as e:
+                yield cast(StreamOutput[Union[U, V]], self._output_wrap(e, final=False))
+                async for output in self._wrap(handler(e), name=next_name):
+                    yield cast(StreamOutput[Union[U, V]], output)
+
+        return Stream[T, Union[U, V]](next_name, lambda input: on_error(input))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>typing.Generic</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="langstream.contrib.llms.gpt4all_stream.GPT4AllStream" href="../contrib/llms/gpt4all_stream.html#langstream.contrib.llms.gpt4all_stream.GPT4AllStream">GPT4AllStream</a></li>
+<li><a title="langstream.contrib.llms.open_ai.OpenAIChatStream" href="../contrib/llms/open_ai.html#langstream.contrib.llms.open_ai.OpenAIChatStream">OpenAIChatStream</a></li>
+<li><a title="langstream.contrib.llms.open_ai.OpenAICompletionStream" href="../contrib/llms/open_ai.html#langstream.contrib.llms.open_ai.OpenAICompletionStream">OpenAICompletionStream</a></li>
+<li><a title="langstream.core.stream.SingleOutputStream" href="#langstream.core.stream.SingleOutputStream">SingleOutputStream</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="langstream.core.stream.Stream.and_then"><code class="name flex">
+<span>def <span class="ident">and_then</span></span>(<span>self, next: Callable[[Iterable[~U]], Union[AsyncGenerator[<a title="langstream.core.stream.StreamOutput" href="#langstream.core.stream.StreamOutput">StreamOutput</a>[~V], Any], AsyncGenerator[~V, Any], ~V]]) ‑> <a title="langstream.core.stream.Stream" href="#langstream.core.stream.Stream">Stream</a>[~T, ~V]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Processes the output of the current stream through a transformation function or another stream.</p>
+<p>Unlike the map method, which applies transformations to outputs as they arrive,
+the and_then method first collects all the outputs and then passes them to the transformation function or the next stream.
+This method is blocking and will wait for the entire stream to be processed before applying the transformation.</p>
+<p>If <code>transform</code> is a function, it should accept the list of collected outputs and return a modified version of it.
+If <code>transform</code> is another stream, it is used to process the list of collected outputs.</p>
+<p>Example using a function:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example():
+...     word_stream = Stream[str, str](&quot;WordStream&quot;, lambda word: as_async_generator(word, &quot;!&quot;))
+...     count_stream : Stream[str, int] = word_stream.and_then(lambda outputs: len(list(outputs)))
+...     return await collect_final_output(count_stream(&quot;Hi&quot;))
+...
+&gt;&gt;&gt; asyncio.run(example())
+[2]
+</code></pre>
+<p>Example using another stream:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from langstream import Stream, as_async_generator, join_final_output
+&gt;&gt;&gt; from typing import Iterable
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example():
+...     words_stream = Stream[str, str](&quot;WordsStream&quot;, lambda sentence: as_async_generator(*sentence.split(&quot; &quot;))) # produces one word at a time
+...     acronym_stream = Stream[Iterable[str], str](&quot;AcronymStream&quot;, lambda words: &quot;&quot;.join(word.upper()[0] for word in words)) # produces acronym
+...     composed_stream = words_stream.and_then(acronym_stream)
+...     return await join_final_output(composed_stream(&quot;as soon as possible&quot;))
+...
+&gt;&gt;&gt; asyncio.run(example())
+'ASAP'
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def and_then(
+    self,
+    next: Callable[
+        [Iterable[U]],
+        Union[AsyncGenerator[StreamOutput[V], Any], AsyncGenerator[V, Any], V],
+    ],
+) -&gt; &#34;Stream[T, V]&#34;:
+    &#34;&#34;&#34;
+    Processes the output of the current stream through a transformation function or another stream.
+
+    Unlike the map method, which applies transformations to outputs as they arrive,
+    the and_then method first collects all the outputs and then passes them to the transformation function or the next stream.
+    This method is blocking and will wait for the entire stream to be processed before applying the transformation.
+
+    If `transform` is a function, it should accept the list of collected outputs and return a modified version of it.
+    If `transform` is another stream, it is used to process the list of collected outputs.
+
+    Example using a function:
+
+    &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     word_stream = Stream[str, str](&#34;WordStream&#34;, lambda word: as_async_generator(word, &#34;!&#34;))
+    ...     count_stream : Stream[str, int] = word_stream.and_then(lambda outputs: len(list(outputs)))
+    ...     return await collect_final_output(count_stream(&#34;Hi&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(example())
+    [2]
+
+
+    Example using another stream:
+
+    &gt;&gt;&gt; from langstream import Stream, as_async_generator, join_final_output
+    &gt;&gt;&gt; from typing import Iterable
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     words_stream = Stream[str, str](&#34;WordsStream&#34;, lambda sentence: as_async_generator(*sentence.split(&#34; &#34;))) # produces one word at a time
+    ...     acronym_stream = Stream[Iterable[str], str](&#34;AcronymStream&#34;, lambda words: &#34;&#34;.join(word.upper()[0] for word in words)) # produces acronym
+    ...     composed_stream = words_stream.and_then(acronym_stream)
+    ...     return await join_final_output(composed_stream(&#34;as soon as possible&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(example())
+    &#39;ASAP&#39;
+    &#34;&#34;&#34;
+
+    next_name = f&#34;{self.name}@and_then&#34;
+    if hasattr(next, &#34;name&#34;):
+        next_name = next.name
+
+    async def and_then(
+        input: T,
+    ) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+        # First, reyield previous stream so we never block the stream, and collect the results until they are done
+        iter_u: Iterable[U] = []
+        async for values, to_reyield in self._reyield(self(input)):
+            yield cast(StreamOutput[V], to_reyield)
+            iter_u = values
+
+        # Then, call in the next stream
+        iter_v = self._wrap(next(iter_u), name=next_name)
+        async for v in iter_v:
+            yield v
+
+    return Stream[T, V](next_name, and_then)</code></pre>
+</details>
+</dd>
+<dt id="langstream.core.stream.Stream.collect"><code class="name flex">
+<span>def <span class="ident">collect</span></span>(<span>self: <a title="langstream.core.stream.Stream" href="#langstream.core.stream.Stream">Stream</a>[T, U]) ‑> <a title="langstream.core.stream.SingleOutputStream" href="#langstream.core.stream.SingleOutputStream">SingleOutputStream</a>[~T, typing.List[~U]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Collects all the outputs produced by the stream and returns them as a list.</p>
+<p>This method is blocking useful when the next stream or processing step needs to have access to the
+entire output all at once, rather than processing elements as they arrive.</p>
+<p>Example:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example():
+...     word_stream: Stream[str, List[str]] = Stream[str, str](
+...         &quot;WordStream&quot;, lambda word: as_async_generator(word, &quot;!&quot;)
+...     ).collect()
+...     return await collect_final_output(word_stream(&quot;Hi&quot;))
+...
+&gt;&gt;&gt; asyncio.run(example())
+[['Hi', '!']]
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def collect(self: &#34;Stream[T, U]&#34;) -&gt; &#34;SingleOutputStream[T, List[U]]&#34;:
+    &#34;&#34;&#34;
+    Collects all the outputs produced by the stream and returns them as a list.
+
+    This method is blocking useful when the next stream or processing step needs to have access to the
+    entire output all at once, rather than processing elements as they arrive.
+
+    Example:
+
+    &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     word_stream: Stream[str, List[str]] = Stream[str, str](
+    ...         &#34;WordStream&#34;, lambda word: as_async_generator(word, &#34;!&#34;)
+    ...     ).collect()
+    ...     return await collect_final_output(word_stream(&#34;Hi&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(example())
+    [[&#39;Hi&#39;, &#39;!&#39;]]
+    &#34;&#34;&#34;
+
+    next_name = f&#34;{self.name}@collect&#34;
+
+    async def _collect(
+        input: T,
+    ) -&gt; AsyncGenerator[StreamOutput[List[U]], Any]:
+        # First, reyield previous stream so we never block the stream, and collect the results until they are done
+        iter_u: Iterable[U] = []
+        async for values, to_reyield in self._reyield(self(input)):
+            yield cast(StreamOutput[List[U]], to_reyield)
+            iter_u = values
+
+        # Then, yield the collected results
+        yield self._output_wrap(iter_u, name=next_name)
+
+    return SingleOutputStream[T, List[U]](next_name, _collect)</code></pre>
+</details>
+</dd>
+<dt id="langstream.core.stream.Stream.filter"><code class="name flex">
+<span>def <span class="ident">filter</span></span>(<span>self, fn: Callable[[~U], bool]) ‑> <a title="langstream.core.stream.Stream" href="#langstream.core.stream.Stream">Stream</a>[~T, ~U]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Filters the output of the current stream, keeping only the values that return True.</p>
+<p>This method is non-blocking and expects a function that returns True for keeping the value,
+or False for dropping it, as they arrive.</p>
+<p>Example:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example():
+...     numbers_stream = Stream[int, int](&quot;NumbersStream&quot;, lambda input: as_async_generator(*range(0, input)))
+...     even_stream = numbers_stream.filter(lambda input: input % 2 == 0)
+...     return await collect_final_output(even_stream(9))
+...
+&gt;&gt;&gt; asyncio.run(example())
+[0, 2, 4, 6, 8]
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def filter(self, fn: Callable[[U], bool]) -&gt; &#34;Stream[T, U]&#34;:
+    &#34;&#34;&#34;
+    Filters the output of the current stream, keeping only the values that return True.
+
+    This method is non-blocking and expects a function that returns True for keeping the value,
+    or False for dropping it, as they arrive.
+
+    Example:
+
+    &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     numbers_stream = Stream[int, int](&#34;NumbersStream&#34;, lambda input: as_async_generator(*range(0, input)))
+    ...     even_stream = numbers_stream.filter(lambda input: input % 2 == 0)
+    ...     return await collect_final_output(even_stream(9))
+    ...
+    &gt;&gt;&gt; asyncio.run(example())
+    [0, 2, 4, 6, 8]
+    &#34;&#34;&#34;
+
+    next_name = f&#34;{self.name}@filter&#34;
+
+    async def filter(input: T) -&gt; AsyncGenerator[StreamOutput[U], Any]:
+        # Reyield previous stream so we never block the stream, and at the same time yield mapped values
+        prev_len_values = 0
+        async for values, to_reyield in self._reyield(self(input)):
+            yield to_reyield
+            if len(values) &gt; prev_len_values:  # as soon as there is a new value
+                prev_len_values = len(values)
+                if fn(values[-1]):
+                    yield self._output_wrap(values[-1], name=next_name)
+
+    return Stream[T, U](next_name, lambda input: filter(input))</code></pre>
+</details>
+</dd>
+<dt id="langstream.core.stream.Stream.gather"><code class="name flex">
+<span>def <span class="ident">gather</span></span>(<span>self: Union[<a title="langstream.core.stream.Stream" href="#langstream.core.stream.Stream">Stream</a>[T, AsyncGenerator[<a title="langstream.core.stream.StreamOutput" href="#langstream.core.stream.StreamOutput">StreamOutput</a>[V], Any]], <a title="langstream.core.stream.Stream" href="#langstream.core.stream.Stream">Stream</a>[T, AsyncGenerator[V, Any]]]) ‑> <a title="langstream.core.stream.SingleOutputStream" href="#langstream.core.stream.SingleOutputStream">SingleOutputStream</a>[~T, typing.List[typing.List[~V]]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Gathers results from multiple streams and processes them in parallel.</p>
+<p>The <code>gather</code> method is used to process several streams concurrently, and it waits until all of
+them are complete before continuing. This is similar to <code>asyncio.gather</code>, and is useful when you
+want to run multiple asynchronous tasks in parallel and wait for all of them to complete.</p>
+<p>Note that the order of results corresponds to the order of streams passed to the <code>gather</code> method.</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def delayed_output(x):
+...     await asyncio.sleep(0.1)
+...     yield f&quot;Number: {x}&quot;
+...
+&gt;&gt;&gt; async def example():
+...     number_stream = Stream[int, int](
+...         &quot;NumberStream&quot;, lambda x: as_async_generator(*range(x))
+...     )
+...     gathered_stream : Stream[int, str] = (
+...         number_stream.map(delayed_output)
+...         .gather()
+...         .and_then(lambda results: as_async_generator(*(r[0] for r in results)))
+...     )
+...     return await collect_final_output(gathered_stream(3))
+...
+&gt;&gt;&gt; asyncio.run(example()) # will take 0.1s to finish, not 0.3s, because it runs in parallel
+['Number: 0', 'Number: 1', 'Number: 2']
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def gather(
+    self: &#34;Union[Stream[T, AsyncGenerator[StreamOutput[V], Any]], Stream[T, AsyncGenerator[V, Any]]]&#34;,
+) -&gt; &#34;SingleOutputStream[T, List[List[V]]]&#34;:
+    &#34;&#34;&#34;
+    Gathers results from multiple streams and processes them in parallel.
+
+    The `gather` method is used to process several streams concurrently, and it waits until all of
+    them are complete before continuing. This is similar to `asyncio.gather`, and is useful when you
+    want to run multiple asynchronous tasks in parallel and wait for all of them to complete.
+
+    Note that the order of results corresponds to the order of streams passed to the `gather` method.
+
+    &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def delayed_output(x):
+    ...     await asyncio.sleep(0.1)
+    ...     yield f&#34;Number: {x}&#34;
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     number_stream = Stream[int, int](
+    ...         &#34;NumberStream&#34;, lambda x: as_async_generator(*range(x))
+    ...     )
+    ...     gathered_stream : Stream[int, str] = (
+    ...         number_stream.map(delayed_output)
+    ...         .gather()
+    ...         .and_then(lambda results: as_async_generator(*(r[0] for r in results)))
+    ...     )
+    ...     return await collect_final_output(gathered_stream(3))
+    ...
+    &gt;&gt;&gt; asyncio.run(example()) # will take 0.1s to finish, not 0.3s, because it runs in parallel
+    [&#39;Number: 0&#39;, &#39;Number: 1&#39;, &#39;Number: 2&#39;]
+    &#34;&#34;&#34;
+    return self.collect().gather()</code></pre>
+</details>
+</dd>
+<dt id="langstream.core.stream.Stream.join"><code class="name flex">
+<span>def <span class="ident">join</span></span>(<span>self: <a title="langstream.core.stream.Stream" href="#langstream.core.stream.Stream">Stream</a>[T, str], separator='') ‑> <a title="langstream.core.stream.SingleOutputStream" href="#langstream.core.stream.SingleOutputStream">SingleOutputStream</a>[~T, str]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Joins the output of a string-producing stream into a single string.</p>
+<p>The <code>join</code> method concatenates each item in the output of the stream, using the
+provided separator between each element. This is particularly useful when working
+with text, and you want to merge all the generated tokens.</p>
+<p>Note that this method blocks until all outputs of the stream are available, as it
+needs to wait for the complete output to perform the join operation.</p>
+<h2 id="params">Params</h2>
+<p>separator : str
+A string that will be used as a separator between the elements. Default is an empty string.</p>
+<p>Example:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from langstream import Stream, as_async_generator, join_final_output
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example():
+...     words_stream = Stream[str, str](&quot;WordsStream&quot;, lambda sentence: as_async_generator(*sentence.split(&quot; &quot;)))
+...     capitalized_stream = words_stream.map(lambda word: word.capitalize())
+...     joined_stream = capitalized_stream.join(&quot; &quot;)
+...     return await join_final_output(joined_stream(&quot;this is an example&quot;))
+...
+&gt;&gt;&gt; asyncio.run(example())
+'This Is An Example'
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def join(self: &#34;Stream[T, str]&#34;, separator=&#34;&#34;) -&gt; &#34;SingleOutputStream[T, str]&#34;:
+    &#34;&#34;&#34;
+    Joins the output of a string-producing stream into a single string.
+
+    The `join` method concatenates each item in the output of the stream, using the
+    provided separator between each element. This is particularly useful when working
+    with text, and you want to merge all the generated tokens.
+
+    Note that this method blocks until all outputs of the stream are available, as it
+    needs to wait for the complete output to perform the join operation.
+
+    Params
+    ----------
+    separator : str
+        A string that will be used as a separator between the elements. Default is an empty string.
+
+    Example:
+
+    &gt;&gt;&gt; from langstream import Stream, as_async_generator, join_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     words_stream = Stream[str, str](&#34;WordsStream&#34;, lambda sentence: as_async_generator(*sentence.split(&#34; &#34;)))
+    ...     capitalized_stream = words_stream.map(lambda word: word.capitalize())
+    ...     joined_stream = capitalized_stream.join(&#34; &#34;)
+    ...     return await join_final_output(joined_stream(&#34;this is an example&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(example())
+    &#39;This Is An Example&#39;
+    &#34;&#34;&#34;
+
+    next_name = f&#34;{self.name}@join&#34;
+
+    async def _join(
+        input: T,
+    ) -&gt; AsyncGenerator[StreamOutput[str], Any]:
+        # First, reyield previous stream so we never block the stream, and collect the results until they are done
+        iter_u: Iterable[str] = []
+        async for values, to_reyield in self._reyield(self(input)):
+            yield to_reyield
+            iter_u = values
+
+        # Then, return the joined result
+        output: str = separator.join(iter_u)
+        yield self._output_wrap(output, name=next_name)
+
+    return SingleOutputStream[T, str](next_name, _join)</code></pre>
+</details>
+</dd>
+<dt id="langstream.core.stream.Stream.map"><code class="name flex">
+<span>def <span class="ident">map</span></span>(<span>self, fn: Callable[[~U], ~V]) ‑> <a title="langstream.core.stream.Stream" href="#langstream.core.stream.Stream">Stream</a>[~T, ~V]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Maps the output of the current stream through a function as they arrive.</p>
+<p>The transform function will receive the current output of the stream and
+should return a modified version of it. This method is non-blocking and
+will continue processing the stream in parallel.</p>
+<p>Example:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from langstream import Stream, join_final_output
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example():
+...     greet_stream = Stream[str, str](&quot;GreetingStream&quot;, lambda name: f&quot;Hello, {name}!&quot;)
+...     polite_stream = greet_stream.map(lambda greeting: f&quot;{greeting} How are you?&quot;)
+...     return await join_final_output(polite_stream(&quot;Alice&quot;))
+...
+&gt;&gt;&gt; asyncio.run(example())
+'Hello, Alice! How are you?'
+</code></pre>
+<p>Example of processing one token at a time:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from langstream import Stream, as_async_generator, join_final_output
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example():
+...     words_stream = Stream[str, str](&quot;WordsStream&quot;, lambda sentence: as_async_generator(*sentence.split(&quot; &quot;))) # produces one word at a time
+...     accronym_stream = words_stream.map(lambda word: word.upper()[0]) # uppercases each word and take the first letter
+...     return await join_final_output(accronym_stream(&quot;as soon as possible&quot;))
+...
+&gt;&gt;&gt; asyncio.run(example())
+'ASAP'
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def map(self, fn: Callable[[U], V]) -&gt; &#34;Stream[T, V]&#34;:
+    &#34;&#34;&#34;
+    Maps the output of the current stream through a function as they arrive.
+
+    The transform function will receive the current output of the stream and
+    should return a modified version of it. This method is non-blocking and
+    will continue processing the stream in parallel.
+
+    Example:
+
+    &gt;&gt;&gt; from langstream import Stream, join_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     greet_stream = Stream[str, str](&#34;GreetingStream&#34;, lambda name: f&#34;Hello, {name}!&#34;)
+    ...     polite_stream = greet_stream.map(lambda greeting: f&#34;{greeting} How are you?&#34;)
+    ...     return await join_final_output(polite_stream(&#34;Alice&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(example())
+    &#39;Hello, Alice! How are you?&#39;
+
+
+    Example of processing one token at a time:
+
+    &gt;&gt;&gt; from langstream import Stream, as_async_generator, join_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     words_stream = Stream[str, str](&#34;WordsStream&#34;, lambda sentence: as_async_generator(*sentence.split(&#34; &#34;))) # produces one word at a time
+    ...     accronym_stream = words_stream.map(lambda word: word.upper()[0]) # uppercases each word and take the first letter
+    ...     return await join_final_output(accronym_stream(&#34;as soon as possible&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(example())
+    &#39;ASAP&#39;
+    &#34;&#34;&#34;
+
+    next_name = f&#34;{self.name}@map&#34;
+
+    async def map(input: T) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+        # Reyield previous stream so we never block the stream, and at the same time yield mapped values
+        prev_len_values = 0
+        async for values, to_reyield in self._reyield(self(input)):
+            yield cast(StreamOutput[V], to_reyield)
+            if len(values) &gt; prev_len_values:  # as soon as there is a new value
+                prev_len_values = len(values)
+                yield self._output_wrap(fn(values[-1]), name=next_name)
+
+    return Stream[T, V](next_name, lambda input: map(input))</code></pre>
+</details>
+</dd>
+<dt id="langstream.core.stream.Stream.on_error"><code class="name flex">
+<span>def <span class="ident">on_error</span></span>(<span>self, handler: Callable[[Exception], Union[AsyncGenerator[<a title="langstream.core.stream.StreamOutput" href="#langstream.core.stream.StreamOutput">StreamOutput</a>[~V], Any], ~V]]) ‑> <a title="langstream.core.stream.Stream" href="#langstream.core.stream.Stream">Stream</a>[~T, typing.Union[~U, ~V]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Handles any uncaught exceptions that might occur during the execution of the current stream.</p>
+<p>The <code>handler</code> function takes an exception as its argument and returns a new value that
+will be used as the output of the stream instead of the exception. The function can also re-raise
+the exception or raise a new one, which will then be propagated further up the stream.</p>
+<p>If an exception occurs in the <code>handler</code> function itself, it will be propagated without any
+further handling.</p>
+<p>Example:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from langstream import Stream, join_final_output
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; def failed_greeting(name: str):
+...     raise Exception(f&quot;Giving {name} a cold shoulder&quot;)
+...
+&gt;&gt;&gt; async def example():
+...     greet_stream = Stream[str, str](
+...         &quot;GreetingStream&quot;,
+...         failed_greeting
+...     ).on_error(lambda e: f&quot;Sorry, an error occurred: {str(e)}&quot;)
+...
+...     async for output in greet_stream(&quot;Alice&quot;):
+...         print(output)
+...
+&gt;&gt;&gt; asyncio.run(example())
+StreamOutput(stream='GreetingStream', data=Exception('Giving Alice a cold shoulder'), final=False)
+StreamOutput(stream='GreetingStream@on_error', data='Sorry, an error occurred: ...', final=True)
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def on_error(
+    self,
+    handler: Callable[[Exception], Union[AsyncGenerator[StreamOutput[V], Any], V]],
+) -&gt; &#34;Stream[T, Union[U, V]]&#34;:
+    &#34;&#34;&#34;
+    Handles any uncaught exceptions that might occur during the execution of the current stream.
+
+    The `handler` function takes an exception as its argument and returns a new value that
+    will be used as the output of the stream instead of the exception. The function can also re-raise
+    the exception or raise a new one, which will then be propagated further up the stream.
+
+    If an exception occurs in the `handler` function itself, it will be propagated without any
+    further handling.
+
+    Example:
+
+    &gt;&gt;&gt; from langstream import Stream, join_final_output
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; def failed_greeting(name: str):
+    ...     raise Exception(f&#34;Giving {name} a cold shoulder&#34;)
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     greet_stream = Stream[str, str](
+    ...         &#34;GreetingStream&#34;,
+    ...         failed_greeting
+    ...     ).on_error(lambda e: f&#34;Sorry, an error occurred: {str(e)}&#34;)
+    ...
+    ...     async for output in greet_stream(&#34;Alice&#34;):
+    ...         print(output)
+    ...
+    &gt;&gt;&gt; asyncio.run(example())
+    StreamOutput(stream=&#39;GreetingStream&#39;, data=Exception(&#39;Giving Alice a cold shoulder&#39;), final=False)
+    StreamOutput(stream=&#39;GreetingStream@on_error&#39;, data=&#39;Sorry, an error occurred: ...&#39;, final=True)
+    &#34;&#34;&#34;
+
+    next_name = f&#34;{self.name}@on_error&#34;
+    if hasattr(next, &#34;name&#34;):
+        next_name = next.name
+
+    async def on_error(
+        input: T,
+    ) -&gt; AsyncGenerator[StreamOutput[Union[U, V]], Any]:
+        try:
+            async for output in self(input):
+                yield cast(StreamOutput[Union[U, V]], output)
+        except Exception as e:
+            yield cast(StreamOutput[Union[U, V]], self._output_wrap(e, final=False))
+            async for output in self._wrap(handler(e), name=next_name):
+                yield cast(StreamOutput[Union[U, V]], output)
+
+    return Stream[T, Union[U, V]](next_name, lambda input: on_error(input))</code></pre>
+</details>
+</dd>
+<dt id="langstream.core.stream.Stream.pipe"><code class="name flex">
+<span>def <span class="ident">pipe</span></span>(<span>self, fn: Callable[[AsyncGenerator[~U, Any]], AsyncGenerator[Union[<a title="langstream.core.stream.StreamOutput" href="#langstream.core.stream.StreamOutput">StreamOutput</a>[~V], ~V], Any]]) ‑> <a title="langstream.core.stream.Stream" href="#langstream.core.stream.Stream">Stream</a>[~T, ~V]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Lower level constructor to pipe a stream into another one, giving you the underlying AsyncGenerator.
+Pipe takes a callback function which should always produce an AsyncGenerator in return, which means you
+need to declare an async function and your function needs to use <code>yield</code> for generating values, the advantage
+of that is that you have fine control on whether it will be blocking the stream or not.</p>
+<p>In fact, with pipe you can reconstruct <code>map</code> and <code>and_then</code>, for example:</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+&gt;&gt;&gt; from typing import List, AsyncGenerator
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example(items):
+...     async def mario_pipe(stream: AsyncGenerator[str, None]) -&gt; AsyncGenerator[str, None]:
+...        waiting_for_mushroom = False
+...        async for item in stream:
+...            if item == &quot;Mario&quot;:
+...                waiting_for_mushroom = True
+...            elif item == &quot;Mushroom&quot; and waiting_for_mushroom:
+...                yield &quot;Super Mario!&quot;
+...            else:
+...                yield item + &quot;?&quot;
+...
+...     piped_stream = Stream[List[str], str](
+...         &quot;PipedStream&quot;, lambda items: as_async_generator(*items)
+...     ).pipe(mario_pipe)
+...
+...     return await collect_final_output(piped_stream(items))
+...
+&gt;&gt;&gt; asyncio.run(example([&quot;Mario&quot;, &quot;Mushroom&quot;]))
+['Super Mario!']
+&gt;&gt;&gt; asyncio.run(example([&quot;Luigi&quot;]))
+['Luigi?']
+&gt;&gt;&gt; asyncio.run(example([&quot;Mario&quot;, &quot;Luigi&quot;, &quot;Mushroom&quot;]))
+['Luigi?', 'Super Mario!']
+</code></pre>
+<p>As you can see this pipe blocks kinda like <code>and_then</code> when it sees "Mario", until a mushroom arrives, but for other random items
+such as "Luigi" it just re-yields it immediately, adding a question mark, non-blocking, like <code>map</code>.</p>
+<p>You can also call another stream from <code>pipe</code> directly, just be sure to re-yield its outputs</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pipe(
+    self,
+    fn: Callable[
+        [AsyncGenerator[U, Any]], AsyncGenerator[Union[StreamOutput[V], V], Any]
+    ],
+) -&gt; &#34;Stream[T, V]&#34;:
+    &#34;&#34;&#34;
+    Lower level constructor to pipe a stream into another one, giving you the underlying AsyncGenerator.
+    Pipe takes a callback function which should always produce an AsyncGenerator in return, which means you
+    need to declare an async function and your function needs to use `yield` for generating values, the advantage
+    of that is that you have fine control on whether it will be blocking the stream or not.
+
+    In fact, with pipe you can reconstruct `map` and `and_then`, for example:
+
+    &gt;&gt;&gt; from langstream import Stream, as_async_generator, collect_final_output
+    &gt;&gt;&gt; from typing import List, AsyncGenerator
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example(items):
+    ...     async def mario_pipe(stream: AsyncGenerator[str, None]) -&gt; AsyncGenerator[str, None]:
+    ...        waiting_for_mushroom = False
+    ...        async for item in stream:
+    ...            if item == &#34;Mario&#34;:
+    ...                waiting_for_mushroom = True
+    ...            elif item == &#34;Mushroom&#34; and waiting_for_mushroom:
+    ...                yield &#34;Super Mario!&#34;
+    ...            else:
+    ...                yield item + &#34;?&#34;
+    ...
+    ...     piped_stream = Stream[List[str], str](
+    ...         &#34;PipedStream&#34;, lambda items: as_async_generator(*items)
+    ...     ).pipe(mario_pipe)
+    ...
+    ...     return await collect_final_output(piped_stream(items))
+    ...
+    &gt;&gt;&gt; asyncio.run(example([&#34;Mario&#34;, &#34;Mushroom&#34;]))
+    [&#39;Super Mario!&#39;]
+    &gt;&gt;&gt; asyncio.run(example([&#34;Luigi&#34;]))
+    [&#39;Luigi?&#39;]
+    &gt;&gt;&gt; asyncio.run(example([&#34;Mario&#34;, &#34;Luigi&#34;, &#34;Mushroom&#34;]))
+    [&#39;Luigi?&#39;, &#39;Super Mario!&#39;]
+
+    As you can see this pipe blocks kinda like `and_then` when it sees &#34;Mario&#34;, until a mushroom arrives, but for other random items
+    such as &#34;Luigi&#34; it just re-yields it immediately, adding a question mark, non-blocking, like `map`.
+
+    You can also call another stream from `pipe` directly, just be sure to re-yield its outputs
+    &#34;&#34;&#34;
+
+    next_name = f&#34;{self.name}@pipe&#34;
+
+    async def filter_final_output(
+        async_iterable: AsyncGenerator[StreamOutput[U], Any]
+    ) -&gt; AsyncGenerator[U, Any]:
+        async for output in async_iterable:
+            if output.final:
+                yield cast(U, output.data)
+
+    def pipe(input: T) -&gt; AsyncGenerator[StreamOutput[V], Any]:
+        previous, final = asyncstdlib.tee(self(input), n=2, lock=asyncio.Lock())
+
+        previous = self._wrap(previous, name=next_name, final=False)
+        previous = cast(AsyncGenerator[StreamOutput[V], Any], previous)
+
+        final = filter_final_output(
+            cast(AsyncGenerator[StreamOutput[U], Any], final)
+        )
+        final = cast(
+            AsyncGenerator[StreamOutput[V], Any],
+            self._wrap(fn(final), name=next_name),
+        )
+
+        return merge(previous, final)
+
+    return Stream[T, V](next_name, pipe)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="langstream.core.stream.StreamOutput"><code class="flex name class">
+<span>class <span class="ident">StreamOutput</span></span>
+<span>(</span><span>stream: str, data: Union[~T, Any], final: bool)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>StreamOutput is a data class that represents the output of a Stream at each step.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>stream</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of the stream that produced this output. This helps in identifying
+which part of the processing pipeline the output is coming from.</dd>
+<dt><strong><code>output</code></strong> :&ensp;<code>Union[T, Any]</code></dt>
+<dd>The actual output data produced by the stream. This will be type T for final stream output,
+but can be also be of any type produced by any step of the whole stream.</dd>
+<dt><strong><code>final</code></strong> :&ensp;<code>bool</code></dt>
+<dd>A boolean flag indicating whether this output is the final output of the stream.
+Only the outputs at the end of the stream are marked as "final".</dd>
+</dl>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from langstream import Stream
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example():
+...     greet_stream = Stream[str, str](&quot;GreetingStream&quot;, lambda name: f&quot;Hello, {name}!&quot;)
+...     polite_stream = greet_stream.map(lambda greeting: f&quot;{greeting} How are you?&quot;)
+...
+...     async for output in polite_stream(&quot;Alice&quot;):
+...         # Output is of type StreamOutput
+...         print(output)
+...
+&gt;&gt;&gt; asyncio.run(example())
+StreamOutput(stream='GreetingStream', data='Hello, Alice!', final=False)
+StreamOutput(stream='GreetingStream@map', data='Hello, Alice! How are you?', final=True)
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@dataclass
+class StreamOutput(Generic[T]):
+    &#34;&#34;&#34;
+    StreamOutput is a data class that represents the output of a Stream at each step.
+
+    Attributes
+    ----------
+    stream : str
+        The name of the stream that produced this output. This helps in identifying
+        which part of the processing pipeline the output is coming from.
+
+    output : Union[T, Any]
+        The actual output data produced by the stream. This will be type T for final stream output,
+        but can be also be of any type produced by any step of the whole stream.
+
+    final : bool
+        A boolean flag indicating whether this output is the final output of the stream.
+        Only the outputs at the end of the stream are marked as &#34;final&#34;.
+
+    Example
+    -------
+
+    &gt;&gt;&gt; from langstream import Stream
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     greet_stream = Stream[str, str](&#34;GreetingStream&#34;, lambda name: f&#34;Hello, {name}!&#34;)
+    ...     polite_stream = greet_stream.map(lambda greeting: f&#34;{greeting} How are you?&#34;)
+    ...
+    ...     async for output in polite_stream(&#34;Alice&#34;):
+    ...         # Output is of type StreamOutput
+    ...         print(output)
+    ...
+    &gt;&gt;&gt; asyncio.run(example())
+    StreamOutput(stream=&#39;GreetingStream&#39;, data=&#39;Hello, Alice!&#39;, final=False)
+    StreamOutput(stream=&#39;GreetingStream@map&#39;, data=&#39;Hello, Alice! How are you?&#39;, final=True)
+    &#34;&#34;&#34;
+
+    stream: str
+    data: Union[T, Any]
+    final: bool</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>typing.Generic</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="langstream.core.stream.StreamOutput.data"><code class="name">var <span class="ident">data</span> : Union[~T, Any]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="langstream.core.stream.StreamOutput.final"><code class="name">var <span class="ident">final</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="langstream.core.stream.StreamOutput.stream"><code class="name">var <span class="ident">stream</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<a href="/langstream/docs/intro" style="color: #000">← Back to Docs</a>
+<h1>🪽🔗 LangStream API Reference</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="langstream.core" href="index.html">langstream.core</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="langstream.core.stream.SingleOutputStream" href="#langstream.core.stream.SingleOutputStream">SingleOutputStream</a></code></h4>
+<ul class="two-column">
+<li><code><a title="langstream.core.stream.SingleOutputStream.and_then" href="#langstream.core.stream.SingleOutputStream.and_then">and_then</a></code></li>
+<li><code><a title="langstream.core.stream.SingleOutputStream.filter" href="#langstream.core.stream.SingleOutputStream.filter">filter</a></code></li>
+<li><code><a title="langstream.core.stream.SingleOutputStream.gather" href="#langstream.core.stream.SingleOutputStream.gather">gather</a></code></li>
+<li><code><a title="langstream.core.stream.SingleOutputStream.map" href="#langstream.core.stream.SingleOutputStream.map">map</a></code></li>
+<li><code><a title="langstream.core.stream.SingleOutputStream.on_error" href="#langstream.core.stream.SingleOutputStream.on_error">on_error</a></code></li>
+<li><code><a title="langstream.core.stream.SingleOutputStream.pipe" href="#langstream.core.stream.SingleOutputStream.pipe">pipe</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="langstream.core.stream.Stream" href="#langstream.core.stream.Stream">Stream</a></code></h4>
+<ul class="two-column">
+<li><code><a title="langstream.core.stream.Stream.and_then" href="#langstream.core.stream.Stream.and_then">and_then</a></code></li>
+<li><code><a title="langstream.core.stream.Stream.collect" href="#langstream.core.stream.Stream.collect">collect</a></code></li>
+<li><code><a title="langstream.core.stream.Stream.filter" href="#langstream.core.stream.Stream.filter">filter</a></code></li>
+<li><code><a title="langstream.core.stream.Stream.gather" href="#langstream.core.stream.Stream.gather">gather</a></code></li>
+<li><code><a title="langstream.core.stream.Stream.join" href="#langstream.core.stream.Stream.join">join</a></code></li>
+<li><code><a title="langstream.core.stream.Stream.map" href="#langstream.core.stream.Stream.map">map</a></code></li>
+<li><code><a title="langstream.core.stream.Stream.on_error" href="#langstream.core.stream.Stream.on_error">on_error</a></code></li>
+<li><code><a title="langstream.core.stream.Stream.pipe" href="#langstream.core.stream.Stream.pipe">pipe</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="langstream.core.stream.StreamOutput" href="#langstream.core.stream.StreamOutput">StreamOutput</a></code></h4>
+<ul class="">
+<li><code><a title="langstream.core.stream.StreamOutput.data" href="#langstream.core.stream.StreamOutput.data">data</a></code></li>
+<li><code><a title="langstream.core.stream.StreamOutput.final" href="#langstream.core.stream.StreamOutput.final">final</a></code></li>
+<li><code><a title="langstream.core.stream.StreamOutput.stream" href="#langstream.core.stream.StreamOutput.stream">stream</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

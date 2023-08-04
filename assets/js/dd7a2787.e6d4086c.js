@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[4839],{148:e=>{e.exports=JSON.parse('{"title":"UI","slug":"/category/ui","permalink":"/litechain/docs/category/ui","navigation":{"previous":{"title":"Zero Temperature","permalink":"/litechain/docs/llms/zero_temperature"},"next":{"title":"Chainlit Integration","permalink":"/litechain/docs/ui/chainlit"}}}')}}]);
