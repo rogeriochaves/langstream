@@ -1,5 +1,7 @@
 # 🪽🔗 LangStream
 
+> ⚠️ Heads up! LiteChain was renamed to LangStream, for more details, check out [issue #4](https://github.com/rogeriochaves/langstream/issues/4)
+
 [![](https://dcbadge.vercel.app/api/server/48ZM5KkKgw?style=flat)](https://discord.gg/48ZM5KkKgw)
 [![Release Notes](https://img.shields.io/github/release/rogeriochaves/langstream)](https://pypi.org/project/langstream/)
 [![tests](https://github.com/rogeriochaves/langstream/actions/workflows/run_tests.yml/badge.svg)](https://github.com/rogeriochaves/langstream/actions/workflows/run_tests.yml)
