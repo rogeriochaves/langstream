@@ -1,5 +1,5 @@
 """
-Utils for working with Python's AsyncGenerator with the same primitives as chains
+Utils for working with Python's AsyncGenerator with the same primitives as streams
 """
 import asyncio
 from typing import Any, AsyncGenerator, List, TypeVar, Union
@@ -11,7 +11,7 @@ U = TypeVar("U")
 async def as_async_generator(*values: T) -> AsyncGenerator[T, Any]:
     """
     Creates an asynchronous generator out of simple values, it's useful for
-    converting a single value or a list of values to a streamed output of a Chain
+    converting a single value or a list of values to a streamed output of a Stream
 
     Example
     -------

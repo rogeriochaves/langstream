@@ -3,22 +3,22 @@ from typing import AsyncGenerator, Callable, Iterable, Optional, TypeVar, cast
 
 from gpt4all import GPT4All
 
-from litechain.core.chain import Chain
+from langstream.core.stream import Stream
 
 T = TypeVar("T")
 U = TypeVar("U")
 
 
-class GPT4AllChain(Chain[T, U]):
+class GPT4AllStream(Stream[T, U]):
     """
-    GPT4AllChain is a Chain that allows you to run local LLMs easily
+    GPT4AllStream is a Stream that allows you to run local LLMs easily
     using [GPT4All](https://gpt4all.io/) model.
 
     [GPT4All](https://gpt4all.io/) is a project that focuses on making
     the LLM models very small and very fast to be able to run in any computer
     without GPUs. Check out more about the project [here](https://gpt4all.io/).
 
-    You can use it as any other chain, on the first use, it will download the model
+    You can use it as any other stream, on the first use, it will download the model
     (a few GB). Alternatively, you can point to a locally downloaded model.bin file.
 
     There are serveral parameters you can use to adjust the model output such as
@@ -28,19 +28,19 @@ class GPT4AllChain(Chain[T, U]):
     Example
     -------
 
-    >>> from litechain import join_final_output
-    >>> from litechain.contrib import GPT4AllChain
+    >>> from langstream import join_final_output
+    >>> from langstream.contrib import GPT4AllStream
     >>> import asyncio
     ...
     >>> async def example():
-    ...     greet_chain = GPT4AllChain[str, str](
-    ...         "GreetingChain",
+    ...     greet_stream = GPT4AllStream[str, str](
+    ...         "GreetingStream",
     ...         lambda name: f"### User: Hello, my name is {name}. How is it going?\\n\\n### Response:",
     ...         model="orca-mini-3b.ggmlv3.q4_0.bin",
     ...         temperature=0,
     ...     )
     ...
-    ...     return await join_final_output(greet_chain("Alice"))
+    ...     return await join_final_output(greet_stream("Alice"))
     ...
     >>> asyncio.run(example()) # doctest:+ELLIPSIS +SKIP
     Found model file at ...
@@ -49,7 +49,7 @@ class GPT4AllChain(Chain[T, U]):
     """
 
     def __init__(
-        self: "GPT4AllChain[T, str]",
+        self: "GPT4AllStream[T, str]",
         name: str,
         call: Callable[
             [T],

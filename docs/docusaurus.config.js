@@ -6,8 +6,8 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: "LiteChain",
-  tagline: "Lightweight LLM chaining library",
+  title: "LangStream",
+  tagline: "Lightweight LLM streaming library",
   favicon:
     "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪽</text></svg>",
 
@@ -15,14 +15,14 @@ const config = {
   url: "https://github.com/",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: "/litechain",
+  baseUrl: "/langstream",
 
   staticDirectories: ["reference", "static"],
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: "rogeriochaves", // Usually your GitHub org/user name.
-  projectName: "litechain", // Usually your repo name.
+  projectName: "langstream", // Usually your repo name.
 
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
@@ -67,7 +67,7 @@ const config = {
       // Replace with your project's social card
       image: "img/docusaurus-social-card.jpg",
       navbar: {
-        title: "🪽🔗 LiteChain",
+        title: "🪽🔗 LangStream",
         items: [
           {
             type: "docSidebar",
@@ -77,10 +77,10 @@ const config = {
           },
           {
             type: "html",
-            value: "<a class='navbar__link' style='margin-top: 2px' href='/litechain/reference/litechain/index.html'>Reference</a>"
+            value: "<a class='navbar__link' style='margin-top: 2px' href='/langstream/reference/langstream/index.html'>Reference</a>"
           },
           {
-            href: "https://github.com/rogeriochaves/litechain",
+            href: "https://github.com/rogeriochaves/langstream",
             label: "GitHub",
             position: "right",
           },
@@ -108,7 +108,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} LiteChain, Inc. Docs built with Docusaurus and pdoc3.`,
+        copyright: `Copyright © ${new Date().getFullYear()} LangStream, Inc. Docs built with Docusaurus and pdoc3.`,
       },
       prism: {
         theme: lightCodeTheme,

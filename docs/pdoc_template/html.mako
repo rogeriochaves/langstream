@@ -299,9 +299,9 @@
       <%include file="_lunr_search.inc.mako"/>
     % endif
 
-    <a href="/litechain/docs/intro" style="color: #000">← Back to Docs</a>
+    <a href="/langstream/docs/intro" style="color: #000">← Back to Docs</a>
 
-    <h1>🪽🔗 LiteChain API Reference</h1>
+    <h1>🪽🔗 LangStream API Reference</h1>
     ${extract_toc(module.docstring) if extract_module_toc_into_sidebar else ''}
     <ul id="index">
     % if supermodule:
@@ -479,24 +479,24 @@
     justify-content: space-between;
     width: 100%;">
     <div class="navbar__items">
-      <a class="navbar__brand" href="/litechain/"
-        ><b class="navbar__title text--truncate">🪽🔗 LiteChain</b></a
+      <a class="navbar__brand" href="/langstream/"
+        ><b class="navbar__title text--truncate">🪽🔗 LangStream</b></a
       ><a
         aria-current="page"
         class="navbar__item navbar__link"
-        href="/litechain/docs/intro"
+        href="/langstream/docs/intro"
         >Docs</a
       >
       <a
         aria-current="page"
         class="navbar__item navbar__link navbar__link--active"
-        href="/litechain/reference/litechain/index.html"
+        href="/langstream/reference/langstream/index.html"
         >Reference</a
       >
     </div>
     <div class="navbar__items navbar__items--right">
       <a
-        href="https://github.com/rogeriochaves/litechain"
+        href="https://github.com/rogeriochaves/langstream"
         target="_blank"
         rel="noopener noreferrer"
         class="navbar__item navbar__link"

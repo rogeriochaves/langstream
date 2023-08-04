@@ -10,4 +10,4 @@ When temperature is zero, it means the LLM will always choose the highest probab
 
 In a way, it follows the analogy with temperature in physics, when temperature is high, atoms get agitaded and moving all around, when temperature is low, they are more stable and move less, in more predictable manners.
 
-We then recommend setting the temperature of your LLMs to zero for development, to be able to develop and test it with more ease, and once everything is in place, you can try to increase the temperature of some chains and retest to see if the results feel better.
+We then recommend setting the temperature of your LLMs to zero for development, to be able to develop and test it with more ease, and once everything is in place, you can try to increase the temperature of some streams and retest to see if the results feel better.
