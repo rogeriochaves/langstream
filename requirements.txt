@@ -4,6 +4,7 @@ colorama
 
 # Contrib
 openai
+litellm
 gpt4all
 retry
 

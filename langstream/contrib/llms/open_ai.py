@@ -14,6 +14,7 @@ from typing import (
 )
 
 import openai
+from litellm import completion
 from colorama import Fore
 from retry import retry
 
@@ -294,7 +295,7 @@ class OpenAIChatStream(Stream[T, U]):
                 if function_call is not None:
                     function_kwargs["function_call"] = function_call
 
-                return openai.ChatCompletion.create(
+                return completion(
                     timeout=timeout,
                     request_timeout=timeout,
                     model=model,
