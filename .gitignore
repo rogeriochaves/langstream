@@ -10,6 +10,7 @@ chainlit.md
 build/
 langstream.egg-info/
 .chroma
+litellm_uuid.txt
 
 # Generated markdown files from jupyter notebooks
 docs/docs/examples/*.md

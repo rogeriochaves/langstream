@@ -6,6 +6,7 @@ colorama
 openai
 gpt4all
 retry
+litellm==0.1.450
 
 # Function parsing
 docstring_parser
