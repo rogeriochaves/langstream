@@ -16,6 +16,11 @@ from langstream.contrib.llms.open_ai import (
     OpenAIChatDelta,
 )
 from langstream.contrib.llms.gpt4all_stream import GPT4AllStream
+from langstream.contrib.llms.lite_llm import (
+    LiteLLMChatStream,
+    LiteLLMChatMessage,
+    LiteLLMChatDelta,
+)
 
 __all__ = (
     "OpenAICompletionStream",
@@ -23,4 +28,7 @@ __all__ = (
     "OpenAIChatMessage",
     "OpenAIChatDelta",
     "GPT4AllStream",
+    "LiteLLMChatStream",
+    "LiteLLMChatMessage",
+    "LiteLLMChatDelta",
 )
