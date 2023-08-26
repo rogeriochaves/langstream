@@ -147,6 +147,11 @@ from langstream.contrib.llms.open_ai import (
     OpenAIChatDelta,
 )
 from langstream.contrib.llms.gpt4all_stream import GPT4AllStream
+from langstream.contrib.llms.lite_llm import (
+    LiteLLMChatStream,
+    LiteLLMChatMessage,
+    LiteLLMChatDelta,
+)
 
 __all__ = (
     &#34;OpenAICompletionStream&#34;,
@@ -154,6 +159,9 @@ __all__ = (
     &#34;OpenAIChatMessage&#34;,
     &#34;OpenAIChatDelta&#34;,
     &#34;GPT4AllStream&#34;,
+    &#34;LiteLLMChatStream&#34;,
+    &#34;LiteLLMChatMessage&#34;,
+    &#34;LiteLLMChatDelta&#34;,
 )</code></pre>
 </details>
 </section>
@@ -291,6 +299,497 @@ Found model file at ...
                 yield cast(U, output)
 
         super().__init__(name, lambda input: generate(call(input)))</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="langstream.core.stream.Stream" href="../core/stream.html#langstream.core.stream.Stream">Stream</a></li>
+<li>typing.Generic</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="langstream.core.stream.Stream" href="../core/stream.html#langstream.core.stream.Stream">Stream</a></b></code>:
+<ul class="hlist">
+<li><code><a title="langstream.core.stream.Stream.and_then" href="../core/stream.html#langstream.core.stream.Stream.and_then">and_then</a></code></li>
+<li><code><a title="langstream.core.stream.Stream.collect" href="../core/stream.html#langstream.core.stream.Stream.collect">collect</a></code></li>
+<li><code><a title="langstream.core.stream.Stream.filter" href="../core/stream.html#langstream.core.stream.Stream.filter">filter</a></code></li>
+<li><code><a title="langstream.core.stream.Stream.gather" href="../core/stream.html#langstream.core.stream.Stream.gather">gather</a></code></li>
+<li><code><a title="langstream.core.stream.Stream.join" href="../core/stream.html#langstream.core.stream.Stream.join">join</a></code></li>
+<li><code><a title="langstream.core.stream.Stream.map" href="../core/stream.html#langstream.core.stream.Stream.map">map</a></code></li>
+<li><code><a title="langstream.core.stream.Stream.on_error" href="../core/stream.html#langstream.core.stream.Stream.on_error">on_error</a></code></li>
+<li><code><a title="langstream.core.stream.Stream.pipe" href="../core/stream.html#langstream.core.stream.Stream.pipe">pipe</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="langstream.contrib.LiteLLMChatDelta"><code class="flex name class">
+<span>class <span class="ident">LiteLLMChatDelta</span></span>
+<span>(</span><span>role: Optional[Literal['assistant', 'function']], content: str, name: Optional[str] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>LiteLLMChatDelta is a data class that represents the output of an <code><a title="langstream.contrib.LiteLLMChatStream" href="#langstream.contrib.LiteLLMChatStream">LiteLLMChatStream</a></code>.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>role</code></strong> :&ensp;<code>Optional[Literal["assistant", "function"]]</code></dt>
+<dd>The role of the output message, the first message will have the role, while
+the subsequent partial content output ones will have the role as <code>None</code>.
+For now the only possible values it will have is either None or <code>"assistant"</code></dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>Optional[str]</code></dt>
+<dd>The name is used for when <code>role</code> is <code>"function"</code>, it represents the name of the function that was called</dd>
+<dt><strong><code>content</code></strong> :&ensp;<code>str</code></dt>
+<dd>A string with the partial content being outputted by the LLM, this generally
+translate to each token the LLM is producing</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@dataclass
+class LiteLLMChatDelta:
+    &#34;&#34;&#34;
+    LiteLLMChatDelta is a data class that represents the output of an `LiteLLMChatStream`.
+
+    Attributes
+    ----------
+    role : Optional[Literal[&#34;assistant&#34;, &#34;function&#34;]]
+        The role of the output message, the first message will have the role, while
+        the subsequent partial content output ones will have the role as `None`.
+        For now the only possible values it will have is either None or `&#34;assistant&#34;`
+
+    name: Optional[str]
+        The name is used for when `role` is `&#34;function&#34;`, it represents the name of the function that was called
+
+    content : str
+        A string with the partial content being outputted by the LLM, this generally
+        translate to each token the LLM is producing
+
+    &#34;&#34;&#34;
+
+    role: Optional[Literal[&#34;assistant&#34;, &#34;function&#34;]]
+    content: str
+    name: Optional[str] = None
+
+    def __stream_debug__(self):
+        name = &#34;&#34;
+        if self.name:
+            name = f&#34; {self.name}&#34;
+        if self.role is not None:
+            print(f&#34;{Fore.YELLOW}{self.role.capitalize()}{name}:{Fore.RESET} &#34;, end=&#34;&#34;)
+        print(
+            self.content,
+            end=&#34;&#34;,
+            flush=True,
+        )</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="langstream.contrib.LiteLLMChatDelta.content"><code class="name">var <span class="ident">content</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="langstream.contrib.LiteLLMChatDelta.name"><code class="name">var <span class="ident">name</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="langstream.contrib.LiteLLMChatDelta.role"><code class="name">var <span class="ident">role</span> : Optional[Literal['assistant', 'function']]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="langstream.contrib.LiteLLMChatMessage"><code class="flex name class">
+<span>class <span class="ident">LiteLLMChatMessage</span></span>
+<span>(</span><span>role: Literal['system', 'user', 'assistant', 'function'], content: str, name: Optional[str] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>LiteLLMChatMessage is a data class that represents a chat message for building <code><a title="langstream.contrib.LiteLLMChatStream" href="#langstream.contrib.LiteLLMChatStream">LiteLLMChatStream</a></code> prompt.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>role</code></strong> :&ensp;<code>Literal["system", "user", "assistant", "function"]</code></dt>
+<dd>The role of who sent this message in the chat, can be one of <code>"system"</code>, <code>"user"</code>, <code>"assistant"</code> or "function"</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>Optional[str]</code></dt>
+<dd>The name is used for when <code>role</code> is <code>"function"</code>, it represents the name of the function that was called</dd>
+<dt><strong><code>content</code></strong> :&ensp;<code>str</code></dt>
+<dd>A string with the full content of what the given role said</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@dataclass
+class LiteLLMChatMessage:
+    &#34;&#34;&#34;
+    LiteLLMChatMessage is a data class that represents a chat message for building `LiteLLMChatStream` prompt.
+
+    Attributes
+    ----------
+    role : Literal[&#34;system&#34;, &#34;user&#34;, &#34;assistant&#34;, &#34;function&#34;]
+        The role of who sent this message in the chat, can be one of `&#34;system&#34;`, `&#34;user&#34;`, `&#34;assistant&#34;` or &#34;function&#34;
+
+    name: Optional[str]
+        The name is used for when `role` is `&#34;function&#34;`, it represents the name of the function that was called
+
+    content : str
+        A string with the full content of what the given role said
+
+    &#34;&#34;&#34;
+
+    role: Literal[&#34;system&#34;, &#34;user&#34;, &#34;assistant&#34;, &#34;function&#34;]
+    content: str
+    name: Optional[str] = None
+
+    def to_dict(self):
+        return {k: v for k, v in self.__dict__.items() if v is not None}</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="langstream.contrib.LiteLLMChatMessage.content"><code class="name">var <span class="ident">content</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="langstream.contrib.LiteLLMChatMessage.name"><code class="name">var <span class="ident">name</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="langstream.contrib.LiteLLMChatMessage.role"><code class="name">var <span class="ident">role</span> : Literal['system', 'user', 'assistant', 'function']</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="langstream.contrib.LiteLLMChatMessage.to_dict"><code class="name flex">
+<span>def <span class="ident">to_dict</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_dict(self):
+    return {k: v for k, v in self.__dict__.items() if v is not None}</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="langstream.contrib.LiteLLMChatStream"><code class="flex name class">
+<span>class <span class="ident">LiteLLMChatStream</span></span>
+<span>(</span><span>name: str, call: Callable[[~T], List[<a title="langstream.contrib.llms.lite_llm.LiteLLMChatMessage" href="llms/lite_llm.html#langstream.contrib.llms.lite_llm.LiteLLMChatMessage">LiteLLMChatMessage</a>]], model: str, custom_llm_provider: Optional[str] = None, stream: bool = True, functions: Optional[List[Dict[str, Any]]] = None, function_call: Union[Literal['none', 'auto'], Dict[str, Any], ForwardRef(None)] = None, temperature: Optional[float] = 0, max_tokens: Optional[int] = None, timeout: int = 5, retries: int = 3)</span>
+</code></dt>
+<dd>
+<div class="desc"><p><code><a title="langstream.contrib.LiteLLMChatStream" href="#langstream.contrib.LiteLLMChatStream">LiteLLMChatStream</a></code> is a wrapper for <a href="https://github.com/BerriAI/litellm">LiteLLM</a>, which gives you access to OpenAI, Azure OpenAI, Anthropic, Google VertexAI,
+HuggingFace, Replicate, A21, Cohere and a bunch other LLMs all the the same time, all while keeping the standard OpenAI chat interface. Check it out the completion API
+and the available models <a href="https://docs.litellm.ai/docs/">on their docs</a>.</p>
+<p>Be aware not all models support streaming, and LangStream by default tries to stream everything. So if the model you choose is not working, you might need to set <code>stream=False</code>,
+when calling the <code><a title="langstream.contrib.LiteLLMChatStream" href="#langstream.contrib.LiteLLMChatStream">LiteLLMChatStream</a></code></p>
+<p>The <code><a title="langstream.contrib.LiteLLMChatStream" href="#langstream.contrib.LiteLLMChatStream">LiteLLMChatStream</a></code> takes a lambda function that should return a list of <code><a title="langstream.contrib.LiteLLMChatMessage" href="#langstream.contrib.LiteLLMChatMessage">LiteLLMChatMessage</a></code> for the assistant to reply, it is stateless, so it doesn't keep
+memory of the past chat messages, you will have to handle the memory yourself, you can <a href="https://rogeriochaves.github.io/langstream/docs/llms/memory">follow this guide to get started on memory</a>.</p>
+<p>The <code><a title="langstream.contrib.LiteLLMChatStream" href="#langstream.contrib.LiteLLMChatStream">LiteLLMChatStream</a></code> also produces <code><a title="langstream.contrib.LiteLLMChatDelta" href="#langstream.contrib.LiteLLMChatDelta">LiteLLMChatDelta</a></code> as output, one per token, it contains the <code>role</code> that started the output, and then subsequent <code>content</code> updates.
+If you want the final content as a string, you will need to use the <code>.content</code> property from the delta and accumulate it for the final result.</p>
+<p>To use this stream you will need to have the proper environment keys available depending on the model you are using, like <code>OPENAI_API_KEY</code>, <code>COHERE_API_KEY</code>, <code>HUGGINGFACE_API_KEY</code>, etc,
+check it out more details on <a href="https://docs.litellm.ai/docs/completion/supported">LiteLLM docs</a></p>
+<h2 id="example">Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from langstream import Stream, join_final_output
+&gt;&gt;&gt; from langstream.contrib import LiteLLMChatStream, LiteLLMChatMessage, LiteLLMChatDelta
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example():
+...     recipe_stream: Stream[str, str] = LiteLLMChatStream[str, LiteLLMChatDelta](
+...         &quot;RecipeStream&quot;,
+...         lambda recipe_name: [
+...             LiteLLMChatMessage(
+...                 role=&quot;system&quot;,
+...                 content=&quot;You are Chef Claude, an assistant bot trained on all culinary knowledge of world's most proeminant Michelin Chefs&quot;,
+...             ),
+...             LiteLLMChatMessage(
+...                 role=&quot;user&quot;,
+...                 content=f&quot;Hello, could you write me a recipe for {recipe_name}?&quot;,
+...             ),
+...         ],
+...         model=&quot;claude-2&quot;,
+...         max_tokens=10,
+...     ).map(lambda delta: delta.content)
+...
+...     return await join_final_output(recipe_stream(&quot;instant noodles&quot;))
+...
+&gt;&gt;&gt; asyncio.run(example()) # doctest:+SKIP
+&quot;Of course! Here's a simple and delicious recipe&quot;
+</code></pre>
+<p>You can also pass LiteLLM function schemas in the <code>function</code> argument with all parameter definitions, just like for OpenAI model, but be aware that not all models support it.
+Once you pass a <code>function</code> param, the model may then produce a <code>function</code> role <code><a title="langstream.contrib.LiteLLMChatDelta" href="#langstream.contrib.LiteLLMChatDelta">LiteLLMChatDelta</a></code> as output,
+using your function, with the <code>content</code> field as a json which you can parse to call an actual function.</p>
+<p>Take a look <a href="https://rogeriochaves.github.io/langstream/docs/llms/open_ai_functions">at our OpenAI guide</a> to learn more about LLM function calls in LangStream, it works the same with LiteLLM.</p>
+<h2 id="function-call-example">Function Call Example</h2>
+<pre><code class="language-python-repl">&gt;&gt;&gt; from langstream import Stream, collect_final_output
+&gt;&gt;&gt; from langstream.contrib import LiteLLMChatStream, LiteLLMChatMessage, LiteLLMChatDelta
+&gt;&gt;&gt; from typing import Literal, Union, Dict
+&gt;&gt;&gt; import asyncio
+...
+&gt;&gt;&gt; async def example():
+...     def get_current_weather(
+...         location: str, format: Literal[&quot;celsius&quot;, &quot;fahrenheit&quot;] = &quot;celsius&quot;
+...     ) -&gt; Dict[str, str]:
+...         return {
+...             &quot;location&quot;: location,
+...             &quot;forecast&quot;: &quot;sunny&quot;,
+...             &quot;temperature&quot;: &quot;25 C&quot; if format == &quot;celsius&quot; else &quot;77 F&quot;,
+...         }
+...
+...     stream : Stream[str, Union[LiteLLMChatDelta, Dict[str, str]]] = LiteLLMChatStream[str, Union[LiteLLMChatDelta, Dict[str, str]]](
+...         &quot;WeatherStream&quot;,
+...         lambda user_input: [
+...             LiteLLMChatMessage(role=&quot;user&quot;, content=user_input),
+...         ],
+...         model=&quot;gpt-3.5-turbo&quot;,
+...         functions=[
+...             {
+...                 &quot;name&quot;: &quot;get_current_weather&quot;,
+...                 &quot;description&quot;: &quot;Gets the current weather in a given location, use this function for any questions related to the weather&quot;,
+...                 &quot;parameters&quot;: {
+...                     &quot;type&quot;: &quot;object&quot;,
+...                     &quot;properties&quot;: {
+...                         &quot;location&quot;: {
+...                             &quot;description&quot;: &quot;The city to get the weather, e.g. San Francisco. Guess the location from user messages&quot;,
+...                             &quot;type&quot;: &quot;string&quot;,
+...                         },
+...                         &quot;format&quot;: {
+...                             &quot;description&quot;: &quot;A string with the full content of what the given role said&quot;,
+...                             &quot;type&quot;: &quot;string&quot;,
+...                             &quot;enum&quot;: (&quot;celsius&quot;, &quot;fahrenheit&quot;),
+...                         },
+...                     },
+...                     &quot;required&quot;: [&quot;location&quot;],
+...                 },
+...             }
+...         ],
+...         temperature=0,
+...     ).map(
+...         lambda delta: get_current_weather(**json.loads(delta.content))
+...         if delta.role == &quot;function&quot; and delta.name == &quot;get_current_weather&quot;
+...         else delta
+...     )
+...
+...     return await collect_final_output(stream(&quot;how is the weather today in Rio de Janeiro?&quot;))
+...
+&gt;&gt;&gt; asyncio.run(example()) # doctest:+SKIP
+[{'location': 'Rio de Janeiro', 'forecast': 'sunny', 'temperature': '25 C'}]
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LiteLLMChatStream(Stream[T, U]):
+    &#34;&#34;&#34;
+    `LiteLLMChatStream` is a wrapper for [LiteLLM](https://github.com/BerriAI/litellm), which gives you access to OpenAI, Azure OpenAI, Anthropic, Google VertexAI,
+    HuggingFace, Replicate, A21, Cohere and a bunch other LLMs all the the same time, all while keeping the standard OpenAI chat interface. Check it out the completion API
+    and the available models [on their docs](https://docs.litellm.ai/docs/).
+
+    Be aware not all models support streaming, and LangStream by default tries to stream everything. So if the model you choose is not working, you might need to set `stream=False`,
+    when calling the `LiteLLMChatStream`
+
+    The `LiteLLMChatStream` takes a lambda function that should return a list of `LiteLLMChatMessage` for the assistant to reply, it is stateless, so it doesn&#39;t keep
+    memory of the past chat messages, you will have to handle the memory yourself, you can [follow this guide to get started on memory](https://rogeriochaves.github.io/langstream/docs/llms/memory).
+
+    The `LiteLLMChatStream` also produces `LiteLLMChatDelta` as output, one per token, it contains the `role` that started the output, and then subsequent `content` updates.
+    If you want the final content as a string, you will need to use the `.content` property from the delta and accumulate it for the final result.
+
+    To use this stream you will need to have the proper environment keys available depending on the model you are using, like `OPENAI_API_KEY`, `COHERE_API_KEY`, `HUGGINGFACE_API_KEY`, etc,
+    check it out more details on [LiteLLM docs](https://docs.litellm.ai/docs/completion/supported)
+
+    Example
+    -------
+
+    &gt;&gt;&gt; from langstream import Stream, join_final_output
+    &gt;&gt;&gt; from langstream.contrib import LiteLLMChatStream, LiteLLMChatMessage, LiteLLMChatDelta
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     recipe_stream: Stream[str, str] = LiteLLMChatStream[str, LiteLLMChatDelta](
+    ...         &#34;RecipeStream&#34;,
+    ...         lambda recipe_name: [
+    ...             LiteLLMChatMessage(
+    ...                 role=&#34;system&#34;,
+    ...                 content=&#34;You are Chef Claude, an assistant bot trained on all culinary knowledge of world&#39;s most proeminant Michelin Chefs&#34;,
+    ...             ),
+    ...             LiteLLMChatMessage(
+    ...                 role=&#34;user&#34;,
+    ...                 content=f&#34;Hello, could you write me a recipe for {recipe_name}?&#34;,
+    ...             ),
+    ...         ],
+    ...         model=&#34;claude-2&#34;,
+    ...         max_tokens=10,
+    ...     ).map(lambda delta: delta.content)
+    ...
+    ...     return await join_final_output(recipe_stream(&#34;instant noodles&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(example()) # doctest:+SKIP
+    &#34;Of course! Here&#39;s a simple and delicious recipe&#34;
+
+    You can also pass LiteLLM function schemas in the `function` argument with all parameter definitions, just like for OpenAI model, but be aware that not all models support it.
+    Once you pass a `function` param, the model may then produce a `function` role `LiteLLMChatDelta` as output,
+    using your function, with the `content` field as a json which you can parse to call an actual function.
+
+    Take a look [at our OpenAI guide](https://rogeriochaves.github.io/langstream/docs/llms/open_ai_functions) to learn more about LLM function calls in LangStream, it works the same with LiteLLM.
+
+    Function Call Example
+    ---------------------
+
+    &gt;&gt;&gt; from langstream import Stream, collect_final_output
+    &gt;&gt;&gt; from langstream.contrib import LiteLLMChatStream, LiteLLMChatMessage, LiteLLMChatDelta
+    &gt;&gt;&gt; from typing import Literal, Union, Dict
+    &gt;&gt;&gt; import asyncio
+    ...
+    &gt;&gt;&gt; async def example():
+    ...     def get_current_weather(
+    ...         location: str, format: Literal[&#34;celsius&#34;, &#34;fahrenheit&#34;] = &#34;celsius&#34;
+    ...     ) -&gt; Dict[str, str]:
+    ...         return {
+    ...             &#34;location&#34;: location,
+    ...             &#34;forecast&#34;: &#34;sunny&#34;,
+    ...             &#34;temperature&#34;: &#34;25 C&#34; if format == &#34;celsius&#34; else &#34;77 F&#34;,
+    ...         }
+    ...
+    ...     stream : Stream[str, Union[LiteLLMChatDelta, Dict[str, str]]] = LiteLLMChatStream[str, Union[LiteLLMChatDelta, Dict[str, str]]](
+    ...         &#34;WeatherStream&#34;,
+    ...         lambda user_input: [
+    ...             LiteLLMChatMessage(role=&#34;user&#34;, content=user_input),
+    ...         ],
+    ...         model=&#34;gpt-3.5-turbo&#34;,
+    ...         functions=[
+    ...             {
+    ...                 &#34;name&#34;: &#34;get_current_weather&#34;,
+    ...                 &#34;description&#34;: &#34;Gets the current weather in a given location, use this function for any questions related to the weather&#34;,
+    ...                 &#34;parameters&#34;: {
+    ...                     &#34;type&#34;: &#34;object&#34;,
+    ...                     &#34;properties&#34;: {
+    ...                         &#34;location&#34;: {
+    ...                             &#34;description&#34;: &#34;The city to get the weather, e.g. San Francisco. Guess the location from user messages&#34;,
+    ...                             &#34;type&#34;: &#34;string&#34;,
+    ...                         },
+    ...                         &#34;format&#34;: {
+    ...                             &#34;description&#34;: &#34;A string with the full content of what the given role said&#34;,
+    ...                             &#34;type&#34;: &#34;string&#34;,
+    ...                             &#34;enum&#34;: (&#34;celsius&#34;, &#34;fahrenheit&#34;),
+    ...                         },
+    ...                     },
+    ...                     &#34;required&#34;: [&#34;location&#34;],
+    ...                 },
+    ...             }
+    ...         ],
+    ...         temperature=0,
+    ...     ).map(
+    ...         lambda delta: get_current_weather(**json.loads(delta.content))
+    ...         if delta.role == &#34;function&#34; and delta.name == &#34;get_current_weather&#34;
+    ...         else delta
+    ...     )
+    ...
+    ...     return await collect_final_output(stream(&#34;how is the weather today in Rio de Janeiro?&#34;))
+    ...
+    &gt;&gt;&gt; asyncio.run(example()) # doctest:+SKIP
+    [{&#39;location&#39;: &#39;Rio de Janeiro&#39;, &#39;forecast&#39;: &#39;sunny&#39;, &#39;temperature&#39;: &#39;25 C&#39;}]
+
+    &#34;&#34;&#34;
+
+    def __init__(
+        self: &#34;LiteLLMChatStream[T, LiteLLMChatDelta]&#34;,
+        name: str,
+        call: Callable[
+            [T],
+            List[LiteLLMChatMessage],
+        ],
+        model: str,
+        custom_llm_provider: Optional[str] = None,
+        stream: bool = True,
+        functions: Optional[List[Dict[str, Any]]] = None,
+        function_call: Optional[Union[Literal[&#34;none&#34;, &#34;auto&#34;], Dict[str, Any]]] = None,
+        temperature: Optional[float] = 0,
+        max_tokens: Optional[int] = None,
+        timeout: int = 5,
+        retries: int = 3,
+    ) -&gt; None:
+        async def chat_completion(
+            messages: List[LiteLLMChatMessage],
+        ) -&gt; AsyncGenerator[StreamOutput[LiteLLMChatDelta], None]:
+            loop = asyncio.get_event_loop()
+
+            @retry(tries=retries)
+            def get_completions():
+                function_kwargs = {}
+                if functions is not None:
+                    function_kwargs[&#34;functions&#34;] = functions
+                if function_call is not None:
+                    function_kwargs[&#34;function_call&#34;] = function_call
+
+                return litellm.completion(
+                    request_timeout=timeout,
+                    model=model,
+                    custom_llm_provider=custom_llm_provider,
+                    messages=[m.to_dict() for m in messages],
+                    temperature=temperature,  # type: ignore (why is their type int?)
+                    stream=stream,
+                    max_tokens=max_tokens,  # type: ignore (why is their type float?)
+                    **function_kwargs,
+                )
+
+            completions = await loop.run_in_executor(None, get_completions)
+
+            pending_function_call: Optional[LiteLLMChatDelta] = None
+
+            completions = (
+                completions if isinstance(completions, GeneratorType) else [completions]
+            )
+            for output in completions:
+                output = cast(dict, output)
+                if &#34;choices&#34; not in output:
+                    continue
+
+                if len(output[&#34;choices&#34;]) == 0:
+                    continue
+
+                delta = (
+                    output[&#34;choices&#34;][0][&#34;message&#34;]
+                    if &#34;delta&#34; not in output[&#34;choices&#34;][0]
+                    else output[&#34;choices&#34;][0][&#34;delta&#34;]
+                )
+
+                if &#34;function_call&#34; in delta:
+                    role = delta[&#34;role&#34;] if &#34;role&#34; in delta else None
+                    function_name: Optional[str] = delta[&#34;function_call&#34;].get(&#34;name&#34;)
+                    function_arguments: Optional[str] = delta[&#34;function_call&#34;].get(
+                        &#34;arguments&#34;
+                    )
+
+                    if function_name is not None:
+                        pending_function_call = LiteLLMChatDelta(
+                            role=&#34;function&#34;,
+                            name=function_name,
+                            content=function_arguments or &#34;&#34;,
+                        )
+                    elif (
+                        pending_function_call is not None
+                        and function_arguments is not None
+                    ):
+                        pending_function_call.content += function_arguments
+                elif &#34;content&#34; in delta:
+                    role = delta[&#34;role&#34;] if &#34;role&#34; in delta else None
+                    yield self._output_wrap(
+                        LiteLLMChatDelta(
+                            role=role,
+                            content=delta[&#34;content&#34;],
+                        )
+                    )
+                else:
+                    if pending_function_call:
+                        yield self._output_wrap(pending_function_call)
+                        pending_function_call = None
+            if pending_function_call:
+                yield self._output_wrap(pending_function_call)
+                pending_function_call = None
+
+        super().__init__(
+            name,
+            lambda input: cast(AsyncGenerator[U, None], chat_completion(call(input))),
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -933,6 +1432,26 @@ using your function, with the <code>content</code> field as a json which you can
 <ul>
 <li>
 <h4><code><a title="langstream.contrib.GPT4AllStream" href="#langstream.contrib.GPT4AllStream">GPT4AllStream</a></code></h4>
+</li>
+<li>
+<h4><code><a title="langstream.contrib.LiteLLMChatDelta" href="#langstream.contrib.LiteLLMChatDelta">LiteLLMChatDelta</a></code></h4>
+<ul class="">
+<li><code><a title="langstream.contrib.LiteLLMChatDelta.content" href="#langstream.contrib.LiteLLMChatDelta.content">content</a></code></li>
+<li><code><a title="langstream.contrib.LiteLLMChatDelta.name" href="#langstream.contrib.LiteLLMChatDelta.name">name</a></code></li>
+<li><code><a title="langstream.contrib.LiteLLMChatDelta.role" href="#langstream.contrib.LiteLLMChatDelta.role">role</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="langstream.contrib.LiteLLMChatMessage" href="#langstream.contrib.LiteLLMChatMessage">LiteLLMChatMessage</a></code></h4>
+<ul class="">
+<li><code><a title="langstream.contrib.LiteLLMChatMessage.content" href="#langstream.contrib.LiteLLMChatMessage.content">content</a></code></li>
+<li><code><a title="langstream.contrib.LiteLLMChatMessage.name" href="#langstream.contrib.LiteLLMChatMessage.name">name</a></code></li>
+<li><code><a title="langstream.contrib.LiteLLMChatMessage.role" href="#langstream.contrib.LiteLLMChatMessage.role">role</a></code></li>
+<li><code><a title="langstream.contrib.LiteLLMChatMessage.to_dict" href="#langstream.contrib.LiteLLMChatMessage.to_dict">to_dict</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="langstream.contrib.LiteLLMChatStream" href="#langstream.contrib.LiteLLMChatStream">LiteLLMChatStream</a></code></h4>
 </li>
 <li>
 <h4><code><a title="langstream.contrib.OpenAIChatDelta" href="#langstream.contrib.OpenAIChatDelta">OpenAIChatDelta</a></code></h4>
