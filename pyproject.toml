@@ -1,0 +1,69 @@
+[tool.poetry]
+name = "langstream"
+version = "0.2.0"
+description = "Build robust LLM applications with true composability"
+authors = ["Rogerio Chaves <rogeriocfj@gmail.com>"]
+homepage = "https://github.com/rogeriochaves/langstream"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.urls] 
+"Documentation" = "https://rogeriochaves.github.io/langstream/"
+"Source Code" = "https://github.com/rogeriochaves/langstream"
+"Issue Tracker" = "https://github.com/rogeriochaves/langstream/issues"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+asyncstdlib = "^3.10.8"
+colorama = "^0.4.6"
+docstring-parser = "^0.15"
+retry = { version = "*" }
+
+openai = { version = "*", optional = true }
+gpt4all = { version = "*", optional = true }
+litellm = { version = "=0.1.450", optional = true }
+
+[tool.poetry.group.dev.dependencies]
+pdoc3 = "^0.10.0"
+pytest = "^7.4.2"
+pytest-timeout = "^2.1.0"
+nbdoc = "^0.0.82"
+
+fastapi = "*"
+uvicorn = "*"
+openai_function_call = "*"
+unstructured = "*"
+chromadb = "=0.4.3"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.4.2"
+pytest-timeout = "^2.1.0"
+pdoc3 = "^0.10.0"
+nbdoc = "^0.0.82"
+
+fastapi = "*"
+uvicorn = "*"
+openai_function_call = "*"
+unstructured = "*"
+chromadb = "=0.4.3"
+
+[tool.poetry.extras]
+openai = ["openai"]
+gpt4all = ["gpt4all"]
+litellm = ["litellm"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

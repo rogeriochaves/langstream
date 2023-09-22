@@ -11,7 +11,9 @@ build/
 langstream.egg-info/
 .chroma
 litellm_uuid.txt
+/dist
 
 # Generated markdown files from jupyter notebooks
 docs/docs/examples/*.md
 !docs/docs/examples/index.md
+
