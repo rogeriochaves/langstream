@@ -15,6 +15,12 @@ export ANTHROPIC_API_KEY=<your key here>
 export HUGGINGFACE_API_KEY=<your key here>
 ```
 
+Make sure you have LiteLLM installed:
+
+```
+pip install litellm
+```
+
 Then, you should be able to use the [`LiteLLMChatStream`](pathname:///reference/langstream/contrib/index.html#langstream.contrib.LiteLLMChatStream), which has basically the same interface as as the [`OpenAIChatStream`](pathname:///reference/langstream/contrib/index.html#langstream.contrib.OpenAIChatStream), check it out:
 
 ## Chat Completion

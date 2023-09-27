@@ -1,7 +1,7 @@
 import asyncio
 from typing import AsyncGenerator, Callable, Iterable, Optional, TypeVar, cast
 
-from gpt4all import GPT4All
+import importlib
 
 from langstream.core.stream import Stream
 
@@ -65,6 +65,7 @@ class GPT4AllStream(Stream[T, U]):
         n_batch=8,
         n_threads: Optional[int] = None,
     ) -> None:
+        GPT4All = importlib.import_module("gpt4all").GPT4All
         gpt4all = GPT4All(model, n_threads=n_threads)
 
         async def generate(prompt: str) -> AsyncGenerator[U, None]:

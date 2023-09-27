@@ -11,10 +11,10 @@ LangStream also puts emphasis on "explicit is better than implicit", which means
 
 ## Getting Started
 
-You can install it with pip:
+You can install langstream with pip + a model provider (like openai, gpt4all or litellm):
 
 ```
-pip install langstream
+pip install langstream openai
 ```
 
 ## Your First Stream

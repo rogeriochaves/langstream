@@ -6,6 +6,12 @@ sidebar_position: 4
 
 LLMs require a lot of GPU to run properly make it hard for the common folk to set one up locally. Fortunately, the folks at [GPT4All](https://gpt4all.io/index.html) are doing an excellent job in really reducing those models with various techniques, and speeding them up to run on CPUs everywhere with no issues. LangStream also provides a thin wrapper for them, and since it's local, no API keys are required.
 
+Make sure you have GPT4All installed:
+
+```
+pip install gpt4all
+```
+
 # GPT4AllStream
 
 You can use a [`GPT4AllStream`](pathname:///reference/langstream/contrib/index.html#langstream.contrib.GPT4AllStream) like this:

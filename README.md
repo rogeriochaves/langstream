@@ -15,7 +15,7 @@ LangStream is a lighter alternative to LangChain for building LLMs application, 
 # Quick Install
 
 ```
-pip install langstream
+pip install langstream openai
 ```
 
 # 🔗 The Stream building block
