@@ -28,7 +28,6 @@ readme = "README.md"
 python = "^3.9"
 asyncstdlib = "^3.10.8"
 colorama = "^0.4.6"
-docstring-parser = "^0.15"
 retry = { version = "*" }
 
 openai = { version = "*", optional = true }
