@@ -275,6 +275,7 @@ Found model file at ...
         n_batch=8,
         n_threads: Optional[int] = None,
     ) -&gt; None:
+        GPT4All = importlib.import_module(&#34;gpt4all&#34;).GPT4All
         gpt4all = GPT4All(model, n_threads=n_threads)
 
         async def generate(prompt: str) -&gt; AsyncGenerator[U, None]:
@@ -720,6 +721,7 @@ using your function, with the <code>content</code> field as a json which you can
                 if function_call is not None:
                     function_kwargs[&#34;function_call&#34;] = function_call
 
+                litellm = importlib.import_module(&#34;litellm&#34;)
                 return litellm.completion(
                     request_timeout=timeout,
                     model=model,
@@ -1199,6 +1201,7 @@ using your function, with the <code>content</code> field as a json which you can
                 if function_call is not None:
                     function_kwargs[&#34;function_call&#34;] = function_call
 
+                openai = importlib.import_module(&#34;openai&#34;)
                 return openai.ChatCompletion.create(
                     timeout=timeout,
                     request_timeout=timeout,
@@ -1366,6 +1369,7 @@ using your function, with the <code>content</code> field as a json which you can
 
             @retry(tries=retries)
             def get_completions():
+                openai = importlib.import_module(&#34;openai&#34;)
                 return openai.Completion.create(
                     model=model,
                     prompt=prompt,
