@@ -19,7 +19,7 @@ classifiers = [
 license = "MIT"
 readme = "README.md"
 
-[tool.poetry.urls] 
+[tool.poetry.urls]
 "Documentation" = "https://rogeriochaves.github.io/langstream/"
 "Source Code" = "https://github.com/rogeriochaves/langstream"
 "Issue Tracker" = "https://github.com/rogeriochaves/langstream/issues"
@@ -33,7 +33,7 @@ retry = { version = "*" }
 
 openai = { version = "*", optional = true }
 gpt4all = { version = "*", optional = true }
-litellm = { version = "=0.1.450", optional = true }
+litellm = { version = "*", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 pdoc3 = "^0.10.0"

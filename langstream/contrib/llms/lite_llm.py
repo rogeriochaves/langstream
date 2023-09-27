@@ -1,6 +1,5 @@
 import asyncio
 from dataclasses import dataclass
-import itertools
 from types import GeneratorType
 from typing import (
     Any,
@@ -15,7 +14,7 @@ from typing import (
     cast,
 )
 
-import litellm
+import importlib
 from colorama import Fore
 from retry import retry
 
@@ -232,6 +231,7 @@ class LiteLLMChatStream(Stream[T, U]):
                 if function_call is not None:
                     function_kwargs["function_call"] = function_call
 
+                litellm = importlib.import_module("litellm")
                 return litellm.completion(
                     request_timeout=timeout,
                     model=model,

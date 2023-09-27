@@ -13,7 +13,7 @@ from typing import (
     cast,
 )
 
-import openai
+import importlib
 from colorama import Fore
 from retry import retry
 
@@ -73,6 +73,7 @@ class OpenAICompletionStream(Stream[T, U]):
 
             @retry(tries=retries)
             def get_completions():
+                openai = importlib.import_module("openai")
                 return openai.Completion.create(
                     model=model,
                     prompt=prompt,
@@ -294,6 +295,7 @@ class OpenAIChatStream(Stream[T, U]):
                 if function_call is not None:
                     function_kwargs["function_call"] = function_call
 
+                openai = importlib.import_module("openai")
                 return openai.ChatCompletion.create(
                     timeout=timeout,
                     request_timeout=timeout,

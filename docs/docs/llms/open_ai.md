@@ -10,6 +10,12 @@ OpenAI took the world by storm with the launch of ChatGPT and GPT-4, at the poin
 export OPENAI_API_KEY=<your key here>
 ```
 
+Make sure you have OpenAI library installed:
+
+```
+pip install openai
+```
+
 Then, LangStream provides two thin wrapper layers for their APIs:
 
 ## Text Completion
