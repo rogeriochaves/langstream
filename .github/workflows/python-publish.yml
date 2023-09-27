@@ -32,7 +32,9 @@ jobs:
         key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
 
     - name: Install dependencies
-      run: make install
+      run: |
+        make install
+        pip install build
 
     - name: Build package
       run: python -m build
