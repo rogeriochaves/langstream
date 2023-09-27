@@ -33,7 +33,7 @@ retry = { version = "*" }
 
 openai = { version = "*", optional = true }
 gpt4all = { version = "*", optional = true }
-litellm = { version = "*", optional = true }
+litellm = { version = "=0.1.450", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 pdoc3 = "^0.10.0"
