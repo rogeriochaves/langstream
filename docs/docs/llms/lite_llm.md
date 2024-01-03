@@ -50,8 +50,6 @@ await join_final_output(recipe_stream("instant noodles"))
 
 Analogous to OpenAI, it takes [`LiteLLMChatMessage`](pathname:///reference/langstream/contrib/index.html#langstream.contrib.LiteLLMChatMessage)s and produces [`LiteLLMChatDelta`](pathname:///reference/langstream/contrib/index.html#langstream.contrib.LiteLLMChatDelta)s, it can also take `functions` as an argument for function calling, but keep in mind not all models support it and it might simply be ignored, be sure to check [Lite LLM Docs](https://docs.litellm.ai/docs/completion/supported) for the model you are using.
 
-Another caveat is that, by default, LangStream tries to stream all outputs, but not all models and APIs support streaming, so you might need to disable it with `stream=False` or they might throw exceptions, again be sure to check which models support it or not.
-
 We hope that with that you will be able to use the best LLM available to you, or even mix and match on the middle of your streams depending on the need, or falling back if one LLM is not generating the right answer, and so on.
 
 Keep on reading the next part of the docs!

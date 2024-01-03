@@ -30,9 +30,9 @@ asyncstdlib = "^3.10.8"
 colorama = "^0.4.6"
 retry = { version = "*" }
 
-openai = { version = "*", optional = true }
-gpt4all = { version = "*", optional = true }
-litellm = { version = "=0.1.450", optional = true }
+openai = { version = ">=1.6.1", optional = true }
+gpt4all = { version = ">=2.0.2", optional = true }
+litellm = { version = ">=1.16.12", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 pdoc3 = "^0.10.0"
@@ -42,9 +42,9 @@ nbdoc = "^0.0.82"
 
 fastapi = "*"
 uvicorn = "*"
-openai_function_call = "*"
+instructor = "^0.4.5"
 unstructured = "*"
-chromadb = "=0.4.3"
+chromadb = "^0.4.22"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.2"
@@ -54,9 +54,9 @@ nbdoc = "^0.0.82"
 
 fastapi = "*"
 uvicorn = "*"
-openai_function_call = "*"
+instructor = "^0.4.5"
 unstructured = "*"
-chromadb = "=0.4.3"
+chromadb = "^0.4.22"
 
 [tool.poetry.extras]
 openai = ["openai"]

@@ -33,7 +33,7 @@ magical_numbers_bot: Stream[str, str] = GPT4AllStream[str, str](
 
             ### Response:"""
         ),
-    model="orca-mini-3b.ggmlv3.q4_0.bin",
+    model="orca-mini-3b-gguf2-q4_0.gguf",
     temperature=0,
 ).map(save_to_memory)
 

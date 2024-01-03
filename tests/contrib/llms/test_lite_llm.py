@@ -26,9 +26,8 @@ class LiteLLMChatStreamTestCase(unittest.IsolatedAsyncioTestCase):
             lambda name: [
                 LiteLLMChatMessage(role="user", content=f"Hello, my name is {name}")
             ],
-            model="replicate/replicate/llama-2-70b-chat:2796ee9483c3fd7aa2e171d38f4ca12251a30609463dcfd4cd76703f22e96cdf",
-            stream=False,
-            temperature=0,
+            model="replicate/meta/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3",
+            temperature=0.01,
         )
 
         result = ""

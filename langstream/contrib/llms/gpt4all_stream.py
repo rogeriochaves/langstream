@@ -36,7 +36,7 @@ class GPT4AllStream(Stream[T, U]):
     ...     greet_stream = GPT4AllStream[str, str](
     ...         "GreetingStream",
     ...         lambda name: f"### User: Hello, my name is {name}. How is it going?\\n\\n### Response:",
-    ...         model="orca-mini-3b.ggmlv3.q4_0.bin",
+    ...         model="orca-mini-3b-gguf2-q4_0.gguf",
     ...         temperature=0,
     ...     )
     ...

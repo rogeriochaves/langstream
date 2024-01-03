@@ -95,9 +95,6 @@ class LiteLLMChatStream(Stream[T, U]):
     HuggingFace, Replicate, A21, Cohere and a bunch other LLMs all the the same time, all while keeping the standard OpenAI chat interface. Check it out the completion API
     and the available models [on their docs](https://docs.litellm.ai/docs/).
 
-    Be aware not all models support streaming, and LangStream by default tries to stream everything. So if the model you choose is not working, you might need to set `stream=False`,
-    when calling the `LiteLLMChatStream`
-
     The `LiteLLMChatStream` takes a lambda function that should return a list of `LiteLLMChatMessage` for the assistant to reply, it is stateless, so it doesn't keep
     memory of the past chat messages, you will have to handle the memory yourself, you can [follow this guide to get started on memory](https://rogeriochaves.github.io/langstream/docs/llms/memory).
 
@@ -210,7 +207,6 @@ class LiteLLMChatStream(Stream[T, U]):
         ],
         model: str,
         custom_llm_provider: Optional[str] = None,
-        stream: bool = True,
         functions: Optional[List[Dict[str, Any]]] = None,
         function_call: Optional[Union[Literal["none", "auto"], Dict[str, Any]]] = None,
         temperature: Optional[float] = 0,
@@ -232,13 +228,15 @@ class LiteLLMChatStream(Stream[T, U]):
                     function_kwargs["function_call"] = function_call
 
                 litellm = importlib.import_module("litellm")
+                # import litellm
+
                 return litellm.completion(
                     request_timeout=timeout,
                     model=model,
                     custom_llm_provider=custom_llm_provider,
                     messages=[m.to_dict() for m in messages],
                     temperature=temperature,  # type: ignore (why is their type int?)
-                    stream=stream,
+                    stream=True,
                     max_tokens=max_tokens,  # type: ignore (why is their type float?)
                     **function_kwargs,
                 )
@@ -248,27 +246,34 @@ class LiteLLMChatStream(Stream[T, U]):
             pending_function_call: Optional[LiteLLMChatDelta] = None
 
             completions = (
-                completions if isinstance(completions, GeneratorType) else [completions]
+                completions if hasattr(completions, "__iter__") else [completions]
             )
+            # from litellm import ModelResponse
+            # from litellm.utils import StreamingChoices
+
             for output in completions:
-                output = cast(dict, output)
-                if "choices" not in output:
+                # output = cast(ModelResponse, output)
+                if len(output.choices) == 0:
                     continue
 
-                if len(output["choices"]) == 0:
+                # choices = cast(List[StreamingChoices], output.choices)
+                choices = output.choices
+                delta = choices[0].delta
+                if not delta:
                     continue
 
-                delta = (
-                    output["choices"][0]["message"]
-                    if "delta" not in output["choices"][0]
-                    else output["choices"][0]["delta"]
-                )
-
-                if "function_call" in delta:
-                    role = delta["role"] if "role" in delta else None
-                    function_name: Optional[str] = delta["function_call"].get("name")
-                    function_arguments: Optional[str] = delta["function_call"].get(
-                        "arguments"
+                delta_function_call = delta.model_dump().get("function_call")
+                if delta_function_call is not None:
+                    role = delta.role
+                    function_name: Optional[str] = (
+                        delta_function_call["name"]
+                        if "name" in delta_function_call
+                        else None
+                    )
+                    function_arguments: Optional[str] = (
+                        delta_function_call["arguments"]
+                        if "arguments" in delta_function_call
+                        else None
                     )
 
                     if function_name is not None:
@@ -282,12 +287,14 @@ class LiteLLMChatStream(Stream[T, U]):
                         and function_arguments is not None
                     ):
                         pending_function_call.content += function_arguments
-                elif "content" in delta:
-                    role = delta["role"] if "role" in delta else None
+                elif delta.content is not None:
+                    role = cast(
+                        Union[Literal["assistant", "function"], None], delta.role
+                    )
                     yield self._output_wrap(
                         LiteLLMChatDelta(
                             role=role,
-                            content=delta["content"],
+                            content=delta.content,
                         )
                     )
                 else:

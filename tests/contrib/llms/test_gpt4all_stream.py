@@ -14,7 +14,7 @@ class GPT4AllStreamTestCase(unittest.IsolatedAsyncioTestCase):
             GPT4AllStream[str, str](
                 "GreetingStream",
                 lambda name: f"### User: Hello, my name is {name}. How is it going?\n\n### Response:",
-                model="orca-mini-3b.ggmlv3.q4_0.bin",
+                model="orca-mini-3b-gguf2-q4_0.gguf",
                 temperature=0,
             )
         )
@@ -30,7 +30,7 @@ class GPT4AllStreamTestCase(unittest.IsolatedAsyncioTestCase):
         async_stream = GPT4AllStream[str, str](
             "AsyncStream",
             lambda _: f"to make a function asynchronous in js, use the keyword `",
-            model="orca-mini-3b.ggmlv3.q4_0.bin",
+            model="orca-mini-3b-gguf2-q4_0.gguf",
             max_tokens=2,
             temperature=0,
         )

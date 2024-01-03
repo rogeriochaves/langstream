@@ -74,20 +74,20 @@ class OpenAICompletionStream(Stream[T, U]):
             @retry(tries=retries)
             def get_completions():
                 openai = importlib.import_module("openai")
-                return openai.Completion.create(
+                client = openai.OpenAI()
+                return client.completions.create(
                     model=model,
                     prompt=prompt,
                     temperature=temperature,
                     stream=True,
                     max_tokens=max_tokens,
                     timeout=timeout,
-                    request_timeout=timeout,
                 )
 
             completions = await loop.run_in_executor(None, get_completions)
 
             for output in completions:
-                output = cast(dict, output)
+                output = cast(dict, output.model_dump())
                 if "choices" in output:
                     if len(output["choices"]) > 0:
                         if "text" in output["choices"][0]:
@@ -296,11 +296,13 @@ class OpenAIChatStream(Stream[T, U]):
                     function_kwargs["function_call"] = function_call
 
                 openai = importlib.import_module("openai")
-                return openai.ChatCompletion.create(
+                # import openai
+
+                client = openai.OpenAI()
+                return client.chat.completions.create(
                     timeout=timeout,
-                    request_timeout=timeout,
                     model=model,
-                    messages=[m.to_dict() for m in messages],
+                    messages=cast(Any, [m.to_dict() for m in messages]),
                     temperature=temperature,
                     stream=True,
                     max_tokens=max_tokens,
@@ -312,23 +314,17 @@ class OpenAIChatStream(Stream[T, U]):
             pending_function_call: Optional[OpenAIChatDelta] = None
 
             for output in completions:
-                output = cast(dict, output)
-                if "choices" not in output:
+                if len(output.choices) == 0:
                     continue
 
-                if len(output["choices"]) == 0:
+                delta = output.choices[0].delta
+                if not delta:
                     continue
 
-                if "delta" not in output["choices"][0]:
-                    continue
-
-                if "function_call" in output["choices"][0]["delta"]:
-                    delta = output["choices"][0]["delta"]
-                    role = delta["role"] if "role" in delta else None
-                    function_name: Optional[str] = delta["function_call"].get("name")
-                    function_arguments: Optional[str] = delta["function_call"].get(
-                        "arguments"
-                    )
+                if delta.function_call is not None:
+                    role = delta.role
+                    function_name: Optional[str] = delta.function_call.name
+                    function_arguments: Optional[str] = delta.function_call.arguments
 
                     if function_name is not None:
                         pending_function_call = OpenAIChatDelta(
@@ -341,13 +337,14 @@ class OpenAIChatStream(Stream[T, U]):
                         and function_arguments is not None
                     ):
                         pending_function_call.content += function_arguments
-                elif "content" in output["choices"][0]["delta"]:
-                    delta = output["choices"][0]["delta"]
-                    role = delta["role"] if "role" in delta else None
+                elif delta.content is not None:
+                    role = cast(
+                        Union[Literal["assistant", "function"], None], delta.role
+                    )
                     yield self._output_wrap(
                         OpenAIChatDelta(
                             role=role,
-                            content=delta["content"],
+                            content=delta.content,
                         )
                     )
                 else:
