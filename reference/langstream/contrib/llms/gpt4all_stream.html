@@ -160,7 +160,7 @@ class GPT4AllStream(Stream[T, U]):
     ...     greet_stream = GPT4AllStream[str, str](
     ...         &#34;GreetingStream&#34;,
     ...         lambda name: f&#34;### User: Hello, my name is {name}. How is it going?\\n\\n### Response:&#34;,
-    ...         model=&#34;orca-mini-3b.ggmlv3.q4_0.bin&#34;,
+    ...         model=&#34;orca-mini-3b-gguf2-q4_0.gguf&#34;,
     ...         temperature=0,
     ...     )
     ...
@@ -249,7 +249,7 @@ about them <a href="https://docs.gpt4all.io/gpt4all_python.html#generation-param
 ...     greet_stream = GPT4AllStream[str, str](
 ...         &quot;GreetingStream&quot;,
 ...         lambda name: f&quot;### User: Hello, my name is {name}. How is it going?\n\n### Response:&quot;,
-...         model=&quot;orca-mini-3b.ggmlv3.q4_0.bin&quot;,
+...         model=&quot;orca-mini-3b-gguf2-q4_0.gguf&quot;,
 ...         temperature=0,
 ...     )
 ...
@@ -290,7 +290,7 @@ Found model file at ...
     ...     greet_stream = GPT4AllStream[str, str](
     ...         &#34;GreetingStream&#34;,
     ...         lambda name: f&#34;### User: Hello, my name is {name}. How is it going?\\n\\n### Response:&#34;,
-    ...         model=&#34;orca-mini-3b.ggmlv3.q4_0.bin&#34;,
+    ...         model=&#34;orca-mini-3b-gguf2-q4_0.gguf&#34;,
     ...         temperature=0,
     ...     )
     ...
