@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "langstream"
-version = "0.2.0"
+version = "0.3.0"
 description = "Build robust LLM applications with true composability"
 authors = ["Rogerio Chaves <rogeriocfj@gmail.com>"]
 homepage = "https://github.com/rogeriochaves/langstream"
