@@ -1206,11 +1206,9 @@ using your function, with the <code>content</code> field as a json which you can
                 if function_call is not None:
                     function_kwargs[&#34;function_call&#34;] = function_call
 
-                openai = importlib.import_module(&#34;openai&#34;)
                 # import openai
 
-                client = openai.OpenAI()
-                return client.chat.completions.create(
+                return OpenAIChatStream.client().chat.completions.create(
                     timeout=timeout,
                     model=model,
                     messages=cast(Any, [m.to_dict() for m in messages]),
@@ -1269,13 +1267,51 @@ using your function, with the <code>content</code> field as a json which you can
         super().__init__(
             name,
             lambda input: cast(AsyncGenerator[U, None], chat_completion(call(input))),
-        )</code></pre>
+        )
+
+    _client_ = None
+    @staticmethod
+    def client():
+        &#34;&#34;&#34;
+        Returns the OpenAI client instance being used to make the LLM calls.
+        &#34;&#34;&#34;
+
+        if not OpenAIChatStream._client_:
+            openai = importlib.import_module(&#34;openai&#34;)
+            OpenAIChatStream._client_ = openai.OpenAI()
+
+        return OpenAIChatStream._client_</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="langstream.core.stream.Stream" href="../core/stream.html#langstream.core.stream.Stream">Stream</a></li>
 <li>typing.Generic</li>
 </ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="langstream.contrib.OpenAIChatStream.client"><code class="name flex">
+<span>def <span class="ident">client</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the OpenAI client instance being used to make the LLM calls.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def client():
+    &#34;&#34;&#34;
+    Returns the OpenAI client instance being used to make the LLM calls.
+    &#34;&#34;&#34;
+
+    if not OpenAIChatStream._client_:
+        openai = importlib.import_module(&#34;openai&#34;)
+        OpenAIChatStream._client_ = openai.OpenAI()
+
+    return OpenAIChatStream._client_</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="langstream.core.stream.Stream" href="../core/stream.html#langstream.core.stream.Stream">Stream</a></b></code>:
@@ -1371,9 +1407,7 @@ using your function, with the <code>content</code> field as a json which you can
 
             @retry(tries=retries)
             def get_completions():
-                openai = importlib.import_module(&#34;openai&#34;)
-                client = openai.OpenAI()
-                return client.completions.create(
+                return OpenAICompletionStream.client().completions.create(
                     model=model,
                     prompt=prompt,
                     temperature=temperature,
@@ -1391,13 +1425,51 @@ using your function, with the <code>content</code> field as a json which you can
                         if &#34;text&#34; in output[&#34;choices&#34;][0]:
                             yield output[&#34;choices&#34;][0][&#34;text&#34;]
 
-        super().__init__(name, lambda input: completion(call(input)))</code></pre>
+        super().__init__(name, lambda input: completion(call(input)))
+
+    _client_ = None
+    @staticmethod
+    def client():
+        &#34;&#34;&#34;
+        Returns the OpenAI client instance being used to make the LLM calls.
+        &#34;&#34;&#34;
+
+        if not OpenAICompletionStream._client_:
+            openai = importlib.import_module(&#34;openai&#34;)
+            OpenAICompletionStream._client_ = openai.OpenAI()
+
+        return OpenAICompletionStream._client_</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="langstream.core.stream.Stream" href="../core/stream.html#langstream.core.stream.Stream">Stream</a></li>
 <li>typing.Generic</li>
 </ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="langstream.contrib.OpenAICompletionStream.client"><code class="name flex">
+<span>def <span class="ident">client</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the OpenAI client instance being used to make the LLM calls.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def client():
+    &#34;&#34;&#34;
+    Returns the OpenAI client instance being used to make the LLM calls.
+    &#34;&#34;&#34;
+
+    if not OpenAICompletionStream._client_:
+        openai = importlib.import_module(&#34;openai&#34;)
+        OpenAICompletionStream._client_ = openai.OpenAI()
+
+    return OpenAICompletionStream._client_</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="langstream.core.stream.Stream" href="../core/stream.html#langstream.core.stream.Stream">Stream</a></b></code>:
@@ -1478,9 +1550,15 @@ using your function, with the <code>content</code> field as a json which you can
 </li>
 <li>
 <h4><code><a title="langstream.contrib.OpenAIChatStream" href="#langstream.contrib.OpenAIChatStream">OpenAIChatStream</a></code></h4>
+<ul class="">
+<li><code><a title="langstream.contrib.OpenAIChatStream.client" href="#langstream.contrib.OpenAIChatStream.client">client</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="langstream.contrib.OpenAICompletionStream" href="#langstream.contrib.OpenAICompletionStream">OpenAICompletionStream</a></code></h4>
+<ul class="">
+<li><code><a title="langstream.contrib.OpenAICompletionStream.client" href="#langstream.contrib.OpenAICompletionStream.client">client</a></code></li>
+</ul>
 </li>
 </ul>
 </li>
