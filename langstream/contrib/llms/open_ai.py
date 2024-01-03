@@ -73,9 +73,7 @@ class OpenAICompletionStream(Stream[T, U]):
 
             @retry(tries=retries)
             def get_completions():
-                openai = importlib.import_module("openai")
-                client = openai.OpenAI()
-                return client.completions.create(
+                return OpenAICompletionStream.client().completions.create(
                     model=model,
                     prompt=prompt,
                     temperature=temperature,
@@ -95,6 +93,18 @@ class OpenAICompletionStream(Stream[T, U]):
 
         super().__init__(name, lambda input: completion(call(input)))
 
+    _client_ = None
+    @staticmethod
+    def client():
+        """
+        Returns the OpenAI client instance being used to make the LLM calls.
+        """
+
+        if not OpenAICompletionStream._client_:
+            openai = importlib.import_module("openai")
+            OpenAICompletionStream._client_ = openai.OpenAI()
+
+        return OpenAICompletionStream._client_
 
 @dataclass
 class OpenAIChatMessage:
@@ -295,11 +305,9 @@ class OpenAIChatStream(Stream[T, U]):
                 if function_call is not None:
                     function_kwargs["function_call"] = function_call
 
-                openai = importlib.import_module("openai")
                 # import openai
 
-                client = openai.OpenAI()
-                return client.chat.completions.create(
+                return OpenAIChatStream.client().chat.completions.create(
                     timeout=timeout,
                     model=model,
                     messages=cast(Any, [m.to_dict() for m in messages]),
@@ -359,3 +367,16 @@ class OpenAIChatStream(Stream[T, U]):
             name,
             lambda input: cast(AsyncGenerator[U, None], chat_completion(call(input))),
         )
+
+    _client_ = None
+    @staticmethod
+    def client():
+        """
+        Returns the OpenAI client instance being used to make the LLM calls.
+        """
+
+        if not OpenAIChatStream._client_:
+            openai = importlib.import_module("openai")
+            OpenAIChatStream._client_ = openai.OpenAI()
+
+        return OpenAIChatStream._client_
